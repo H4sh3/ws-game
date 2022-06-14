@@ -1,7 +1,3 @@
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package root
 
 import (
@@ -151,10 +147,14 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: shared.Vector{X: shared.RandIntInRange(-75, 75), Y: shared.RandIntInRange(-75, 75)}}
 	client.send <- events.GetAssignUserIdEvent(id_cnt)
 
+	// provide the new player with all players positions
 	for c := range hub.clients {
 		new_client_message := []byte(events.GetNewPlayerEvent(c.Id, c.Pos))
 		client.send <- new_client_message
 	}
+
+	// provide the new player with all resources
+	client.send <- events.NewResourcePositionsEvent(hub.Resources)
 
 	client.hub.register <- client
 	hub.new_client(client)

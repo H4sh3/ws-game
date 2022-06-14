@@ -3,19 +3,23 @@ package events
 import (
 	"encoding/json"
 	"fmt"
+	"ws-game/resource"
 	"ws-game/shared"
 )
 
+type EventType string
+
 const (
-	NEW_USER_EVENT         = 0
-	ASSIGN_USER_ID_EVENT   = 1
-	USER_MOVE_EVENT        = 2
-	KEYBOARD_EVENT         = 3
-	UPDATE_PLAYER_VELOCITY = 4
+	NEW_USER_EVENT               EventType = "NEW_USER_EVENT"
+	ASSIGN_USER_ID_EVENT         EventType = "ASSIGN_USER_ID_EVENT"
+	USER_MOVE_EVENT              EventType = "USER_MOVE_EVENT"
+	KEYBOARD_EVENT               EventType = "KEYBOARD_EVENT"
+	UPDATE_PLAYER_VELOCITY_EVENT EventType = "UPDATE_PLAYER_VELOCITY_EVENT"
+	RESOURCE_POSITIONS_EVENT     EventType = "RESOURCE_POSITIONS_EVENT"
 )
 
 type NewPlayerEvent struct {
-	EventType int           `json:"eventType"`
+	EventType EventType     `json:"eventType"`
 	Id        int           `json:"id"`
 	Pos       shared.Vector `json:"pos"`
 }
@@ -34,9 +38,9 @@ func GetNewPlayerEvent(id int, pos shared.Vector) []byte {
 }
 
 type UserMoveEvent struct {
-	EventType int `json:"eventType"`
-	x         int `json:"x"`
-	y         int `json:"y"`
+	EventType EventType `json:"eventType"`
+	x         int       `json:"x"`
+	y         int       `json:"y"`
 }
 
 func GetUserMoveEvent(x int, y int) []byte {
@@ -53,8 +57,8 @@ func GetUserMoveEvent(x int, y int) []byte {
 }
 
 type AssignUserIdEvent struct {
-	EventType int `json:"eventType"`
-	Id        int `json:"id"`
+	EventType EventType `json:"eventType"`
+	Id        int       `json:"id"`
 }
 
 func GetAssignUserIdEvent(id int) []byte {
@@ -71,13 +75,31 @@ func GetAssignUserIdEvent(id int) []byte {
 }
 
 type UpdatePlayerVelocityEvent struct {
-	EventType int           `json:"eventType"`
+	EventType EventType     `json:"eventType"`
 	Id        int           `json:"id"`
 	Velocity  shared.Vector `json:"velocity"`
 }
 
 func NewPlayerVelocityEvent(v shared.Vector, id int) []byte {
-	u := &UpdatePlayerVelocityEvent{EventType: UPDATE_PLAYER_VELOCITY, Velocity: v, Id: id}
+	u := &UpdatePlayerVelocityEvent{EventType: UPDATE_PLAYER_VELOCITY_EVENT, Velocity: v, Id: id}
+
+	value, err := json.Marshal(u)
+
+	if err != nil {
+		fmt.Println(err)
+		return []byte{}
+	} else {
+		return value
+	}
+}
+
+type ResourcePositionsEvent struct {
+	EventType EventType           `json:"eventType"`
+	Resources []resource.Resource `json:"resources"`
+}
+
+func NewResourcePositionsEvent(resources []resource.Resource) []byte {
+	u := &ResourcePositionsEvent{EventType: RESOURCE_POSITIONS_EVENT, Resources: resources}
 
 	value, err := json.Marshal(u)
 
@@ -92,7 +114,7 @@ func NewPlayerVelocityEvent(v shared.Vector, id int) []byte {
 // read events from clients
 
 type BaseEvent struct {
-	EventType int             `json:"eventType"`
+	EventType EventType       `json:"eventType"`
 	Payload   json.RawMessage `json:"Payload"`
 }
 

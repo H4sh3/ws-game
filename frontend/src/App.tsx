@@ -1,8 +1,7 @@
 import { ReactElement, useEffect, useRef, useState } from 'react'
 import { Stage, Sprite, Container } from '@inlet/react-pixi'
-import { KeyStates, getKeyChangeEvent, Player, isNewPlayerEvent, createVector, isAssignUserIdEvent, isUpdatePlayerVelocityEvent } from './types'
-import { isUndefined } from 'util'
-import { usePlayers } from './PlayerStore'
+import { KeyStates, getKeyBoardEvent, Player, isNewPlayerEvent, isAssignUserIdEvent, isUpdatePlayerVelocityEvent, isResourcePositionsEvent, createVector } from './eventTypes'
+import { useMainStore } from './MainStore'
 import { enableMapSet } from 'immer'
 
 
@@ -22,26 +21,23 @@ class KeyboardInputHandler {
 
   keyChange(key: string, value: KeyStates, userId: number) {
     if (this.keys.has(key)) {
-      if (this.keys.get(key) !== value || true) {
+      if (this.keys.get(key) !== value) {
         // change in key state
         // send to server
         this.keys.set(key, value)
-        this.ws.send(JSON.stringify(getKeyChangeEvent(key, value, userId)))
+        this.ws.send(JSON.stringify(getKeyBoardEvent(key, value, userId)))
       }
     }
   }
 }
 
-function getPlayer(players: Player[], playerId: number) {
-  return players.find(p => p.id === playerId)
-}
 
 function App(): ReactElement {
   enableMapSet()
   const [connection, setConnection] = useState(false)
   const [myId, setMyId] = useState(-1)
 
-  const { getPlayerArr, spawnPlayer, updatePlayer } = usePlayers()
+  const { getPlayerArr, spawnPlayer, updatePlayer, setResources, getResources } = useMainStore()
   //const [ws, setWs] = useState<WebSocket>()
 
   let ws = useRef<WebSocket>()
@@ -83,8 +79,11 @@ function App(): ReactElement {
               function logKeyUp(e: KeyboardEvent) {
                 keyboardInputHandler.keyChange(e.key, KeyStates.UP, id)
               }
+
             } else if (isUpdatePlayerVelocityEvent(parsed)) {
               updatePlayer(parsed.id, parsed.velocity)
+            } else if (isResourcePositionsEvent(parsed)) {
+              setResources(parsed.resources)
             }
           })
         }
@@ -93,6 +92,17 @@ function App(): ReactElement {
     }
 
   }, [])
+
+  let myPos = createVector(0, 0)
+
+  if (getPlayerArr().length > 0) {
+    const p: Player | undefined = getPlayerArr().find(p => p.id === myId)
+    if (p !== undefined) {
+      myPos.x = p.pos.x
+      myPos.y = p.pos.y
+    }
+  }
+
 
   return (
     <div className="flex flex-col justify-center">
@@ -106,18 +116,35 @@ function App(): ReactElement {
         {`Players: ${getPlayerArr().length}`}
       </div>
       <Stage width={300} height={300} options={{ backgroundColor: 0xeef1f5 }}>
-        <Container position={[150, 150]}>
+        <Container position={[0, 0]}>
           {
-            getPlayerArr().map((p, i) => {
+            getPlayerArr().filter(p => p.id !== myId).map((p, i) => {
               return <Sprite
                 key={i}
                 anchor={0.5}
-                x={p.pos.x}
-                y={p.pos.y}
-                image="https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/IaUrttj.png"
+                x={p.pos.x + 125 - myPos.x}
+                y={p.pos.y + 125 - myPos.y}
+                image="rabbit.png"
               />
             })
           }
+          {
+            getResources().map((r, i) => {
+              return <Sprite
+                key={i}
+                anchor={0.5}
+                x={r.pos.x + 125 - myPos.x}
+                y={r.pos.y + 125 - myPos.y}
+                image="iron.png"
+              />
+            })
+          }
+          <Sprite
+            anchor={0.5}
+            x={125}
+            y={125}
+            image="https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/IaUrttj.png"
+          />
         </Container>
       </Stage>
     </div>

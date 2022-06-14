@@ -1,19 +1,21 @@
 import create from 'zustand';
 import { combine } from 'zustand/middleware';
 import produce from 'immer';
-import { createVector, Player, Vector } from './types';
+import { Player, Resource, Vector } from './eventTypes';
 
 interface State {
     readonly players: Map<number, Player>
     readonly fps: number
+    readonly resources: Resource[]
 }
 
 
-export const usePlayers = create(
+export const useMainStore = create(
     combine(
         {
             players: new Map(),
-            fps: 0
+            fps: 0,
+            resources: []
         } as State,
         (set, get) => ({
             spawnPlayer: (id: number, pos: Vector) => {
@@ -33,9 +35,18 @@ export const usePlayers = create(
                     }
                 }));
             },
+            setResources: (resources: Resource[]) => {
+                set((state) => produce(state, draftState => {
+                    draftState.resources = resources
+                }));
+            },
             getPlayerArr: (): Player[] => {
                 return Array.from(get().players.values())
             },
+            getResources: (): Resource[] => {
+                return get().resources
+            },
+
         })
     )
 );

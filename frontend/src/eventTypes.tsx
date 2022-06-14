@@ -1,3 +1,4 @@
+import { EVENT_TYPES } from "./const"
 
 export function createVector(x: number, y: number): Vector {
     return {
@@ -7,11 +8,10 @@ export function createVector(x: number, y: number): Vector {
 }
 
 export interface BaseEvent {
-    eventType: number
+    eventType: string
 }
 
 export function isBaseEvent(value: any): value is BaseEvent {
-    console.log(value)
     return (
         "eventType" in value
     )
@@ -29,7 +29,7 @@ export interface NewPlayerEvent extends BaseEvent {
 export function isNewPlayerEvent(value: any): value is NewPlayerEvent {
     return (
         isBaseEvent(value) &&
-        value.eventType == 0
+        value.eventType == EVENT_TYPES.NEW_USER_EVENT
     )
 }
 
@@ -81,13 +81,13 @@ export class Player {
 export function isUpdatePlayerVelocityEvent(value: any): value is UpdatePlayerVelocityEvent {
     return (
         isBaseEvent(value) &&
-        value.eventType == 4
+        value.eventType == EVENT_TYPES.UPDATE_PLAYER_VELOCITY_EVENT
     )
 }
 
-export function getKeyChangeEvent(key: string, value: KeyStates, id: number): KeyChangeEvent {
+export function getKeyBoardEvent(key: string, value: KeyStates, id: number): KeyChangeEvent {
     return {
-        "eventType": 3,
+        "eventType": EVENT_TYPES.KEYBOARD_EVENT,
         "payload": {
             "key": key,
             "value": value,
@@ -99,11 +99,32 @@ export function getKeyChangeEvent(key: string, value: KeyStates, id: number): Ke
 export function isAssignUserIdEvent(value: any): value is AssignidEvent {
     return (
         isBaseEvent(value) &&
-        value.eventType == 1
+        value.eventType == EVENT_TYPES.ASSIGN_USER_ID_EVENT
     )
 }
 
 export enum KeyStates {
     UP,
     DOWN
+}
+
+
+export interface Resource {
+    resourceType: string,
+    pos: Vector,
+    capacity: {
+        current: number,
+        max: number
+    }
+}
+
+interface ResourcePositionsEvent extends BaseEvent {
+    resources: Resource[]
+}
+
+export function isResourcePositionsEvent(value: any): value is ResourcePositionsEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType === EVENT_TYPES.RESOURCE_POSITIONS_EVENT
+    )
 }
