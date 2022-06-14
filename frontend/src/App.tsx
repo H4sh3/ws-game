@@ -1,61 +1,52 @@
-import { ReactElement, useEffect, useRef, useState } from 'react'
-import { Stage, Sprite, Container } from '@inlet/react-pixi'
-import { KeyStates, getKeyBoardEvent, Player, isNewPlayerEvent, isAssignUserIdEvent, isUpdatePlayerVelocityEvent, isResourcePositionsEvent, createVector } from './eventTypes'
+import { ReactElement, useEffect, useState } from 'react'
+import { Stage, Sprite, Container, useTick } from '@inlet/react-pixi'
+import { KeyStates, isNewPlayerEvent, isAssignUserIdEvent, isPlayerTargetPositionEvent, isResourcePositionsEvent, createVector } from './types/events'
 import { useMainStore } from './MainStore'
 import { enableMapSet } from 'immer'
 
 
-const VALID_KEYS = ["w", "a", "s", "d"]
 
-class KeyboardInputHandler {
-  ws: WebSocket
-  keys: Map<String, KeyStates>
+function Player(): ReactElement {
+  const { playerId, updatePlayerPositions } = useMainStore()
 
-  constructor(ws: WebSocket) {
-    this.ws = ws
-    this.keys = new Map()
-    VALID_KEYS.forEach(k => {
-      this.keys.set(k, KeyStates.UP)
-    })
+  useTick(delta => {
+    updatePlayerPositions(delta)
+  })
+
+  if (playerId == -1) {
+    return <></>
   }
 
-  keyChange(key: string, value: KeyStates, userId: number) {
-    if (this.keys.has(key)) {
-      if (this.keys.get(key) !== value) {
-        // change in key state
-        // send to server
-        this.keys.set(key, value)
-        this.ws.send(JSON.stringify(getKeyBoardEvent(key, value, userId)))
-      }
-    }
-  }
+  return <Sprite
+    anchor={0.5}
+    x={125}
+    y={125}
+    image="https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/IaUrttj.png"
+  />
 }
 
 
 function App(): ReactElement {
   enableMapSet()
   const [connection, setConnection] = useState(false)
-  const [myId, setMyId] = useState(-1)
 
-  const { getPlayerArr, spawnPlayer, updatePlayer, setResources, getResources } = useMainStore()
-  //const [ws, setWs] = useState<WebSocket>()
-
-  let ws = useRef<WebSocket>()
+  const { playerId, setPlayerId, getPlayerArr, spawnPlayer, setPlayerTargetPos, setResources, getResources, getPlayerPos, fps, getOtherPlayers,
+    addKeyEvent, setWs, ws
+  } = useMainStore()
 
   useEffect(() => {
-    if (!ws.current) {
-      ws.current = new WebSocket("ws://127.0.0.1:7777/ws")
-      const keyboardInputHandler = new KeyboardInputHandler(ws.current)
+    if (ws === undefined) {
+      let tmpWs = new WebSocket("ws://127.0.0.1:7777/ws")
 
-      ws.current.onerror = (error) => {
+      tmpWs.onerror = (error) => {
         console.log(error)
       }
 
-      ws.current.onopen = () => {
+      tmpWs.onopen = () => {
         setConnection(true)
       }
 
-      ws.current.onmessage = (m) => {
+      tmpWs.onmessage = (m) => {
 
         if (typeof (m.data) == "string") {
 
@@ -63,46 +54,33 @@ function App(): ReactElement {
             let parsed: any = JSON.parse(message)
 
             if (isNewPlayerEvent(parsed)) {
-              spawnPlayer(parsed.id, parsed.pos)
+              spawnPlayer(parsed.id, createVector(parsed.pos.x, parsed.pos.y))
             } else if (isAssignUserIdEvent(parsed)) { // join event
               const id: number = parsed.id
-              setMyId(id)
-
-              document.addEventListener('keydown', logKeyDown);
-
-              document.addEventListener('keyup', logKeyUp);
-
-              function logKeyDown(e: KeyboardEvent) {
-                keyboardInputHandler.keyChange(e.key, KeyStates.DOWN, id)
-              }
-
-              function logKeyUp(e: KeyboardEvent) {
-                keyboardInputHandler.keyChange(e.key, KeyStates.UP, id)
-              }
-
-            } else if (isUpdatePlayerVelocityEvent(parsed)) {
-              updatePlayer(parsed.id, parsed.velocity)
+              setPlayerId(id)
+              document.addEventListener('keydown', (e: KeyboardEvent) => {
+                if (!e.repeat) {
+                  console.log("down!")
+                  addKeyEvent(e.key, KeyStates.DOWN)
+                }
+              });
+              document.addEventListener('keyup', (e: KeyboardEvent) => {
+                if (!e.repeat) {
+                  addKeyEvent(e.key, KeyStates.UP)
+                }
+              });
+            } else if (isPlayerTargetPositionEvent(parsed)) {
+              setPlayerTargetPos(parsed.id, createVector(parsed.pos.x, parsed.pos.y))
             } else if (isResourcePositionsEvent(parsed)) {
               setResources(parsed.resources)
             }
           })
         }
       }
-
+      setWs(tmpWs)
     }
 
   }, [])
-
-  let myPos = createVector(0, 0)
-
-  if (getPlayerArr().length > 0) {
-    const p: Player | undefined = getPlayerArr().find(p => p.id === myId)
-    if (p !== undefined) {
-      myPos.x = p.pos.x
-      myPos.y = p.pos.y
-    }
-  }
-
 
   return (
     <div className="flex flex-col justify-center">
@@ -110,20 +88,30 @@ function App(): ReactElement {
         {`Websocket: ${connection ? 'connected' : 'disconnected'}`}
       </div>
       <div>
-        {`UserId: ${myId}`}
+        {`UserId: ${playerId}`}
       </div>
       <div>
         {`Players: ${getPlayerArr().length}`}
       </div>
+      <div>
+        {fps}
+      </div>
+      <div>
+        {`${getPlayerPos().x}`}
+      </div>
+      <div>
+        {`${getPlayerPos().y}`}
+      </div>
       <Stage width={300} height={300} options={{ backgroundColor: 0xeef1f5 }}>
         <Container position={[0, 0]}>
+          <Player />
           {
-            getPlayerArr().filter(p => p.id !== myId).map((p, i) => {
+            getOtherPlayers().map((p, i) => {
               return <Sprite
                 key={i}
                 anchor={0.5}
-                x={p.pos.x + 125 - myPos.x}
-                y={p.pos.y + 125 - myPos.y}
+                x={p.currentPos.x + 125 - getPlayerPos().x}
+                y={p.currentPos.y + 125 - getPlayerPos().y}
                 image="rabbit.png"
               />
             })
@@ -133,18 +121,12 @@ function App(): ReactElement {
               return <Sprite
                 key={i}
                 anchor={0.5}
-                x={r.pos.x + 125 - myPos.x}
-                y={r.pos.y + 125 - myPos.y}
+                x={r.pos.x + 125 - getPlayerPos().x}
+                y={r.pos.y + 125 - getPlayerPos().y}
                 image="iron.png"
               />
             })
           }
-          <Sprite
-            anchor={0.5}
-            x={125}
-            y={125}
-            image="https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/IaUrttj.png"
-          />
         </Container>
       </Stage>
     </div>

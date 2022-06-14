@@ -1,5 +1,5 @@
 
-import { degToRad, radToDeg } from "./math";
+import { degToRad, radToDeg } from "../etc/math";
 
 export class Vector {
     x: number

@@ -29,8 +29,8 @@ func NewResource(resourceType ResourceType) *Resource {
 	return &Resource{
 		ResourceType: resourceType,
 		Pos: shared.Vector{
-			X: shared.RandIntInRange(-r, r) * 25,
-			Y: shared.RandIntInRange(-r, r) * 25,
+			X: shared.RandIntInRange(-r, r) * 10,
+			Y: shared.RandIntInRange(-r, r) * 10,
 		},
 		Capacity: Capacity{
 			Current: 100,

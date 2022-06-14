@@ -14,7 +14,7 @@ const (
 	ASSIGN_USER_ID_EVENT         EventType = "ASSIGN_USER_ID_EVENT"
 	USER_MOVE_EVENT              EventType = "USER_MOVE_EVENT"
 	KEYBOARD_EVENT               EventType = "KEYBOARD_EVENT"
-	UPDATE_PLAYER_VELOCITY_EVENT EventType = "UPDATE_PLAYER_VELOCITY_EVENT"
+	PLAYER_TARGET_POSITION_EVENT EventType = "PLAYER_TARGET_POSITION_EVENT"
 	RESOURCE_POSITIONS_EVENT     EventType = "RESOURCE_POSITIONS_EVENT"
 )
 
@@ -74,14 +74,14 @@ func GetAssignUserIdEvent(id int) []byte {
 	}
 }
 
-type UpdatePlayerVelocityEvent struct {
+type PlayerTargetPositionEvent struct {
 	EventType EventType     `json:"eventType"`
 	Id        int           `json:"id"`
-	Velocity  shared.Vector `json:"velocity"`
+	Pos       shared.Vector `json:"pos"`
 }
 
-func NewPlayerVelocityEvent(v shared.Vector, id int) []byte {
-	u := &UpdatePlayerVelocityEvent{EventType: UPDATE_PLAYER_VELOCITY_EVENT, Velocity: v, Id: id}
+func NewPlayerTargetPositionEvent(v shared.Vector, id int) []byte {
+	u := &PlayerTargetPositionEvent{EventType: PLAYER_TARGET_POSITION_EVENT, Pos: v, Id: id}
 
 	value, err := json.Marshal(u)
 
@@ -115,7 +115,7 @@ func NewResourcePositionsEvent(resources []resource.Resource) []byte {
 
 type BaseEvent struct {
 	EventType EventType       `json:"eventType"`
-	Payload   json.RawMessage `json:"Payload"`
+	Payload   json.RawMessage `json:"payload"`
 }
 
 type KeyBoardEvent struct {

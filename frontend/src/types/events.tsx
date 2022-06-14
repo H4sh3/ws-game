@@ -1,10 +1,8 @@
-import { EVENT_TYPES } from "./const"
+import { EVENT_TYPES } from "../const"
+import Vector from "./vector"
 
 export function createVector(x: number, y: number): Vector {
-    return {
-        x,
-        y
-    }
+    return new Vector(x, y)
 }
 
 export interface BaseEvent {
@@ -50,38 +48,16 @@ export interface KeyChangeEvent extends BaseEvent {
     }
 }
 
-export interface Vector {
-    x: number
-    y: number
-}
-
-export interface UpdatePlayerVelocityEvent extends BaseEvent {
-    id: number
-    velocity: Vector
-}
-
-
-export class Player {
+export interface PlayerTargetPositionEvent extends BaseEvent {
     id: number
     pos: Vector
-    vel: Vector
-
-    constructor(id: number, pos: Vector) {
-        this.vel = createVector(0, 0)
-        this.pos = pos
-        this.id = id
-    }
-
-    update(vel: Vector) {
-        this.pos.x += vel.x * 10
-        this.pos.y += vel.y * 10
-    }
 }
 
-export function isUpdatePlayerVelocityEvent(value: any): value is UpdatePlayerVelocityEvent {
+
+export function isPlayerTargetPositionEvent(value: any): value is PlayerTargetPositionEvent {
     return (
         isBaseEvent(value) &&
-        value.eventType == EVENT_TYPES.UPDATE_PLAYER_VELOCITY_EVENT
+        value.eventType == EVENT_TYPES.PLAYER_TARGET_POSITION_EVENT
     )
 }
 

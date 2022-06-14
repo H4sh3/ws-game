@@ -1,10 +1,8 @@
 package root
 
 import (
-	"fmt"
 	"ws-game/events"
 	"ws-game/resource"
-	"ws-game/shared"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -70,32 +68,27 @@ func (h *Hub) new_client(client *Client) {
 	h.broadcast <- new_client_message
 }
 
-func (h *Hub) distribMoveEvent(event events.KeyBoardEvent) {
-	playerVelocity := shared.Vector{
-		X: 0,
-		Y: 0,
-	}
+func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
+	stepSize := 50
 
 	if event.Key == "w" {
-		playerVelocity.Y = -event.Value
+		c.Pos.Y -= stepSize
 	}
 
 	if event.Key == "a" {
-		playerVelocity.X = -event.Value
+		c.Pos.X -= stepSize
 	}
 
 	if event.Key == "s" {
-		playerVelocity.Y = event.Value
+		c.Pos.Y += stepSize
 	}
 
 	if event.Key == "d" {
-		playerVelocity.X = event.Value
+		c.Pos.X += stepSize
 	}
 
-	e := events.NewPlayerVelocityEvent(playerVelocity, event.Id)
+	e := events.NewPlayerTargetPositionEvent(c.Pos, event.Id)
 	for client := range h.clients {
-		fmt.Println("is zero?")
-		fmt.Println(event.Id)
 		client.send <- e
 	}
 }

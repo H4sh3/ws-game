@@ -182,6 +182,12 @@ func UnmarshalClientEvents(jsonInput []byte, h *Hub) {
 			panic(err)
 		}
 		fmt.Println(keyboardEvent)
-		h.distribMoveEvent(*keyboardEvent)
+
+		for client := range h.clients {
+			if client.Id == keyboardEvent.Id {
+				h.handleMovementEvent(*keyboardEvent, client)
+			}
+		}
+
 	}
 }
