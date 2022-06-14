@@ -73,6 +73,11 @@ export const useMainStore = create(
                     draftState.players.push(new Player(id, pos))
                 }));
             },
+            removePlayer: (id: number) => {
+                set((state) => produce(state, draftState => {
+                    draftState.players = state.players.filter(p => p.id !== id)
+                }));
+            },
             setPlayerTargetPos: (id: number, pos: Vector) => {
                 set((state) => produce(state, draftState => {
                     // update own position
@@ -113,16 +118,15 @@ export const useMainStore = create(
                 const pId = get().playerId
                 return players.filter(p => p.id !== pId)
             },
+            // Todo: make sense of delta and how it changes by different frametimes
             updatePlayerPositions: (delta: number) => {
                 set((state) => produce(state, draftState => {
                     // update other players positions
                     get().players.map(player => {
                         const diff = player.targetPos.copy().sub(player.currentPos)
-                        diff.mult(0.2)
 
-                        if (diff.x != 0 || diff.y != 0) {
-                            console.log(diff)
-                        }
+                        // slow down the movement
+                        diff.mult(0.2)
 
                         if (diff.mag() > 0.1) {
                             player.currentPos.add(diff)

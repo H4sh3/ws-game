@@ -53,6 +53,17 @@ export interface PlayerTargetPositionEvent extends BaseEvent {
     pos: Vector
 }
 
+export interface PlayerDisconnectedEvent extends BaseEvent {
+    id: number
+}
+
+export function isPlayerDisconnectedEvent(value: any): value is PlayerDisconnectedEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType == EVENT_TYPES.PLAYER_DISCONNECTED_EVENT
+    )
+}
+
 
 export function isPlayerTargetPositionEvent(value: any): value is PlayerTargetPositionEvent {
     return (

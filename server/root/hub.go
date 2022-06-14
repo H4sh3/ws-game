@@ -47,6 +47,12 @@ func (h *Hub) Run() {
 			h.clients[client] = true
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
+				for c := range h.clients {
+					if c.Id == client.Id {
+						continue
+					}
+					c.send <- events.NewPlayerDisconnectedEvent(client.Id)
+				}
 				delete(h.clients, client)
 				close(client.send)
 			}

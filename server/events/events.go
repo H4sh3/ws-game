@@ -16,6 +16,7 @@ const (
 	KEYBOARD_EVENT               EventType = "KEYBOARD_EVENT"
 	PLAYER_TARGET_POSITION_EVENT EventType = "PLAYER_TARGET_POSITION_EVENT"
 	RESOURCE_POSITIONS_EVENT     EventType = "RESOURCE_POSITIONS_EVENT"
+	PLAYER_DISCONNECTED_EVENT    EventType = "PLAYER_DISCONNECTED_EVENT"
 )
 
 type NewPlayerEvent struct {
@@ -30,7 +31,7 @@ func GetNewPlayerEvent(id int, pos shared.Vector) []byte {
 	value, err := json.Marshal(u)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Error: %s", err)
 		return []byte{}
 	} else {
 		return value
@@ -49,7 +50,7 @@ func GetUserMoveEvent(x int, y int) []byte {
 	value, err := json.Marshal(u)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Error: %s", err)
 		return []byte{}
 	} else {
 		return value
@@ -67,7 +68,7 @@ func GetAssignUserIdEvent(id int) []byte {
 	value, err := json.Marshal(u)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Error: %s", err)
 		return []byte{}
 	} else {
 		return value
@@ -86,7 +87,7 @@ func NewPlayerTargetPositionEvent(v shared.Vector, id int) []byte {
 	value, err := json.Marshal(u)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Error: %s", err)
 		return []byte{}
 	} else {
 		return value
@@ -104,7 +105,25 @@ func NewResourcePositionsEvent(resources []resource.Resource) []byte {
 	value, err := json.Marshal(u)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Error: %s", err)
+		return []byte{}
+	} else {
+		return value
+	}
+}
+
+type PlayerDisconnectedEvent struct {
+	EventType EventType `json:"eventType"`
+	Id        int       `json:"id"`
+}
+
+func NewPlayerDisconnectedEvent(id int) []byte {
+	u := &PlayerDisconnectedEvent{EventType: PLAYER_DISCONNECTED_EVENT, Id: id}
+
+	value, err := json.Marshal(u)
+
+	if err != nil {
+		fmt.Printf("Error: %s", err)
 		return []byte{}
 	} else {
 		return value

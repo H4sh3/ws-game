@@ -77,7 +77,6 @@ func (c *Client) readPump() {
 		// all message recieved from client get unmarshalled to structs
 		UnmarshalClientEvents(message, c.hub)
 
-		fmt.Println(string(message))
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
@@ -167,7 +166,6 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 }
 
 func UnmarshalClientEvents(jsonInput []byte, h *Hub) {
-	fmt.Println(string(jsonInput))
 	event_data := &events.BaseEvent{}
 	if err := json.Unmarshal(jsonInput, &event_data); err != nil {
 		x := fmt.Sprintf("Non event message %s", string(jsonInput))
@@ -181,7 +179,6 @@ func UnmarshalClientEvents(jsonInput []byte, h *Hub) {
 		if err := json.Unmarshal(event_data.Payload, &keyboardEvent); err != nil {
 			panic(err)
 		}
-		fmt.Println(keyboardEvent)
 
 		for client := range h.clients {
 			if client.Id == keyboardEvent.Id {
