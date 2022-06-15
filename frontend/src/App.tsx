@@ -21,7 +21,7 @@ function Player(): ReactElement {
     anchor={0.5}
     x={125}
     y={125}
-    image="https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/IaUrttj.png"
+    image="/assets/rabbit.png"
   />
 }
 
@@ -36,7 +36,9 @@ function App(): ReactElement {
 
   useEffect(() => {
     if (ws === undefined) {
-      let tmpWs = new WebSocket("ws://127.0.0.1:7777/ws")
+      const local = "ws://127.0.0.1:7777/ws"
+      const prod = "ws://game.gymcadia.com/wsocket"
+      let tmpWs = new WebSocket(prod)
 
       tmpWs.onerror = (error) => {
         console.log(error)
@@ -114,7 +116,7 @@ function App(): ReactElement {
                 anchor={0.5}
                 x={p.currentPos.x + 125 - getPlayerPos().x}
                 y={p.currentPos.y + 125 - getPlayerPos().y}
-                image="rabbit.png"
+                image="/assets/rabbit.png"
               />
             })
           }
@@ -125,7 +127,7 @@ function App(): ReactElement {
                 anchor={0.5}
                 x={r.pos.x + 125 - getPlayerPos().x}
                 y={r.pos.y + 125 - getPlayerPos().y}
-                image="iron.png"
+                image="/assets/iron.png"
               />
             })
           }
