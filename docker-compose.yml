@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+#  frontend:
+#    build:
+#      context: ./frontend
+#      dockerfile: ./Dockerfile
+#    ports:
+#      - "127.0.0.1:8050:3000"
+#    networks:
+#      - ws-game
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: ./Dockerfile
+    ports:
+      - "127.0.0.1:8051:7777"
+    networks:
+      - ws-game
+
+networks:
+  ws-game:
