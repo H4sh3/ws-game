@@ -37,7 +37,7 @@ function App(): ReactElement {
   useEffect(() => {
     if (ws === undefined) {
       const local = "ws://127.0.0.1:7777/ws"
-      const prod = "wss://game.gymcadia.com/wsocket"
+      const prod = "wss://game.gymcadia.com/wsocket/"
       let tmpWs = new WebSocket(prod)
 
       tmpWs.onerror = (error) => {
