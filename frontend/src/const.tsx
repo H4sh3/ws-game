@@ -8,7 +8,8 @@ export enum EVENT_TYPES {
     PLAYER_DISCONNECTED_EVENT = "PLAYER_DISCONNECTED_EVENT"
 }
 
+export const playerFrames = ["player0.png", "player1.png", "player2.png", "player3.png"]
+
 export enum ASSETS {
-    Player = "player.png",
     Iron = "iron.png"
 }

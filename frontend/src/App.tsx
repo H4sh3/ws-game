@@ -3,11 +3,14 @@ import { Stage, Sprite, Container, useTick } from '@inlet/react-pixi'
 import { KeyStates, isNewPlayerEvent, isAssignUserIdEvent, isPlayerTargetPositionEvent, isResourcePositionsEvent, createVector, isPlayerDisconnectedEvent } from './types/events'
 import { useMainStore } from './MainStore'
 import { enableMapSet } from 'immer'
-import { ASSETS } from './const'
+import { ASSETS, getPlayerFrame, playerFrames } from './const'
+
+
+
 
 
 function Player(): ReactElement {
-  const { playerId, updatePlayerPositions } = useMainStore()
+  const { playerId, updatePlayerPositions, getPlayerFrame } = useMainStore()
 
   useTick(delta => {
     updatePlayerPositions(delta)
@@ -21,7 +24,7 @@ function Player(): ReactElement {
     anchor={0}
     x={125}
     y={125}
-    image={`/assets/${ASSETS.Player}`}
+    image={`/assets/${playerFrames[getPlayerFrame()]}`}
   />
 }
 
@@ -64,7 +67,6 @@ function App(): ReactElement {
               setPlayerId(id)
               document.addEventListener('keydown', (e: KeyboardEvent) => {
                 if (!e.repeat) {
-                  console.log("down!")
                   addKeyEvent(e.key, KeyStates.DOWN)
                 }
               });
@@ -122,7 +124,7 @@ function App(): ReactElement {
                     anchor={0}
                     x={p.currentPos.x + 125 - getPlayerPos().x}
                     y={p.currentPos.y + 125 - getPlayerPos().y}
-                    image={`/assets/${ASSETS.Player}`}
+                    image={`/assets/${playerFrames[p.frame]}`}
                   />
                 })
               }

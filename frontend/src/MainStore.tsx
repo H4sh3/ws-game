@@ -39,7 +39,7 @@ interface KeyEvent {
 interface State {
     readonly playerId: number
     readonly players: Player[]// Map<number, Player>
-    readonly fps: number
+    readonly count: number
     readonly resources: Resource[]
     readonly keyboardInputHandler: KeyboardInputHandler
     readonly keys: Map<String, KeyStates>
@@ -53,7 +53,7 @@ export const useMainStore = create(
         {
             playerId: -1,
             players: [],
-            fps: 0,
+            count: 0,
             resources: [],
             currentPosition: createVector(0, 0),
             targetPosition: createVector(0, 0),
@@ -107,6 +107,10 @@ export const useMainStore = create(
             getPlayerArr: (): Player[] => {
                 return get().players
             },
+            getPlayerFrame: (): number => {
+                const player = get().players.find(p => p.id === get().playerId)
+                return player !== undefined ? player.frame : 0
+            },
             getPlayerPos: (): Vector => {
                 const pId = get().playerId
                 const player = get().players.find(p => p.id == pId)
@@ -128,18 +132,20 @@ export const useMainStore = create(
                 set((state) => produce(state, draftState => {
                     // update other players positions
                     get().players.map(player => {
-                        const diff = player.targetPos.copy().sub(player.currentPos)
+                        // take step to target direction
+                        const step = player.targetPos.copy().sub(player.currentPos).mult(0.2)
 
-                        // slow down the movement
-                        diff.mult(0.2)
-
-                        if (diff.mag() > 0.1) {
-                            player.currentPos.add(diff)
+                        if (step.mag() > 0.1) {
+                            player.currentPos.add(step)
+                            if (state.count % 4 == 0) {
+                                player.frame = (player.frame + 1) % 4
+                            }
                         } else {
                             player.currentPos = player.targetPos.copy()
+                            player.frame = 0
                         }
                     })
-                    draftState.fps += 1
+                    draftState.count += 1
 
                     if (state.ws === undefined) return
 

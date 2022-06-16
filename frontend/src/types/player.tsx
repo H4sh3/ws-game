@@ -6,11 +6,13 @@ export class Player {
     currentPos: Vector
     targetPos: Vector
     vel: Vector
+    frame: number
 
     constructor(id: number, pos: Vector) {
         this.vel = createVector(0, 0)
         this.currentPos = pos
         this.targetPos = pos
         this.id = id
+        this.frame = 0
     }
 }
