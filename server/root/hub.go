@@ -112,5 +112,6 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 	if !collision {
 		c.Pos = *newPos
 	}
-	h.broadcast <- events.NewPlayerTargetPositionEvent(c.Pos, c.Id)
+
+	h.broadcast <- events.NewPlayerTargetPositionEvent(c.Pos, c.Id, collision)
 }

@@ -73,7 +73,7 @@ function App(): ReactElement {
                 }
               });
             } else if (isPlayerTargetPositionEvent(parsed)) {
-              setPlayerTargetPos(parsed.id, createVector(parsed.pos.x, parsed.pos.y))
+              setPlayerTargetPos(parsed.id, createVector(parsed.pos.x, parsed.pos.y), parsed.hasCollision)
             } else if (isResourcePositionsEvent(parsed)) {
               setResources(parsed.resources)
             } else if (isPlayerDisconnectedEvent(parsed)) {

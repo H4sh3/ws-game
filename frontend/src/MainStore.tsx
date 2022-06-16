@@ -78,18 +78,17 @@ export const useMainStore = create(
                     draftState.players = state.players.filter(p => p.id !== id)
                 }));
             },
-            setPlayerTargetPos: (id: number, pos: Vector) => {
+            setPlayerTargetPos: (id: number, pos: Vector, hasCollision: boolean) => {
                 set((state) => produce(state, draftState => {
+
+                    if (id === state.playerId && !hasCollision) {
+                        return
+                    }
+
                     const p = state.players.find(p => p.id == id)
 
                     if (p) {
                         p.targetPos = pos
-                        /* if (id === state.playerId) {
-                            if (p.targetPos.x !== pos.x && p.targetPos.y !== pos.y) {
-                                p.targetPos = pos
-                            }
-                        } else {
-                        } */
                     }
                 }));
             },
@@ -148,24 +147,24 @@ export const useMainStore = create(
                         VALID_KEYS.forEach(key => {
                             const value = state.keyboardInputHandler.keys.get(key)
                             if (value == KeyStates.DOWN) {
-                                /* 
-                                                                const stepSize = 5
-                                
-                                                                if (key == "w") {
-                                                                    player.targetPos.y -= stepSize
-                                                                }
-                                
-                                                                if (key == "a") {
-                                                                    player.targetPos.x -= stepSize
-                                                                }
-                                
-                                                                if (key == "s") {
-                                                                    player.targetPos.y += stepSize
-                                                                }
-                                
-                                                                if (key == "d") {
-                                                                    player.targetPos.x += stepSize
-                                                                } */
+
+                                const stepSize = 5
+
+                                if (key == "w") {
+                                    player.targetPos.y -= stepSize
+                                }
+
+                                if (key == "a") {
+                                    player.targetPos.x -= stepSize
+                                }
+
+                                if (key == "s") {
+                                    player.targetPos.y += stepSize
+                                }
+
+                                if (key == "d") {
+                                    player.targetPos.x += stepSize
+                                }
 
                                 if (state.ws !== undefined) {
                                     state.ws.send(JSON.stringify(getKeyBoardEvent(key, value, state.playerId)))

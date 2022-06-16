@@ -76,13 +76,14 @@ func GetAssignUserIdEvent(id int) []byte {
 }
 
 type PlayerTargetPositionEvent struct {
-	EventType EventType     `json:"eventType"`
-	Id        int           `json:"id"`
-	Pos       shared.Vector `json:"pos"`
+	EventType    EventType     `json:"eventType"`
+	Id           int           `json:"id"`
+	Pos          shared.Vector `json:"pos"`
+	HasCollision bool          `json:"hasCollision"`
 }
 
-func NewPlayerTargetPositionEvent(v shared.Vector, id int) []byte {
-	u := &PlayerTargetPositionEvent{EventType: PLAYER_TARGET_POSITION_EVENT, Pos: v, Id: id}
+func NewPlayerTargetPositionEvent(v shared.Vector, id int, hasCollision bool) []byte {
+	u := &PlayerTargetPositionEvent{EventType: PLAYER_TARGET_POSITION_EVENT, Pos: v, Id: id, HasCollision: hasCollision}
 
 	value, err := json.Marshal(u)
 

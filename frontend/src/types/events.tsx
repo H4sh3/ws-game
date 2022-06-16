@@ -50,6 +50,7 @@ export interface KeyChangeEvent extends BaseEvent {
 
 export interface PlayerTargetPositionEvent extends BaseEvent {
     id: number
+    hasCollision: boolean
     pos: Vector
 }
 
