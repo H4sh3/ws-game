@@ -29,15 +29,11 @@ func NewHub(n int) *Hub {
 
 	resources := []resource.Resource{}
 
-	for y := 0; y < n; y++ {
-		for x := 0; x < n; x++ {
-			pos := shared.Vector{
-				X: x * 50,
-				Y: y * 50,
-			}
-			resources = append(resources, *resource.NewResource(resource.Iron, pos))
-		}
+	pos := shared.Vector{
+		X: 50,
+		Y: 50,
 	}
+	resources = append(resources, *resource.NewResource(resource.Iron, pos))
 
 	return &Hub{
 		broadcast:  make(chan []byte),
@@ -83,23 +79,48 @@ func (h *Hub) new_client(client *Client) {
 }
 
 func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
+
 	stepSize := 5
+	newPos := &shared.Vector{X: c.Pos.X, Y: c.Pos.Y}
 
 	if event.Key == "w" {
-		c.Pos.Y -= stepSize
+		newPos.Y -= stepSize
 	}
 
 	if event.Key == "a" {
-		c.Pos.X -= stepSize
+		newPos.X -= stepSize
 	}
 
 	if event.Key == "s" {
-		c.Pos.Y += stepSize
+		newPos.Y += stepSize
 	}
 
 	if event.Key == "d" {
-		c.Pos.X += stepSize
+		newPos.X += stepSize
 	}
 
+	collision := false
+	for _, resource := range h.Resources {
+		pL := newPos.X
+		pR := newPos.X + 50
+		pT := newPos.Y
+		pB := newPos.Y + 50
+		rL := resource.Pos.X
+		rR := resource.Pos.X + 50
+		rT := resource.Pos.Y
+		rB := resource.Pos.Y + 50
+		cond1 := pL > rR
+		cond2 := pR < rL
+		cond3 := pT > rB
+		cond4 := pB < rT
+		if !(cond1 || cond2 || cond3 || cond4) {
+			collision = true
+			break
+		}
+	}
+
+	if !collision {
+		c.Pos = *newPos
+	}
 	h.broadcast <- events.NewPlayerTargetPositionEvent(c.Pos, c.Id)
 }

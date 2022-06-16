@@ -144,8 +144,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 		return
 	}
 
-	spawnRange := 100
-	clientPostion := shared.Vector{X: shared.RandIntInRange(-spawnRange, spawnRange), Y: shared.RandIntInRange(-spawnRange, spawnRange)}
+	clientPostion := shared.Vector{X: 0, Y: 0}
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: clientPostion}
 	client.send <- events.GetAssignUserIdEvent(id_cnt)
 
