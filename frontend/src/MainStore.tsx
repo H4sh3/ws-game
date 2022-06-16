@@ -84,7 +84,7 @@ export const useMainStore = create(
 
                     if (p) {
                         if (id === state.playerId) {
-                            if (p.targetPos.dist(pos) > 100) {
+                            if (p.targetPos.x !== pos.x && p.targetPos.y !== pos.y) {
                                 p.targetPos = pos
                             }
                         } else {
