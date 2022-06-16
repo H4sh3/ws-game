@@ -32,7 +32,7 @@ func NewHub(n int) *Hub {
 	for i := 0; i < n; i++ {
 		pos := shared.Vector{
 			X: 100 * i,
-			Y: 50,
+			Y: 100,
 		}
 		resources = append(resources, *resource.NewResource(resource.Iron, pos))
 	}
@@ -113,5 +113,5 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 		c.Pos = *newPos
 	}
 
-	h.broadcast <- events.NewPlayerTargetPositionEvent(c.Pos, c.Id, collision)
+	h.broadcast <- events.NewPlayerTargetPositionEvent(c.Pos, c.Id)
 }

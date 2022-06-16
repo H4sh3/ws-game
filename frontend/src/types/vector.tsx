@@ -1,7 +1,13 @@
 
 import { degToRad, radToDeg } from "../etc/math";
 
-export class Vector {
+
+export interface IVector {
+    x: number
+    y: number
+}
+
+export class Vector implements IVector {
     x: number
     y: number
 

@@ -1,7 +1,7 @@
 import create from 'zustand';
 import { combine } from 'zustand/middleware';
 import produce from 'immer';
-import { createVector, getKeyBoardEvent, KeyStates, Resource } from './types/events';
+import { createVector, getKeyBoardEvent, IResource, KeyStates, Resource } from './types/events';
 import Vector from './types/vector';
 import { Player } from './types/player';
 
@@ -78,13 +78,8 @@ export const useMainStore = create(
                     draftState.players = state.players.filter(p => p.id !== id)
                 }));
             },
-            setPlayerTargetPos: (id: number, pos: Vector, hasCollision: boolean) => {
+            setPlayerTargetPos: (id: number, pos: Vector) => {
                 set((state) => produce(state, draftState => {
-
-                    if (id === state.playerId && !hasCollision) {
-                        return
-                    }
-
                     const p = state.players.find(p => p.id == id)
 
                     if (p) {
@@ -97,9 +92,15 @@ export const useMainStore = create(
                     draftState.ws = ws
                 }));
             },
-            setResources: (resources: Resource[]) => {
+            setResources: (resources: IResource[]) => {
                 set((state) => produce(state, draftState => {
-                    draftState.resources = resources
+                    draftState.resources = resources.map(r => {
+                        return {
+                            capacity: r.capacity,
+                            pos: createVector(r.pos.x, r.pos.y),
+                            resourceType: r.resourceType
+                        }
+                    })
                 }));
             },
             getPlayerArr: (): Player[] => {
@@ -148,25 +149,30 @@ export const useMainStore = create(
                             const value = state.keyboardInputHandler.keys.get(key)
                             if (value == KeyStates.DOWN) {
 
+                                const newPos = player.targetPos.copy()
+
                                 const stepSize = 5
 
                                 if (key == "w") {
-                                    player.targetPos.y -= stepSize
+                                    newPos.y -= stepSize
                                 }
 
                                 if (key == "a") {
-                                    player.targetPos.x -= stepSize
+                                    newPos.x -= stepSize
                                 }
 
                                 if (key == "s") {
-                                    player.targetPos.y += stepSize
+                                    newPos.y += stepSize
                                 }
 
                                 if (key == "d") {
-                                    player.targetPos.x += stepSize
+                                    newPos.x += stepSize
                                 }
 
-                                if (state.ws !== undefined) {
+                                const hasCollision = state.resources.some(r => r.pos.dist(newPos) < 40)
+
+                                if (state.ws !== undefined && !hasCollision) {
+                                    player.targetPos = newPos
                                     state.ws.send(JSON.stringify(getKeyBoardEvent(key, value, state.playerId)))
                                 }
                             }

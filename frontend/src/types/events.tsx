@@ -1,5 +1,5 @@
 import { EVENT_TYPES } from "../const"
-import Vector from "./vector"
+import Vector, { IVector } from "./vector"
 
 export function createVector(x: number, y: number): Vector {
     return new Vector(x, y)
@@ -50,7 +50,6 @@ export interface KeyChangeEvent extends BaseEvent {
 
 export interface PlayerTargetPositionEvent extends BaseEvent {
     id: number
-    hasCollision: boolean
     pos: Vector
 }
 
@@ -96,6 +95,14 @@ export enum KeyStates {
     DOWN
 }
 
+export interface IResource {
+    resourceType: string,
+    pos: IVector,
+    capacity: {
+        current: number,
+        max: number
+    }
+}
 
 export interface Resource {
     resourceType: string,
