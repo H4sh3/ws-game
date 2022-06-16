@@ -4,8 +4,8 @@ import { KeyStates, isNewPlayerEvent, isAssignUserIdEvent, isPlayerTargetPositio
 import { useMainStore } from './stores/MainStore'
 import { enableMapSet } from 'immer'
 import { wsUrl } from './etc/const'
-import { OtherPlayers, Player } from './entities/players'
-import { Resources } from './entities/resources'
+import { OtherPlayers, Player } from './components/players'
+import { Resources } from './components/resources'
 
 
 function App(): ReactElement {
