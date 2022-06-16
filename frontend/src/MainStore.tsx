@@ -81,8 +81,16 @@ export const useMainStore = create(
             setPlayerTargetPos: (id: number, pos: Vector) => {
                 set((state) => produce(state, draftState => {
                     const p = state.players.find(p => p.id == id)
+
                     if (p) {
-                        p.targetPos = pos
+
+                        if (id === state.playerId) {
+                            if (p.targetPos.dist(pos) > 10) {
+                                p.targetPos = pos
+                            }
+                        } else {
+                            p.targetPos = pos
+                        }
                     }
                 }));
             },
