@@ -148,24 +148,24 @@ export const useMainStore = create(
                         VALID_KEYS.forEach(key => {
                             const value = state.keyboardInputHandler.keys.get(key)
                             if (value == KeyStates.DOWN) {
-
-                                const stepSize = 5
-
-                                if (key == "w") {
-                                    player.targetPos.y -= stepSize
-                                }
-
-                                if (key == "a") {
-                                    player.targetPos.x -= stepSize
-                                }
-
-                                if (key == "s") {
-                                    player.targetPos.y += stepSize
-                                }
-
-                                if (key == "d") {
-                                    player.targetPos.x += stepSize
-                                }
+                                /* 
+                                                                const stepSize = 5
+                                
+                                                                if (key == "w") {
+                                                                    player.targetPos.y -= stepSize
+                                                                }
+                                
+                                                                if (key == "a") {
+                                                                    player.targetPos.x -= stepSize
+                                                                }
+                                
+                                                                if (key == "s") {
+                                                                    player.targetPos.y += stepSize
+                                                                }
+                                
+                                                                if (key == "d") {
+                                                                    player.targetPos.x += stepSize
+                                                                } */
 
                                 if (state.ws !== undefined) {
                                     state.ws.send(JSON.stringify(getKeyBoardEvent(key, value, state.playerId)))
