@@ -3,9 +3,10 @@ import { Stage, Sprite, Container, useTick } from '@inlet/react-pixi'
 import { KeyStates, isNewPlayerEvent, isAssignUserIdEvent, isPlayerTargetPositionEvent, isResourcePositionsEvent, createVector, isPlayerDisconnectedEvent } from './types/events'
 import { useMainStore } from './MainStore'
 import { enableMapSet } from 'immer'
-import { ASSETS, playerFrames } from './const'
+import { ASSETS, playerFrames, wsUrl } from './const'
 
 
+import * as PIXI from "pixi.js";
 
 
 
@@ -20,12 +21,72 @@ function Player(): ReactElement {
     return <></>
   }
 
+  const textures = [
+    PIXI.Texture.from(`/assets/${playerFrames[0]}`),
+    PIXI.Texture.from(`/assets/${playerFrames[1]}`),
+    PIXI.Texture.from(`/assets/${playerFrames[2]}`),
+    PIXI.Texture.from(`/assets/${playerFrames[3]}`)
+  ]
+
   return <Sprite
-    anchor={0}
-    x={125}
-    y={125}
-    image={`/assets/${playerFrames[getPlayerFrame()]}`}
+    anchor={0.5}
+    x={250}
+    y={250}
+    texture={textures[getPlayerFrame()]}
   />
+}
+
+interface ResourceProps {
+  x: number
+  y: number
+}
+
+const Resource: React.FunctionComponent<ResourceProps> = ({ x, y }) => {
+  const [hovered, setHovered] = useState(false)
+  return <Sprite
+    anchor={0.5}
+    scale={hovered ? 1.1 : 1}
+    x={x}
+    y={y}
+    interactive={true}
+    mouseover={() => setHovered(true)}
+    mouseout={() => setHovered(false)}
+    image={`/assets/${ASSETS.Iron}`}
+  />
+}
+
+function Resources(): ReactElement {
+  const { getResources, getPlayerPos } = useMainStore()
+
+  return <>
+    {
+      getResources().map((r, i) => {
+        return <Resource
+          key={i}
+          x={r.pos.x + 250 - getPlayerPos().x}
+          y={r.pos.y + 250 - getPlayerPos().y}
+        />
+      })
+    }
+  </>
+}
+
+const OtherPlayers: React.FunctionComponent = () => {
+  const { getOtherPlayers, getPlayerPos } = useMainStore()
+
+  return <>
+    {
+      getOtherPlayers().map((p, i) => {
+        return <Sprite
+          key={i}
+          anchor={0.5}
+          x={p.currentPos.x + 250 - getPlayerPos().x}
+          y={p.currentPos.y + 250 - getPlayerPos().y}
+          image={`/assets/${playerFrames[p.frame]}`}
+        />
+      })
+    }
+  </>
 }
 
 
@@ -33,17 +94,14 @@ function App(): ReactElement {
   enableMapSet()
   const [connected, setConnected] = useState(false)
 
-  const { playerId, setPlayerId, getPlayerArr, spawnPlayer, setPlayerTargetPos, setResources, getResources, getPlayerPos, getOtherPlayers,
+  const { playerId, setPlayerId, getPlayerArr, spawnPlayer, setPlayerTargetPos, setResources, getPlayerPos, getOtherPlayers,
     addKeyEvent, setWs, ws, removePlayer
   } = useMainStore()
 
   useEffect(() => {
     if (ws === undefined) {
-      const local = "ws://127.0.0.1:7777"
-      const prod = "wss://game.gymcadia.com/websocket"
-      const wsUrl = import.meta.env.MODE === 'development' ? local : prod
-      console.log(wsUrl)
-      let tmpWs = new WebSocket(wsUrl)
+
+      const tmpWs = new WebSocket(wsUrl)
 
       tmpWs.onerror = (error) => {
         console.log(error)
@@ -95,7 +153,7 @@ function App(): ReactElement {
   }
 
   return (
-    <div className=" w-full h-full bg-gray-500">
+    <div className=" w-full h-full bg-gray-500 select-none">
       <div className="flex flex-row justify-center h-full">
         <div className="flex flex-col justify-center">
           <div className="flex flex-row items-center gap-2">
@@ -117,28 +175,8 @@ function App(): ReactElement {
           </div>
           <Stage width={500} height={500} options={{ backgroundColor: 0xeef1f5 }}>
             <Container position={[0, 0]}>
-              {
-                getOtherPlayers().map((p, i) => {
-                  return <Sprite
-                    key={i}
-                    anchor={0}
-                    x={p.currentPos.x + 125 - getPlayerPos().x}
-                    y={p.currentPos.y + 125 - getPlayerPos().y}
-                    image={`/assets/${playerFrames[p.frame]}`}
-                  />
-                })
-              }
-              {
-                getResources().map((r, i) => {
-                  return <Sprite
-                    key={i}
-                    anchor={0}
-                    x={r.pos.x + 125 - getPlayerPos().x}
-                    y={r.pos.y + 125 - getPlayerPos().y}
-                    image={`/assets/${ASSETS.Iron}`}
-                  />
-                })
-              }
+              <OtherPlayers />
+              <Resources />
               <Player />
             </Container>
           </Stage>
