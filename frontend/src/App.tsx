@@ -17,10 +17,10 @@ function Player(): ReactElement {
   }
 
   return <Sprite
-    anchor={0.5}
+    anchor={0}
     x={125}
     y={125}
-    image="/assets/rabbit.png"
+    image="/assets/rabbitsq.png"
   />
 }
 
@@ -114,10 +114,10 @@ function App(): ReactElement {
                 getOtherPlayers().map((p, i) => {
                   return <Sprite
                     key={i}
-                    anchor={0.5}
+                    anchor={0}
                     x={p.currentPos.x + 125 - getPlayerPos().x}
                     y={p.currentPos.y + 125 - getPlayerPos().y}
-                    image="/assets/rabbit.png"
+                    image="/assets/rabbitsq.png"
                   />
                 })
               }
@@ -125,7 +125,7 @@ function App(): ReactElement {
                 getResources().map((r, i) => {
                   return <Sprite
                     key={i}
-                    anchor={0.5}
+                    anchor={0}
                     x={r.pos.x + 125 - getPlayerPos().x}
                     y={r.pos.y + 125 - getPlayerPos().y}
                     image="/assets/iron2.png"
