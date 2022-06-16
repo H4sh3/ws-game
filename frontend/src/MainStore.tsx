@@ -80,8 +80,9 @@ export const useMainStore = create(
             },
             setPlayerTargetPos: (id: number, pos: Vector) => {
                 set((state) => produce(state, draftState => {
-                    const p = state.players.find(p => p.id == id)
+                    if (id === state.playerId) return
 
+                    const p = state.players.find(p => p.id == id)
                     if (p) {
                         p.targetPos = pos
                     }
