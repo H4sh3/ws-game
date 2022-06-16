@@ -28,7 +28,7 @@ function Player(): ReactElement {
 
 function App(): ReactElement {
   enableMapSet()
-  const [connection, setConnection] = useState(false)
+  const [connected, setConnected] = useState(false)
 
   const { playerId, setPlayerId, getPlayerArr, spawnPlayer, setPlayerTargetPos, setResources, getResources, getPlayerPos, fps, getOtherPlayers,
     addKeyEvent, setWs, ws, removePlayer
@@ -47,7 +47,7 @@ function App(): ReactElement {
       }
 
       tmpWs.onopen = () => {
-        setConnection(true)
+        setConnected(true)
       }
 
       tmpWs.onmessage = (m) => {
@@ -88,21 +88,24 @@ function App(): ReactElement {
 
   }, [])
 
+  if (!connected) {
+    return <>loading...</>
+  }
+
   return (
     <div className=" w-full h-full bg-gray-500">
       <div className="flex flex-row justify-center h-full">
         <div className="flex flex-col justify-center">
-          <div>
-            {`Websocket: ${connection ? 'connected' : 'disconnected'}`}
+          <div className="flex flex-row items-center gap-2">
+            Connection
+            <div className={`${connected ? 'bg-green-500' : 'bg-red-500'} h-3 w-3 rounded-full`}>
+            </div>
           </div>
           <div>
             {`UserId: ${playerId}`}
           </div>
           <div>
             {`Players: ${getPlayerArr().length}`}
-          </div>
-          <div>
-            {fps}
           </div>
           <div>
             {`${getPlayerPos().x}`}
