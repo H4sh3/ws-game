@@ -1,9 +1,9 @@
 import create from 'zustand';
 import { combine } from 'zustand/middleware';
 import produce from 'immer';
-import { createVector, getKeyBoardEvent, IResource, KeyStates, Resource } from './types/events';
-import Vector from './types/vector';
-import { Player } from './types/player';
+import { createVector, getKeyBoardEvent, IResource, KeyStates, Resource } from '../types/events';
+import Vector from '../types/vector';
+import { Player } from '../types/player';
 
 
 const VALID_KEYS = ["w", "a", "s", "d"]

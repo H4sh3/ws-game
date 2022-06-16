@@ -1,4 +1,4 @@
-import { EVENT_TYPES } from "../const"
+import { EVENT_TYPES } from "../etc/const"
 import Vector, { IVector } from "./vector"
 
 export function createVector(x: number, y: number): Vector {

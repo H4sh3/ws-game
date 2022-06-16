@@ -1,93 +1,11 @@
 import { ReactElement, useEffect, useState } from 'react'
-import { Stage, Sprite, Container, useTick } from '@inlet/react-pixi'
+import { Stage, Container } from '@inlet/react-pixi'
 import { KeyStates, isNewPlayerEvent, isAssignUserIdEvent, isPlayerTargetPositionEvent, isResourcePositionsEvent, createVector, isPlayerDisconnectedEvent } from './types/events'
-import { useMainStore } from './MainStore'
+import { useMainStore } from './stores/MainStore'
 import { enableMapSet } from 'immer'
-import { ASSETS, playerFrames, wsUrl } from './const'
-
-
-import * as PIXI from "pixi.js";
-
-
-
-function Player(): ReactElement {
-  const { playerId, updatePlayerPositions, getPlayerFrame } = useMainStore()
-
-  useTick(delta => {
-    updatePlayerPositions(delta)
-  })
-
-  if (playerId == -1) {
-    return <></>
-  }
-
-  const textures = [
-    PIXI.Texture.from(`/assets/${playerFrames[0]}`),
-    PIXI.Texture.from(`/assets/${playerFrames[1]}`),
-    PIXI.Texture.from(`/assets/${playerFrames[2]}`),
-    PIXI.Texture.from(`/assets/${playerFrames[3]}`)
-  ]
-
-  return <Sprite
-    anchor={0.5}
-    x={250}
-    y={250}
-    texture={textures[getPlayerFrame()]}
-  />
-}
-
-interface ResourceProps {
-  x: number
-  y: number
-}
-
-const Resource: React.FunctionComponent<ResourceProps> = ({ x, y }) => {
-  const [hovered, setHovered] = useState(false)
-  return <Sprite
-    anchor={0.5}
-    scale={hovered ? 1.1 : 1}
-    x={x}
-    y={y}
-    interactive={true}
-    mouseover={() => setHovered(true)}
-    mouseout={() => setHovered(false)}
-    image={`/assets/${ASSETS.Iron}`}
-  />
-}
-
-function Resources(): ReactElement {
-  const { getResources, getPlayerPos } = useMainStore()
-
-  return <>
-    {
-      getResources().map((r, i) => {
-        return <Resource
-          key={i}
-          x={r.pos.x + 250 - getPlayerPos().x}
-          y={r.pos.y + 250 - getPlayerPos().y}
-        />
-      })
-    }
-  </>
-}
-
-const OtherPlayers: React.FunctionComponent = () => {
-  const { getOtherPlayers, getPlayerPos } = useMainStore()
-
-  return <>
-    {
-      getOtherPlayers().map((p, i) => {
-        return <Sprite
-          key={i}
-          anchor={0.5}
-          x={p.currentPos.x + 250 - getPlayerPos().x}
-          y={p.currentPos.y + 250 - getPlayerPos().y}
-          image={`/assets/${playerFrames[p.frame]}`}
-        />
-      })
-    }
-  </>
-}
+import { wsUrl } from './etc/const'
+import { OtherPlayers, Player } from './entities/players'
+import { Resources } from './entities/resources'
 
 
 function App(): ReactElement {
