@@ -7,3 +7,8 @@ export enum EVENT_TYPES {
     RESOURCE_POSITIONS_EVENT = "RESOURCE_POSITIONS_EVENT",
     PLAYER_DISCONNECTED_EVENT = "PLAYER_DISCONNECTED_EVENT"
 }
+
+export enum ASSETS {
+    Player = "player.png",
+    Iron = "iron.png"
+}

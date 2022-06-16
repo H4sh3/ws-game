@@ -3,6 +3,7 @@ import { Stage, Sprite, Container, useTick } from '@inlet/react-pixi'
 import { KeyStates, isNewPlayerEvent, isAssignUserIdEvent, isPlayerTargetPositionEvent, isResourcePositionsEvent, createVector, isPlayerDisconnectedEvent } from './types/events'
 import { useMainStore } from './MainStore'
 import { enableMapSet } from 'immer'
+import { ASSETS } from './const'
 
 
 function Player(): ReactElement {
@@ -20,7 +21,7 @@ function Player(): ReactElement {
     anchor={0}
     x={125}
     y={125}
-    image="/assets/rabbitsq.png"
+    image={`/assets/${ASSETS.Player}`}
   />
 }
 
@@ -118,7 +119,7 @@ function App(): ReactElement {
                     anchor={0}
                     x={p.currentPos.x + 125 - getPlayerPos().x}
                     y={p.currentPos.y + 125 - getPlayerPos().y}
-                    image="/assets/rabbitsq.png"
+                    image={`/assets/${ASSETS.Player}`}
                   />
                 })
               }
@@ -129,7 +130,7 @@ function App(): ReactElement {
                     anchor={0}
                     x={r.pos.x + 125 - getPlayerPos().x}
                     y={r.pos.y + 125 - getPlayerPos().y}
-                    image="/assets/iron2.png"
+                    image={`/assets/${ASSETS.Iron}`}
                   />
                 })
               }
