@@ -5,7 +5,6 @@ import { useMainStore } from './MainStore'
 import { enableMapSet } from 'immer'
 
 
-
 function Player(): ReactElement {
   const { playerId, updatePlayerPositions } = useMainStore()
 
@@ -36,8 +35,8 @@ function App(): ReactElement {
 
   useEffect(() => {
     if (ws === undefined) {
-      const local = "ws://127.0.0.1:7777/ws"
-      const prod = "wss://api.gymcadia.com"
+      const local = "ws://127.0.0.1:7777"
+      const prod = "wss://game.gymcadia.com/websocket"
       let tmpWs = new WebSocket(prod)
 
       tmpWs.onerror = (error) => {

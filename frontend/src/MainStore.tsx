@@ -145,7 +145,7 @@ export const useMainStore = create(
                             const value = state.keyboardInputHandler.keys.get(key)
                             if (value == KeyStates.DOWN) {
 
-                                const stepSize = 50
+                                const stepSize = 5
 
                                 // if key is pressed we move in the same direction after a certain distance has passed
                                 if (player.targetPos.dist(player.currentPos) < 25) {

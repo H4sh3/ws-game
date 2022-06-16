@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
-
 	"ws-game/events"
 	"ws-game/shared"
 
@@ -75,7 +75,7 @@ func (c *Client) readPump() {
 		_, message, err := c.conn.ReadMessage()
 
 		// all message recieved from client get unmarshalled to structs
-		UnmarshalClientEvents(message, c.hub)
+		UnmarshalClientEvents(message, c.hub, c)
 
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
@@ -135,7 +135,8 @@ func (client *Client) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
+	m.Lock()
 	conn, err := upgrader.Upgrade(w, r, nil)
 
 	if err != nil {
@@ -143,7 +144,9 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: shared.Vector{X: shared.RandIntInRange(-75, 75), Y: shared.RandIntInRange(-75, 75)}}
+	spawnRange := 100
+	clientPostion := shared.Vector{X: shared.RandIntInRange(-spawnRange, spawnRange), Y: shared.RandIntInRange(-spawnRange, spawnRange)}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: clientPostion}
 	client.send <- events.GetAssignUserIdEvent(id_cnt)
 
 	// provide the new player with all players positions
@@ -163,13 +166,14 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	// new goroutines.
 	go client.writePump()
 	go client.readPump()
+	m.Unlock()
 }
 
-func UnmarshalClientEvents(jsonInput []byte, h *Hub) {
+func UnmarshalClientEvents(jsonInput []byte, h *Hub, c *Client) {
 	event_data := &events.BaseEvent{}
 	if err := json.Unmarshal(jsonInput, &event_data); err != nil {
-		x := fmt.Sprintf("Non event message %s", string(jsonInput))
-		println(x)
+		fmt.Println("Error unmarshalling Event:")
+		fmt.Println(jsonInput)
 		return
 	}
 
@@ -180,11 +184,6 @@ func UnmarshalClientEvents(jsonInput []byte, h *Hub) {
 			panic(err)
 		}
 
-		for client := range h.clients {
-			if client.Id == keyboardEvent.Id {
-				h.handleMovementEvent(*keyboardEvent, client)
-			}
-		}
-
+		h.handleMovementEvent(*keyboardEvent, c)
 	}
 }

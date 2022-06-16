@@ -140,5 +140,4 @@ type BaseEvent struct {
 type KeyBoardEvent struct {
 	Key   string `json:"key"`
 	Value int    `json:"value"`
-	Id    int    `json:"id"`
 }

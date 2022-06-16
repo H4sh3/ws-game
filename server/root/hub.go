@@ -75,7 +75,7 @@ func (h *Hub) new_client(client *Client) {
 }
 
 func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
-	stepSize := 50
+	stepSize := 5
 
 	if event.Key == "w" {
 		c.Pos.Y -= stepSize
@@ -93,8 +93,5 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 		c.Pos.X += stepSize
 	}
 
-	e := events.NewPlayerTargetPositionEvent(c.Pos, event.Id)
-	for client := range h.clients {
-		client.send <- e
-	}
+	h.broadcast <- events.NewPlayerTargetPositionEvent(c.Pos, c.Id)
 }
