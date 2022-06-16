@@ -102,7 +102,7 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 	}
 
 	collision := false
-	for _, resource := range h.Resources {
+	/* 	for _, resource := range h.Resources {
 
 		pL := newPos.X
 		pR := newPos.X + 50
@@ -125,7 +125,7 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 		//			collision = true
 		//			break
 		//		}
-	}
+	} */
 
 	if !collision {
 		c.Pos = *newPos
