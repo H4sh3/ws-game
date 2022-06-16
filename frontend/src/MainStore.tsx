@@ -83,13 +83,13 @@ export const useMainStore = create(
                     const p = state.players.find(p => p.id == id)
 
                     if (p) {
-                        if (id === state.playerId) {
+                        p.targetPos = pos
+                        /* if (id === state.playerId) {
                             if (p.targetPos.x !== pos.x && p.targetPos.y !== pos.y) {
                                 p.targetPos = pos
                             }
                         } else {
-                            p.targetPos = pos
-                        }
+                        } */
                     }
                 }));
             },
@@ -151,31 +151,27 @@ export const useMainStore = create(
 
                                 const stepSize = 5
 
-                                // if key is pressed we move in the same direction after a certain distance has passed
-                                if (player.targetPos.dist(player.currentPos) < 25) {
-                                    if (key == "w") {
-                                        player.targetPos.y -= stepSize
-                                    }
+                                if (key == "w") {
+                                    player.targetPos.y -= stepSize
+                                }
 
-                                    if (key == "a") {
-                                        player.targetPos.x -= stepSize
-                                    }
+                                if (key == "a") {
+                                    player.targetPos.x -= stepSize
+                                }
 
-                                    if (key == "s") {
-                                        player.targetPos.y += stepSize
-                                    }
+                                if (key == "s") {
+                                    player.targetPos.y += stepSize
+                                }
 
-                                    if (key == "d") {
-                                        player.targetPos.x += stepSize
-                                    }
+                                if (key == "d") {
+                                    player.targetPos.x += stepSize
+                                }
 
-                                    if (state.ws !== undefined) {
-                                        state.ws.send(JSON.stringify(getKeyBoardEvent(key, value, state.playerId)))
-                                    }
+                                if (state.ws !== undefined) {
+                                    state.ws.send(JSON.stringify(getKeyBoardEvent(key, value, state.playerId)))
                                 }
                             }
                         })
-
                     }
 
                 }));
