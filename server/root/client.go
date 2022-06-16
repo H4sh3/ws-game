@@ -183,5 +183,15 @@ func UnmarshalClientEvents(jsonInput []byte, h *Hub, c *Client) {
 		}
 
 		h.handleMovementEvent(*keyboardEvent, c)
+
+	case events.HIT_RESOURCE_EVENT:
+		event := &events.HitResourceEvent{}
+		if err := json.Unmarshal(event_data.Payload, &event); err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("resource id: %d\n", event.Id)
+		fmt.Printf("used skill: %s\n", event.Skill)
+		h.HandleResourceHit(*event, c)
 	}
 }

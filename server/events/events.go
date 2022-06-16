@@ -17,6 +17,8 @@ const (
 	PLAYER_TARGET_POSITION_EVENT EventType = "PLAYER_TARGET_POSITION_EVENT"
 	RESOURCE_POSITIONS_EVENT     EventType = "RESOURCE_POSITIONS_EVENT"
 	PLAYER_DISCONNECTED_EVENT    EventType = "PLAYER_DISCONNECTED_EVENT"
+	HIT_RESOURCE_EVENT           EventType = "HIT_RESOURCE_EVENT"
+	UPDATE_RESOURCE_EVENT        EventType = "UPDATE_RESOURCE_EVENT"
 )
 
 type NewPlayerEvent struct {
@@ -130,6 +132,25 @@ func NewPlayerDisconnectedEvent(id int) []byte {
 	}
 }
 
+type UpdateResourceEvent struct {
+	EventType EventType          `json:"eventType"`
+	Id        int                `json:"id"`
+	Hitpoints resource.Hitpoints `json:"hitpoints"`
+}
+
+func NewUpdateResourceEvent(id int, currentHp int, maxHp int) []byte {
+	u := &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Hitpoints: resource.Hitpoints{Current: currentHp, Max: maxHp}}
+
+	value, err := json.Marshal(u)
+
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return []byte{}
+	} else {
+		return value
+	}
+}
+
 // read events from clients
 
 type BaseEvent struct {
@@ -140,4 +161,9 @@ type BaseEvent struct {
 type KeyBoardEvent struct {
 	Key   string `json:"key"`
 	Value int    `json:"value"`
+}
+
+type HitResourceEvent struct {
+	Skill string `json:"skill"`
+	Id    int    `json:"id"`
 }

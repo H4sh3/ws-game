@@ -34,7 +34,7 @@ func NewHub(n int) *Hub {
 			X: 100 * i,
 			Y: 100,
 		}
-		resources = append(resources, *resource.NewResource(resource.Iron, pos))
+		resources = append(resources, *resource.NewResource(resource.Iron, pos, i))
 	}
 
 	return &Hub{
@@ -114,4 +114,24 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 	}
 
 	h.broadcast <- events.NewPlayerTargetPositionEvent(c.Pos, c.Id)
+}
+
+func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
+	toRemoveIndex := -1
+	for i := range h.Resources {
+		if h.Resources[i].Id == event.Id {
+			resource := &h.Resources[i]
+			resource.Hitpoints.Current -= 10
+			h.broadcast <- events.NewUpdateResourceEvent(resource.Id, resource.Hitpoints.Current, resource.Hitpoints.Max)
+
+			if resource.Hitpoints.Current <= 0 {
+				toRemoveIndex = i
+			}
+		}
+	}
+
+	// resource got destroyed -> remove resource
+	if toRemoveIndex != -1 {
+		h.Resources = append(h.Resources[:toRemoveIndex], h.Resources[toRemoveIndex+1:]...)
+	}
 }

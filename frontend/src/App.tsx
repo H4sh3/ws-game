@@ -1,6 +1,6 @@
 import { ReactElement, useEffect, useState } from 'react'
 import { Stage, Container } from '@inlet/react-pixi'
-import { KeyStates, isNewPlayerEvent, isAssignUserIdEvent, isPlayerTargetPositionEvent, isResourcePositionsEvent, createVector, isPlayerDisconnectedEvent } from './types/events'
+import { KeyStates, isNewPlayerEvent, isAssignUserIdEvent, isPlayerTargetPositionEvent, isResourcePositionsEvent, createVector, isPlayerDisconnectedEvent, isUpdateResourceEvent } from './types/events'
 import { useMainStore } from './stores/MainStore'
 import { enableMapSet } from 'immer'
 import { wsUrl } from './etc/const'
@@ -12,8 +12,8 @@ function App(): ReactElement {
   enableMapSet()
   const [connected, setConnected] = useState(false)
 
-  const { playerId, setPlayerId, getPlayerArr, spawnPlayer, setPlayerTargetPos, setResources, getPlayerPos, getOtherPlayers,
-    addKeyEvent, setWs, ws, removePlayer
+  const { playerId, setPlayerId, getPlayerArr, spawnPlayer, setPlayerTargetPos, setResources, getPlayerPos,
+    addKeyEvent, setWs, ws, removePlayer, handleResourceHit
   } = useMainStore()
 
   useEffect(() => {
@@ -57,6 +57,8 @@ function App(): ReactElement {
               setResources(parsed.resources)
             } else if (isPlayerDisconnectedEvent(parsed)) {
               removePlayer(parsed.id)
+            } else if (isUpdateResourceEvent(parsed)) {
+              handleResourceHit(parsed)
             }
           })
         }

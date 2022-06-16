@@ -13,7 +13,7 @@ const (
 	Gold   ResourceType = "gold"
 )
 
-type Capacity struct {
+type Hitpoints struct {
 	Current int `json:"current"`
 	Max     int `json:"max"`
 }
@@ -21,14 +21,16 @@ type Capacity struct {
 type Resource struct {
 	ResourceType ResourceType  `json:"resourceType"`
 	Pos          shared.Vector `json:"pos"`
-	Capacity     Capacity      `json:"capacity"`
+	Id           int           `json:"id"`
+	Hitpoints    Hitpoints     `json:"hitpoints"`
 }
 
-func NewResource(resourceType ResourceType, pos shared.Vector) *Resource {
+func NewResource(resourceType ResourceType, pos shared.Vector, id int) *Resource {
 	return &Resource{
 		ResourceType: resourceType,
 		Pos:          pos,
-		Capacity: Capacity{
+		Id:           id,
+		Hitpoints: Hitpoints{
 			Current: 100,
 			Max:     100,
 		},

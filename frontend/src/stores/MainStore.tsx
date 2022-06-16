@@ -1,7 +1,7 @@
 import create from 'zustand';
 import { combine } from 'zustand/middleware';
 import produce from 'immer';
-import { createVector, getKeyBoardEvent, IResource, KeyStates, Resource } from '../types/events';
+import { createVector, getKeyBoardEvent, IResource, KeyStates, Resource, UpdateResourceEvent } from '../types/events';
 import Vector from '../types/vector';
 import { Player } from '../types/player';
 
@@ -97,7 +97,8 @@ export const useMainStore = create(
                 set((state) => produce(state, draftState => {
                     draftState.resources = resources.map(r => {
                         return {
-                            capacity: r.capacity,
+                            hitpoints: r.hitpoints,
+                            id: r.id,
                             pos: createVector(r.pos.x, r.pos.y),
                             resourceType: r.resourceType
                         }
@@ -191,6 +192,20 @@ export const useMainStore = create(
             addKeyEvent: (key: string, value: KeyStates) => {
                 set((state) => produce(state, draftState => {
                     draftState.keyboardInputHandler.keyChange(key, value)
+                }));
+            },
+            handleResourceHit: (event: UpdateResourceEvent) => {
+                set((state) => produce(state, draftState => {
+                    const resource = draftState.resources.find(r => r.id === event.id)
+                    if (resource !== undefined) {
+                        // resource hitpoints less then equal to 0 -> remove
+                        if (event.hitpoints.current === 0) {
+                            draftState.resources = draftState.resources.filter(r => r.id !== event.id)
+                        } else {
+                            resource.hitpoints.current = event.hitpoints.current
+                            resource.hitpoints.max = event.hitpoints.max
+                        }
+                    }
                 }));
             },
         })

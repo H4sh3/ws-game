@@ -44,7 +44,6 @@ export interface KeyChangeEvent extends BaseEvent {
     payload: {
         key: string,
         value: KeyStates,
-        id: number
     }
 }
 
@@ -78,6 +77,23 @@ export function getKeyBoardEvent(key: string, value: KeyStates, id: number): Key
         "payload": {
             "key": key,
             "value": value,
+        }
+    }
+}
+
+
+interface HitResourceEvent extends BaseEvent {
+    payload: {
+        skill: string,
+        id: number,
+    }
+}
+
+export function getHitResourceEvent(skill: string, id: number): HitResourceEvent {
+    return {
+        "eventType": EVENT_TYPES.HIT_RESOURCE_EVENT,
+        "payload": {
+            "skill": skill,
             "id": id,
         }
     }
@@ -98,19 +114,23 @@ export enum KeyStates {
 export interface IResource {
     resourceType: string,
     pos: IVector,
-    capacity: {
+    id: number,
+    hitpoints: {
         current: number,
         max: number
     }
 }
 
+export interface Hitpoints {
+    current: number,
+    max: number
+}
+
 export interface Resource {
     resourceType: string,
+    id: number,
     pos: Vector,
-    capacity: {
-        current: number,
-        max: number
-    }
+    hitpoints: Hitpoints
 }
 
 interface ResourcePositionsEvent extends BaseEvent {
@@ -121,5 +141,17 @@ export function isResourcePositionsEvent(value: any): value is ResourcePositions
     return (
         isBaseEvent(value) &&
         value.eventType === EVENT_TYPES.RESOURCE_POSITIONS_EVENT
+    )
+}
+
+export interface UpdateResourceEvent {
+    id: number,
+    hitpoints: Hitpoints
+}
+
+export function isUpdateResourceEvent(value: any): value is UpdateResourceEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType === EVENT_TYPES.UPDATE_RESOURCE_EVENT
     )
 }
