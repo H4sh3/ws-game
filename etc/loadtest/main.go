@@ -11,8 +11,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// game.gymcadia.com
-var addr = flag.String("addr", "localhost:7777", "http service address")
+const prod = "game.gymcadia.com"
+
+//local := "localhost:7777"
+var addr = flag.String("addr", prod, "http service address")
 
 type EventType string
 type BaseEvent struct {
@@ -27,7 +29,7 @@ type KeyBoardEvent struct {
 }
 
 func runClient() {
-	u := url.URL{Scheme: "ws", Host: *addr, Path: "/"}
+	u := url.URL{Scheme: "wss", Host: *addr, Path: "/websocket"}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		log.Fatal("dial:", err)
@@ -37,7 +39,7 @@ func runClient() {
 	done := make(chan struct{})
 	Keys := []string{"w", "a", "s", "d"}
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10000; i++ {
 		randomIndex := rand.Intn(len(Keys))
 		pick := Keys[randomIndex]
 		p := &KeyBoardEvent{
@@ -53,7 +55,7 @@ func runClient() {
 
 		if err == nil {
 			c.WriteMessage(websocket.TextMessage, j)
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond * 1000)
 		}
 	}
 
@@ -61,8 +63,8 @@ func runClient() {
 }
 
 func main() {
-	for i := 0; i < 500; i++ {
+	for i := 0; i < 200; i++ {
 		go runClient()
 	}
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 1000)
 }

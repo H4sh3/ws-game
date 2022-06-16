@@ -24,14 +24,10 @@ type Resource struct {
 	Capacity     Capacity      `json:"capacity"`
 }
 
-func NewResource(resourceType ResourceType) *Resource {
-	r := 10
+func NewResource(resourceType ResourceType, pos shared.Vector) *Resource {
 	return &Resource{
 		ResourceType: resourceType,
-		Pos: shared.Vector{
-			X: shared.RandIntInRange(-r, r) * 10,
-			Y: shared.RandIntInRange(-r, r) * 10,
-		},
+		Pos:          pos,
 		Capacity: Capacity{
 			Current: 100,
 			Max:     100,

@@ -3,6 +3,7 @@ package root
 import (
 	"ws-game/events"
 	"ws-game/resource"
+	"ws-game/shared"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -27,8 +28,15 @@ type Hub struct {
 func NewHub(n int) *Hub {
 
 	resources := []resource.Resource{}
-	for i := 0; i < n; i++ {
-		resources = append(resources, *resource.NewResource(resource.Iron))
+
+	for y := 0; y < n; y++ {
+		for x := 0; x < n; x++ {
+			pos := shared.Vector{
+				X: x * 50,
+				Y: y * 50,
+			}
+			resources = append(resources, *resource.NewResource(resource.Iron, pos))
+		}
 	}
 
 	return &Hub{

@@ -37,7 +37,7 @@ function App(): ReactElement {
     if (ws === undefined) {
       const local = "ws://127.0.0.1:7777"
       const prod = "wss://game.gymcadia.com/websocket"
-      let tmpWs = new WebSocket(prod)
+      let tmpWs = new WebSocket(local)
 
       tmpWs.onerror = (error) => {
         console.log(error)
@@ -86,52 +86,56 @@ function App(): ReactElement {
   }, [])
 
   return (
-    <div className="flex flex-col justify-center">
-      <div>
-        {`Websocket: ${connection ? 'connected' : 'disconnected'}`}
+    <div className=" w-full h-full bg-gray-500">
+      <div className="flex flex-row justify-center h-full">
+        <div className="flex flex-col justify-center">
+          <div>
+            {`Websocket: ${connection ? 'connected' : 'disconnected'}`}
+          </div>
+          <div>
+            {`UserId: ${playerId}`}
+          </div>
+          <div>
+            {`Players: ${getPlayerArr().length}`}
+          </div>
+          <div>
+            {fps}
+          </div>
+          <div>
+            {`${getPlayerPos().x}`}
+          </div>
+          <div>
+            {`${getPlayerPos().y}`}
+          </div>
+          <Stage width={500} height={500} options={{ backgroundColor: 0xeef1f5 }}>
+            <Container position={[0, 0]}>
+              <Player />
+              {
+                getOtherPlayers().map((p, i) => {
+                  return <Sprite
+                    key={i}
+                    anchor={0.5}
+                    x={p.currentPos.x + 125 - getPlayerPos().x}
+                    y={p.currentPos.y + 125 - getPlayerPos().y}
+                    image="/assets/rabbit.png"
+                  />
+                })
+              }
+              {
+                getResources().map((r, i) => {
+                  return <Sprite
+                    key={i}
+                    anchor={0.5}
+                    x={r.pos.x + 125 - getPlayerPos().x}
+                    y={r.pos.y + 125 - getPlayerPos().y}
+                    image="/assets/iron2.png"
+                  />
+                })
+              }
+            </Container>
+          </Stage>
+        </div>
       </div>
-      <div>
-        {`UserId: ${playerId}`}
-      </div>
-      <div>
-        {`Players: ${getPlayerArr().length}`}
-      </div>
-      <div>
-        {fps}
-      </div>
-      <div>
-        {`${getPlayerPos().x}`}
-      </div>
-      <div>
-        {`${getPlayerPos().y}`}
-      </div>
-      <Stage width={300} height={300} options={{ backgroundColor: 0xeef1f5 }}>
-        <Container position={[0, 0]}>
-          <Player />
-          {
-            getOtherPlayers().map((p, i) => {
-              return <Sprite
-                key={i}
-                anchor={0.5}
-                x={p.currentPos.x + 125 - getPlayerPos().x}
-                y={p.currentPos.y + 125 - getPlayerPos().y}
-                image="/assets/rabbit.png"
-              />
-            })
-          }
-          {
-            getResources().map((r, i) => {
-              return <Sprite
-                key={i}
-                anchor={0.5}
-                x={r.pos.x + 125 - getPlayerPos().x}
-                y={r.pos.y + 125 - getPlayerPos().y}
-                image="/assets/iron.png"
-              />
-            })
-          }
-        </Container>
-      </Stage>
     </div>
   )
 }
