@@ -3,7 +3,7 @@ import { Stage, Sprite, Container, useTick } from '@inlet/react-pixi'
 import { KeyStates, isNewPlayerEvent, isAssignUserIdEvent, isPlayerTargetPositionEvent, isResourcePositionsEvent, createVector, isPlayerDisconnectedEvent } from './types/events'
 import { useMainStore } from './MainStore'
 import { enableMapSet } from 'immer'
-import { ASSETS, getPlayerFrame, playerFrames } from './const'
+import { ASSETS, playerFrames } from './const'
 
 
 
@@ -33,7 +33,7 @@ function App(): ReactElement {
   enableMapSet()
   const [connected, setConnected] = useState(false)
 
-  const { playerId, setPlayerId, getPlayerArr, spawnPlayer, setPlayerTargetPos, setResources, getResources, getPlayerPos, fps, getOtherPlayers,
+  const { playerId, setPlayerId, getPlayerArr, spawnPlayer, setPlayerTargetPos, setResources, getResources, getPlayerPos, getOtherPlayers,
     addKeyEvent, setWs, ws, removePlayer
   } = useMainStore()
 
