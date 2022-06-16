@@ -13,8 +13,9 @@ import (
 
 const prod = "game.gymcadia.com"
 
-//local := "localhost:7777"
-var addr = flag.String("addr", prod, "http service address")
+const local = "localhost:7777"
+
+var addr = flag.String("addr", local, "http service address")
 
 type EventType string
 type BaseEvent struct {
@@ -29,7 +30,7 @@ type KeyBoardEvent struct {
 }
 
 func runClient() {
-	u := url.URL{Scheme: "wss", Host: *addr, Path: "/websocket"}
+	u := url.URL{Scheme: "ws", Host: *addr, Path: "/websocket"}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		log.Fatal("dial:", err)

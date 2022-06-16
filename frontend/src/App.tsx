@@ -37,7 +37,7 @@ function App(): ReactElement {
     if (ws === undefined) {
       const local = "ws://127.0.0.1:7777"
       const prod = "wss://game.gymcadia.com/websocket"
-      let tmpWs = new WebSocket(prod)
+      let tmpWs = new WebSocket(local)
 
       tmpWs.onerror = (error) => {
         console.log(error)
@@ -109,7 +109,6 @@ function App(): ReactElement {
           </div>
           <Stage width={500} height={500} options={{ backgroundColor: 0xeef1f5 }}>
             <Container position={[0, 0]}>
-              <Player />
               {
                 getOtherPlayers().map((p, i) => {
                   return <Sprite
@@ -132,6 +131,7 @@ function App(): ReactElement {
                   />
                 })
               }
+              <Player />
             </Container>
           </Stage>
         </div>

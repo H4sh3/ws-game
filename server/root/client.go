@@ -29,7 +29,6 @@ const (
 
 var (
 	newline = []byte{'\n'}
-	space   = []byte{' '}
 	id_cnt  = 0
 )
 

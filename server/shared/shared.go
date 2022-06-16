@@ -1,6 +1,9 @@
 package shared
 
-import "math/rand"
+import (
+	"math"
+	"math/rand"
+)
 
 func RandIntInRange(min int, max int) int {
 	return rand.Intn(max-min) + min
@@ -9,4 +12,10 @@ func RandIntInRange(min int, max int) int {
 type Vector struct {
 	X int `json:"x"`
 	Y int `json:"y"`
+}
+
+func (v1 *Vector) Dist(v2 *Vector) float64 {
+	a := math.Pow(float64(v1.X-v2.X), 2)
+	b := math.Pow(float64(v1.Y-v2.Y), 2)
+	return math.Sqrt(a + b)
 }
