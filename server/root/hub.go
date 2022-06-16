@@ -104,24 +104,24 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 	collision := false
 	for _, resource := range h.Resources {
 
-		if newPos.Dist(&resource.Pos) < 40 {
+		pL := newPos.X
+		pR := newPos.X + 50
+		pT := newPos.Y
+		pB := newPos.Y + 50
+		rL := resource.Pos.X
+		rR := resource.Pos.X + 50
+		rT := resource.Pos.Y
+		rB := resource.Pos.Y + 50
+		cond1 := pL > rR
+		cond2 := pR < rL
+		cond3 := pT > rB
+		cond4 := pB < rT
+		if !(cond1 || cond2 || cond3 || cond4) {
 			collision = true
 			break
 		}
 
-		//		pL := newPos.X
-		//		pR := newPos.X + 50
-		//		pT := newPos.Y
-		//		pB := newPos.Y + 50
-		//		rL := resource.Pos.X
-		//		rR := resource.Pos.X + 50
-		//		rT := resource.Pos.Y
-		//		rB := resource.Pos.Y + 50
-		//		cond1 := pL > rR
-		//		cond2 := pR < rL
-		//		cond3 := pT > rB
-		//		cond4 := pB < rT
-		//		if !(cond1 || cond2 || cond3 || cond4) {
+		//		if newPos.Dist(&resource.Pos) < 40 {
 		//			collision = true
 		//			break
 		//		}
