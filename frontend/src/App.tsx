@@ -89,11 +89,13 @@ function App(): ReactElement {
           <div>
             {`Players: ${getPlayerArr().length}`}
           </div>
-          <div>
-            {`${getPlayerPos().x}`}
-          </div>
-          <div>
-            {`${getPlayerPos().y}`}
+          <div className="flex flex-row justify-between gap-2">
+            <span>
+              {`x: ${getPlayerPos().x}`}
+            </span>
+            <span>
+              {`y: ${getPlayerPos().y}`}
+            </span>
           </div>
           <Stage width={500} height={500} options={{ backgroundColor: 0xeef1f5 }}>
             <Container position={[0, 0]}>
