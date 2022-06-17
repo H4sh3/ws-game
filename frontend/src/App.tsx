@@ -5,7 +5,7 @@ import { useMainStore } from './stores/MainStore'
 import { enableMapSet } from 'immer'
 import { wsUrl } from './etc/const'
 import { OtherPlayers, Player } from './components/players'
-import { Healthbars, Resources } from './components/resources'
+import { Healthbars, getResources } from './components/resources'
 
 
 function App(): ReactElement {
@@ -16,10 +16,14 @@ function App(): ReactElement {
     addKeyEvent, setWs, ws, removePlayer, handleResourceHit
   } = useMainStore()
 
+  const [resources, setResources] = useState([])
+
   useEffect(() => {
     if (ws !== undefined) {
       return
     }
+
+    setResources(getResources())
 
     const tmpWs = new WebSocket(wsUrl)
     setWs(tmpWs)
@@ -98,11 +102,11 @@ function App(): ReactElement {
             </span>
           </div>
           <Stage width={500} height={500} options={{ backgroundColor: 0xeef1f5 }}>
-            <Container position={[0, 0]}>
-              <OtherPlayers />
-              <Resources />
-              <Player />
-              <Healthbars />
+            <Player />
+            <Container position={[-getPlayerPos().x, -getPlayerPos().y]} >
+              {/* <OtherPlayers />
+              <Healthbars /> */}
+              {resources}
             </Container>
           </Stage>
         </div>

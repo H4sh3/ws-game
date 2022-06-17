@@ -1,12 +1,13 @@
 import { Sprite } from "@inlet/react-pixi"
 import { useState, ReactElement } from "react"
-import { ASSETS } from "../etc/const"
+import { getAsserTexture } from "../etc/const"
 import { useMainStore } from "../stores/MainStore"
-import { getHitResourceEvent, Resource } from "../types/events"
+import { createVector, getHitResourceEvent, Resource } from "../types/events"
 
 import React, { useCallback } from 'react';
 import { Graphics } from '@inlet/react-pixi';
 import { Graphics as PGraphics } from "pixi.js"
+import Vector from "../types/vector"
 
 
 interface RectProps {
@@ -33,21 +34,20 @@ interface ResourceProps {
 
 const ResourceItem: React.FunctionComponent<ResourceProps> = ({ r }) => {
     const [hovered, setHovered] = useState(false)
-    const { getPlayerPos, ws } = useMainStore()
+    const { ws } = useMainStore()
 
     const onClick = () => {
-        if (getPlayerPos().dist(r.pos) < 75) {
+        /* if (playerPos.dist(r.pos) < 75) {
             if (ws !== undefined) {
                 ws.send(JSON.stringify(getHitResourceEvent("0", r.id)))
             }
-        }
+        } */
     }
 
-    const rX = r.pos.x + 250 - getPlayerPos().x
-    const rY = r.pos.y + 250 - getPlayerPos().y
+    const rX = r.pos.x + 250
+    const rY = r.pos.y + 250
 
     return <>
-
         <Sprite
             anchor={0.5}
             scale={hovered ? 1.1 : 1}
@@ -56,7 +56,7 @@ const ResourceItem: React.FunctionComponent<ResourceProps> = ({ r }) => {
             interactive={true}
             mouseover={() => setHovered(true)}
             mouseout={() => setHovered(false)}
-            image={`/assets/${r.resourceType}.png`}
+            texture={getAsserTexture(r.resourceType)}
             click={onClick}
         />
     </>
@@ -82,16 +82,29 @@ export function Healthbars(): ReactElement {
     </>
 }
 
-export function Resources(): ReactElement {
-    const { getResources } = useMainStore()
+const resources: React.ReactElement[] = []
+let cnt = 0
+for (let x = 0; x < 10; x++) {
+    for (let y = 0; y < 10; y++) {
+        const r: Resource = {
+            hitpoints: { current: 100, max: 100 },
+            id: cnt,
+            isSolid: false,
+            pos: createVector(x * 100, y * 100),
+            resourceType: "stone"
+        }
+        resources.push(<ResourceItem r={r} key={cnt} />)
+        cnt++
+    }
+}
+
+export function getResources(): ReactElement {
+    //const { getResources, count } = useMainStore()
 
     return <>
         {
-            getResources().map((r, i) => {
-                return <ResourceItem
-                    key={i}
-                    r={r}
-                />
+            resources.map((r, i) => {
+                return r
             })
         }
     </>

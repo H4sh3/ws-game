@@ -1,8 +1,7 @@
 import { Sprite, useTick } from "@inlet/react-pixi"
-import { playerFrames } from "../etc/const"
 import { useMainStore } from "../stores/MainStore"
-import * as PIXI from "pixi.js";
 import { ReactElement } from "react";
+import { PlayerTextures } from "../etc/const";
 
 export const OtherPlayers: React.FunctionComponent = () => {
     const { getOtherPlayers, getPlayerPos } = useMainStore()
@@ -15,7 +14,7 @@ export const OtherPlayers: React.FunctionComponent = () => {
                     anchor={0.5}
                     x={p.currentPos.x + 250 - getPlayerPos().x}
                     y={p.currentPos.y + 250 - getPlayerPos().y}
-                    image={`/assets/${playerFrames[p.frame]}`}
+                    image={`/assets/${PlayerTextures[p.frame]}`}
                 />
             })
         }
@@ -26,6 +25,7 @@ export function Player(): ReactElement {
     const { playerId, updatePlayerPositions, getPlayerFrame } = useMainStore()
 
     useTick(delta => {
+        console.log(60 / delta)
         updatePlayerPositions(delta)
     })
 
@@ -33,17 +33,10 @@ export function Player(): ReactElement {
         return <></>
     }
 
-    const textures = [
-        PIXI.Texture.from(`/assets/${playerFrames[0]}`),
-        PIXI.Texture.from(`/assets/${playerFrames[1]}`),
-        PIXI.Texture.from(`/assets/${playerFrames[2]}`),
-        PIXI.Texture.from(`/assets/${playerFrames[3]}`)
-    ]
-
     return <Sprite
         anchor={0.5}
         x={250}
         y={250}
-        texture={textures[getPlayerFrame()]}
+        texture={PlayerTextures[getPlayerFrame()]}
     />
 }

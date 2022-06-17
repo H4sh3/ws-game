@@ -111,6 +111,10 @@ export enum KeyStates {
     DOWN
 }
 
+export interface Hitpoints {
+    current: number,
+    max: number
+}
 export interface IResource {
     resourceType: string,
     pos: IVector,
@@ -118,12 +122,8 @@ export interface IResource {
     hitpoints: {
         current: number,
         max: number
-    }
-}
-
-export interface Hitpoints {
-    current: number,
-    max: number
+    },
+    isSolid: boolean,
 }
 
 export interface Resource {
@@ -131,6 +131,7 @@ export interface Resource {
     id: number,
     pos: Vector,
     hitpoints: Hitpoints
+    isSolid: boolean,
 }
 
 interface ResourcePositionsEvent extends BaseEvent {

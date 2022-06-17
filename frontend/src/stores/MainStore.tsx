@@ -101,7 +101,8 @@ export const useMainStore = create(
                             hitpoints: r.hitpoints,
                             id: r.id,
                             pos: createVector(r.pos.x, r.pos.y),
-                            resourceType: r.resourceType
+                            resourceType: r.resourceType,
+                            isSolid: r.isSolid,
                         }
                         newResources.push(rX)
                     })
@@ -134,8 +135,9 @@ export const useMainStore = create(
             // Todo: make sense of delta and how it changes by different frametimes
             updatePlayerPositions: (delta: number) => {
                 set((state) => produce(state, draftState => {
+                    draftState.count += 1
                     // update other players positions
-                    get().players.map(player => {
+                    state.players.map(player => {
                         // take step to target direction
                         const step = player.targetPos.copy().sub(player.currentPos).mult(0.2)
 
@@ -149,8 +151,6 @@ export const useMainStore = create(
                             player.frame = 0
                         }
                     })
-                    draftState.count += 1
-
                     if (state.ws === undefined) return
 
                     const player = draftState.players.find(p => p.id === state.playerId)
@@ -180,7 +180,7 @@ export const useMainStore = create(
                                     newPos.x += stepSize
                                 }
 
-                                const hasCollision = state.resources.some(r => r.pos.dist(newPos) < 40)
+                                const hasCollision = state.resources.filter(r => r.isSolid).some(r => r.pos.dist(newPos) < 40)
 
                                 if (state.ws !== undefined && !hasCollision) {
                                     player.targetPos = newPos

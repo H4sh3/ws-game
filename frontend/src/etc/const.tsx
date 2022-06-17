@@ -1,3 +1,4 @@
+import * as PIXI from "pixi.js";
 
 export enum EVENT_TYPES {
     NEW_USER_EVENT = "NEW_USER_EVENT",
@@ -11,13 +12,25 @@ export enum EVENT_TYPES {
     UPDATE_RESOURCE_EVENT = "UPDATE_RESOURCE_EVENT"
 }
 
-export const playerFrames = [
-    "player0.png", "player1.png", "player2.png", "player3.png"
+export const PlayerTextures = [
+    PIXI.Texture.from(`/assets/player0.png`),
+    PIXI.Texture.from(`/assets/player1.png`),
+    PIXI.Texture.from(`/assets/player2.png`),
+    PIXI.Texture.from(`/assets/player3.png`)
 ]
 
-export enum ASSETS {
-    Iron = "iron.png",
-    Stone = "stone.png"
+const IRON_TEXTURE = PIXI.Texture.from(`/assets/iron.png`)
+const BRICK_TEXTURE = PIXI.Texture.from(`/assets/brick.png`)
+const STONE_TEXTURE = PIXI.Texture.from(`/assets/stone.png`)
+
+export const getAsserTexture = (name: string) => {
+    if (name === "iron") {
+        return IRON_TEXTURE
+    } else if (name === "brick") {
+        return BRICK_TEXTURE
+    } else {
+        return STONE_TEXTURE
+    }
 }
 
 const local = "ws://127.0.0.1:7777"
