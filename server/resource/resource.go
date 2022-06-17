@@ -8,6 +8,8 @@ import "ws-game/shared"
 type ResourceType string
 
 const (
+	Stone  ResourceType = "stone"
+	Brick  ResourceType = "brick"
 	Cooper ResourceType = "cooper"
 	Iron   ResourceType = "iron"
 	Gold   ResourceType = "gold"

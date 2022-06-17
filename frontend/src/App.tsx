@@ -12,7 +12,7 @@ function App(): ReactElement {
   enableMapSet()
   const [connected, setConnected] = useState(false)
 
-  const { playerId, setPlayerId, getPlayerArr, spawnPlayer, setPlayerTargetPos, setResources, getPlayerPos,
+  const { playerId, setPlayerId, getPlayerArr, spawnPlayer, setPlayerTargetPos, addResources, getPlayerPos,
     addKeyEvent, setWs, ws, removePlayer, handleResourceHit
   } = useMainStore()
 
@@ -45,7 +45,7 @@ function App(): ReactElement {
         } else if (isUpdateResourceEvent(parsed)) {
           handleResourceHit(parsed)
         } else if (isResourcePositionsEvent(parsed)) {
-          setResources(parsed.resources)
+          addResources(parsed.resources)
         } else if (isPlayerDisconnectedEvent(parsed)) {
           removePlayer(parsed.id)
         } else if (isNewPlayerEvent(parsed)) {

@@ -23,6 +23,7 @@ type Hub struct {
 
 	// resources in the world
 	Resources []resource.Resource
+	ResIdCnt  int
 }
 
 func NewHub(n int) *Hub {
@@ -34,7 +35,7 @@ func NewHub(n int) *Hub {
 			X: 100 * i,
 			Y: 100,
 		}
-		resources = append(resources, *resource.NewResource(resource.Iron, pos, i))
+		resources = append(resources, *resource.NewResource(resource.Stone, pos, i))
 	}
 
 	return &Hub{
@@ -43,6 +44,7 @@ func NewHub(n int) *Hub {
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
 		Resources:  resources,
+		ResIdCnt:   n,
 	}
 }
 
@@ -130,8 +132,24 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 		}
 	}
 
-	// resource got destroyed -> remove resource
 	if toRemoveIndex != -1 {
+		// spawn subtype resources
+
+		if h.Resources[toRemoveIndex].ResourceType == resource.Stone {
+			newResources := []resource.Resource{}
+			for i := 0; i < 3; i++ {
+				pos := shared.Vector{X: h.Resources[toRemoveIndex].Pos.X, Y: h.Resources[toRemoveIndex].Pos.Y}
+				pos.X += shared.RandIntInRange(-10, 10)
+				pos.Y += shared.RandIntInRange(-10, 10)
+				resource := resource.Resource{ResourceType: resource.Brick, Pos: pos, Id: h.ResIdCnt, Hitpoints: resource.Hitpoints{Current: 100, Max: 100}}
+				newResources = append(newResources, resource)
+				h.ResIdCnt++
+			}
+			h.Resources = append(h.Resources, newResources...)
+			h.broadcast <- events.NewResourcePositionsEvent(newResources)
+		}
+
+		// resource got destroyed -> remove resource
 		h.Resources = append(h.Resources[:toRemoveIndex], h.Resources[toRemoveIndex+1:]...)
 	}
 }

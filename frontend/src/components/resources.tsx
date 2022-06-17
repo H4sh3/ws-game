@@ -62,7 +62,7 @@ const ResourceItem: React.FunctionComponent<ResourceProps> = ({ resource }) => {
             interactive={true}
             mouseover={() => setHovered(true)}
             mouseout={() => setHovered(false)}
-            image={`/assets/${ASSETS.Iron}`}
+            image={`/assets/${resource.resourceType}.png`}
             click={onClick}
         />
     </>

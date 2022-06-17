@@ -93,16 +93,19 @@ export const useMainStore = create(
                     draftState.ws = ws
                 }));
             },
-            setResources: (resources: IResource[]) => {
+            addResources: (resources: IResource[]) => {
                 set((state) => produce(state, draftState => {
-                    draftState.resources = resources.map(r => {
-                        return {
+                    const newResources: Resource[] = [...state.resources]
+                    resources.map(r => {
+                        const rX = {
                             hitpoints: r.hitpoints,
                             id: r.id,
                             pos: createVector(r.pos.x, r.pos.y),
                             resourceType: r.resourceType
                         }
+                        newResources.push(rX)
                     })
+                    draftState.resources = newResources
                 }));
             },
             getPlayerArr: (): Player[] => {

@@ -16,7 +16,8 @@ export const playerFrames = [
 ]
 
 export enum ASSETS {
-    Iron = "iron.png"
+    Iron = "iron.png",
+    Stone = "stone.png"
 }
 
 const local = "ws://127.0.0.1:7777"
