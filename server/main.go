@@ -17,6 +17,10 @@ func main() {
 
 	var m sync.Mutex
 
+	http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("hello"))
+	})
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		root.ServeWs(hub, w, r, &m)
 	})
