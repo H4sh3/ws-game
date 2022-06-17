@@ -6,6 +6,7 @@ import { getHitResourceEvent, Resource } from "../types/events"
 
 import React, { useCallback } from 'react';
 import { Graphics } from '@inlet/react-pixi';
+import { Graphics as PGraphics } from "pixi.js"
 
 
 interface RectProps {
@@ -13,10 +14,10 @@ interface RectProps {
     y: number,
     w: number,
     h: number,
-    color: string,
+    color: number,
 }
-const Rectangle: React.FC<RectProps> = ({ x, y, w, h, color }) => {
-    const draw = useCallback((g) => {
+export const Rectangle: React.FC<RectProps> = ({ x, y, w, h, color }) => {
+    const draw = useCallback((g: PGraphics) => {
         g.clear();
         g.beginFill(color);
         g.drawRect(x, y, w, h);
@@ -27,33 +28,26 @@ const Rectangle: React.FC<RectProps> = ({ x, y, w, h, color }) => {
 }
 
 interface ResourceProps {
-    resource: Resource
+    r: Resource
 }
 
-const ResourceItem: React.FunctionComponent<ResourceProps> = ({ resource }) => {
+const ResourceItem: React.FunctionComponent<ResourceProps> = ({ r }) => {
     const [hovered, setHovered] = useState(false)
     const { getPlayerPos, ws } = useMainStore()
 
     const onClick = () => {
-        if (getPlayerPos().dist(resource.pos) < 75) {
+        if (getPlayerPos().dist(r.pos) < 75) {
             if (ws !== undefined) {
-                ws.send(JSON.stringify(getHitResourceEvent("0", resource.id)))
+                ws.send(JSON.stringify(getHitResourceEvent("0", r.id)))
             }
         }
     }
 
-    const rX = resource.pos.x + 250 - getPlayerPos().x
-    const rY = resource.pos.y + 250 - getPlayerPos().y
+    const rX = r.pos.x + 250 - getPlayerPos().x
+    const rY = r.pos.y + 250 - getPlayerPos().y
 
     return <>
-        {
-            resource.hitpoints.current !== resource.hitpoints.max ?
-                <>
-                    <Rectangle x={rX - 30} y={rY - 40} w={60} h={10} color={"0x000000"} />
-                    <Rectangle x={rX - 30} y={rY - 40} w={60 * (resource.hitpoints.current / resource.hitpoints.max)} h={10} color={"0x00FF00"} />
-                </>
-                : <></>
-        }
+
         <Sprite
             anchor={0.5}
             scale={hovered ? 1.1 : 1}
@@ -62,9 +56,29 @@ const ResourceItem: React.FunctionComponent<ResourceProps> = ({ resource }) => {
             interactive={true}
             mouseover={() => setHovered(true)}
             mouseout={() => setHovered(false)}
-            image={`/assets/${resource.resourceType}.png`}
+            image={`/assets/${r.resourceType}.png`}
             click={onClick}
         />
+    </>
+}
+
+export function Healthbars(): ReactElement {
+    const { getResources, getPlayerPos } = useMainStore()
+    return <>
+        {
+            getResources().map((r, i) => {
+                const rX = r.pos.x + 250 - getPlayerPos().x
+                const rY = r.pos.y + 250 - getPlayerPos().y
+                return <>{
+                    r.hitpoints.current !== r.hitpoints.max ?
+                        <>
+                            <Rectangle x={rX - 30} y={rY - 40} w={60} h={10} color={0x000000} />
+                            <Rectangle x={rX - 29} y={rY - 39} w={58 * (r.hitpoints.current / r.hitpoints.max)} h={8} color={0x00FF00} />
+                        </>
+                        : <></>
+                }</>
+            })
+        }
     </>
 }
 
@@ -76,7 +90,7 @@ export function Resources(): ReactElement {
             getResources().map((r, i) => {
                 return <ResourceItem
                     key={i}
-                    resource={r}
+                    r={r}
                 />
             })
         }

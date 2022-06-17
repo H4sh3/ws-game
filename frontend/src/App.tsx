@@ -5,7 +5,7 @@ import { useMainStore } from './stores/MainStore'
 import { enableMapSet } from 'immer'
 import { wsUrl } from './etc/const'
 import { OtherPlayers, Player } from './components/players'
-import { Resources } from './components/resources'
+import { Healthbars, Resources } from './components/resources'
 
 
 function App(): ReactElement {
@@ -100,6 +100,7 @@ function App(): ReactElement {
               <OtherPlayers />
               <Resources />
               <Player />
+              <Healthbars />
             </Container>
           </Stage>
         </div>
