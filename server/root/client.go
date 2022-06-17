@@ -136,6 +136,7 @@ func (client *Client) writePump() {
 // serveWs handles websocket requests from the peer.
 func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	m.Lock()
+	fmt.Println("LOCK")
 	conn, err := upgrader.Upgrade(w, r, nil)
 
 	if err != nil {
@@ -165,6 +166,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	go client.writePump()
 	go client.readPump()
 	m.Unlock()
+	fmt.Println("LOCK")
 }
 
 func UnmarshalClientEvents(jsonInput []byte, h *Hub, c *Client) {
