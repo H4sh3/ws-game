@@ -40,25 +40,6 @@ func GetNewPlayerEvent(id int, pos shared.Vector) []byte {
 	}
 }
 
-type UserMoveEvent struct {
-	EventType EventType `json:"eventType"`
-	x         int       `json:"x"`
-	y         int       `json:"y"`
-}
-
-func GetUserMoveEvent(x int, y int) []byte {
-	u := &UserMoveEvent{EventType: USER_MOVE_EVENT, x: x, y: y}
-
-	value, err := json.Marshal(u)
-
-	if err != nil {
-		fmt.Printf("Error: %s", err)
-		return []byte{}
-	} else {
-		return value
-	}
-}
-
 type AssignUserIdEvent struct {
 	EventType EventType `json:"eventType"`
 	Id        int       `json:"id"`

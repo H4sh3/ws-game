@@ -73,6 +73,11 @@ func (c *Client) readPump() {
 	for {
 		_, message, err := c.conn.ReadMessage()
 
+		// empty message
+		if len(message) == 0 {
+			return
+		}
+
 		// all message recieved from client get unmarshalled to structs
 		UnmarshalClientEvents(message, c.hub, c)
 

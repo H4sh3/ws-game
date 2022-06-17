@@ -30,22 +30,29 @@ func NewHub(n int) *Hub {
 
 	resources := []resource.Resource{}
 
-	for i := 0; i < n; i++ {
-		pos := shared.Vector{
-			X: 100 * i,
-			Y: 100,
-		}
-		resources = append(resources, *resource.NewResource(resource.Stone, pos, i))
-	}
-
-	return &Hub{
+	hub := &Hub{
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
 		Resources:  resources,
-		ResIdCnt:   n,
+		ResIdCnt:   0,
 	}
+
+	for x := 1; x < n; x++ {
+		for y := 1; y < n; y++ {
+			pos := shared.Vector{
+				X: 100 * x,
+				Y: 100 * y,
+			}
+			resources = append(resources, *resource.NewResource(resource.Stone, pos, hub.ResIdCnt, true, 100))
+			hub.ResIdCnt++
+		}
+	}
+
+	hub.Resources = append(hub.Resources, resources...)
+
+	return hub
 }
 
 func (h *Hub) Run() {
@@ -105,6 +112,10 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 
 	collision := false
 	for _, resource := range h.Resources {
+		if !resource.IsSolid {
+			continue
+
+		}
 		if newPos.Dist(&resource.Pos) < 40 {
 			collision = true
 			break
@@ -121,6 +132,10 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 	toRemoveIndex := -1
 	for i := range h.Resources {
+		if h.Resources[i].Hitpoints.Max == -1 {
+			continue
+		}
+
 		if h.Resources[i].Id == event.Id {
 			resource := &h.Resources[i]
 			resource.Hitpoints.Current -= 10
@@ -141,8 +156,8 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 				pos := shared.Vector{X: h.Resources[toRemoveIndex].Pos.X, Y: h.Resources[toRemoveIndex].Pos.Y}
 				pos.X += shared.RandIntInRange(-10, 10)
 				pos.Y += shared.RandIntInRange(-10, 10)
-				resource := resource.Resource{ResourceType: resource.Brick, Pos: pos, Id: h.ResIdCnt, Hitpoints: resource.Hitpoints{Current: 100, Max: 100}}
-				newResources = append(newResources, resource)
+				resource := resource.NewResource(resource.Brick, pos, h.ResIdCnt, false, -1)
+				newResources = append(newResources, *resource)
 				h.ResIdCnt++
 			}
 			h.Resources = append(h.Resources, newResources...)
