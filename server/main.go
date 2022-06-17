@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -22,6 +23,7 @@ func main() {
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("new ws request!")
 		root.ServeWs(hub, w, r, &m)
 	})
 	err := http.ListenAndServe(*addr, nil)
