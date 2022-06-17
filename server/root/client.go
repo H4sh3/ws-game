@@ -166,7 +166,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	go client.writePump()
 	go client.readPump()
 	m.Unlock()
-	fmt.Println("LOCK")
+	fmt.Println("UNLOCK")
 }
 
 func UnmarshalClientEvents(jsonInput []byte, h *Hub, c *Client) {
