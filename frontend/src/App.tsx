@@ -17,53 +17,55 @@ function App(): ReactElement {
   } = useMainStore()
 
   useEffect(() => {
-    if (ws === undefined) {
+    if (ws !== undefined) {
+      return
+    }
 
-      const tmpWs = new WebSocket(wsUrl)
+    const tmpWs = new WebSocket(wsUrl)
+    setWs(tmpWs)
 
-      tmpWs.onerror = (error) => {
-        console.log(error)
+    tmpWs.onerror = (error) => {
+      console.log(error)
+    }
+
+    tmpWs.onopen = () => {
+      setConnected(true)
+    }
+
+    tmpWs.onmessage = (m) => {
+      if (typeof (m.data) != "string") {
+        return
       }
 
-      tmpWs.onopen = () => {
-        setConnected(true)
-      }
+      m.data.split("\n").forEach(message => {
+        let parsed: any = JSON.parse(message)
 
-      tmpWs.onmessage = (m) => {
-
-        if (typeof (m.data) == "string") {
-
-          m.data.split("\n").forEach(message => {
-            let parsed: any = JSON.parse(message)
-
-            if (isNewPlayerEvent(parsed)) {
-              spawnPlayer(parsed.id, createVector(parsed.pos.x, parsed.pos.y))
-            } else if (isAssignUserIdEvent(parsed)) { // join event
-              const id: number = parsed.id
-              setPlayerId(id)
-              document.addEventListener('keydown', (e: KeyboardEvent) => {
-                if (!e.repeat) {
-                  addKeyEvent(e.key, KeyStates.DOWN)
-                }
-              });
-              document.addEventListener('keyup', (e: KeyboardEvent) => {
-                if (!e.repeat) {
-                  addKeyEvent(e.key, KeyStates.UP)
-                }
-              });
-            } else if (isPlayerTargetPositionEvent(parsed)) {
-              setPlayerTargetPos(parsed.id, createVector(parsed.pos.x, parsed.pos.y))
-            } else if (isResourcePositionsEvent(parsed)) {
-              setResources(parsed.resources)
-            } else if (isPlayerDisconnectedEvent(parsed)) {
-              removePlayer(parsed.id)
-            } else if (isUpdateResourceEvent(parsed)) {
-              handleResourceHit(parsed)
+        if (isPlayerTargetPositionEvent(parsed)) {
+          setPlayerTargetPos(parsed.id, createVector(parsed.pos.x, parsed.pos.y))
+        } else if (isUpdateResourceEvent(parsed)) {
+          handleResourceHit(parsed)
+        } else if (isResourcePositionsEvent(parsed)) {
+          setResources(parsed.resources)
+        } else if (isPlayerDisconnectedEvent(parsed)) {
+          removePlayer(parsed.id)
+        } else if (isNewPlayerEvent(parsed)) {
+          spawnPlayer(parsed.id, createVector(parsed.pos.x, parsed.pos.y))
+        } else if (isAssignUserIdEvent(parsed)) {
+          // First event after WS connection is established -> get an ID
+          const id: number = parsed.id
+          setPlayerId(id)
+          document.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (!e.repeat) {
+              addKeyEvent(e.key, KeyStates.DOWN)
             }
-          })
+          });
+          document.addEventListener('keyup', (e: KeyboardEvent) => {
+            if (!e.repeat) {
+              addKeyEvent(e.key, KeyStates.UP)
+            }
+          });
         }
-      }
-      setWs(tmpWs)
+      })
     }
 
   }, [])
