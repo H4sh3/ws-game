@@ -116,18 +116,8 @@ export interface Hitpoints {
     current: number,
     max: number
 }
-export interface IResource {
-    resourceType: string,
-    pos: IVector,
-    id: number,
-    hitpoints: {
-        current: number,
-        max: number
-    },
-    isSolid: boolean,
-}
 
-export interface ResourceI {
+export interface IResource {
     resourceType: string,
     id: number,
     pos: Vector,
@@ -139,7 +129,7 @@ export interface ResourceI {
 }
 
 export interface ResourcePositionsEvent extends BaseEvent {
-    resources: Resource[]
+    resources: IResource[]
 }
 
 export function isResourcePositionsEvent(value: any): value is ResourcePositionsEvent {

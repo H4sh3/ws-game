@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, IPoint, Loader, Point, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, getHitResourceEvent, UpdateResourceEvent, Hitpoints, ResourceI } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, getHitResourceEvent, UpdateResourceEvent, Hitpoints, IResource } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import Vector from './types/vector';
@@ -32,7 +32,7 @@ class Resource {
         this.container = new Container()
         this.container.x = this.pos.x
         this.container.y = this.pos.y
-        this.sprite = new Sprite(loader.resources['assets/stone.png'].texture)
+        this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}.png`].texture)
         this.container.addChild(this.sprite)
 
         this.updateHealthbar()
@@ -42,10 +42,12 @@ class Resource {
         this.sprite.addListener("click", () => {
             ws.send(getHitResourceEvent("1", this.id))
         })
+
         this.sprite.addListener("mouseover", () => {
             const scale = new Point(1.1, 1.1)
             this.sprite.scale = scale
         })
+
         this.sprite.addListener("mouseout", () => {
             const scale = new Point(1, 1)
             this.sprite.scale = scale
@@ -57,17 +59,23 @@ class Resource {
             return
         }
         const width = 50
+        if (this.healthBar) {
+            this.container.removeChild(this.healthBar)
+        }
         this.healthBar = new Graphics();
         this.healthBar.lineStyle(2, 0x666666, 1);
-        this.healthBar.beginFill(0xCCCCCC);
+        //this.healthBar.beginFill(0xCCCCCC);
         this.healthBar.drawRect(-25, -20, width, 10);
         this.healthBar.endFill();
-        this.container.addChild(this.healthBar)
 
-        this.healthBar = new Graphics();
-        this.healthBar.beginFill(0x00ff00);
-        this.healthBar.drawRect(-25, -20, width * (this.hitPoints.current / this.hitPoints.max), 10);
-        this.healthBar.endFill();
+        if (this.healthBarBase) {
+            this.container.removeChild(this.healthBarBase)
+        }
+        this.healthBarBase = new Graphics();
+        this.healthBarBase.beginFill(0x00ff00);
+        this.healthBarBase.drawRect(-25, -20, width * (this.hitPoints.current / this.hitPoints.max), 10);
+        this.healthBarBase.endFill();
+        this.container.addChild(this.healthBarBase)
         this.container.addChild(this.healthBar)
     }
 }
@@ -231,6 +239,8 @@ export class Game extends Container {
                 }
                 r.container.removeChild(r.sprite)
                 this.removeChild(r.container)
+
+                this.resources.filter(r => r.id !== r.id)
             }
         }
     }
