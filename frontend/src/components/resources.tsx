@@ -37,7 +37,6 @@ const ResourceItem: React.FunctionComponent<ResourceProps> = ({ resource }) => {
     const onClick = () => {
         if (getPlayerPos().dist(resource.pos) < 75) {
             if (ws !== undefined) {
-                console.log(resource.id)
                 ws.send(JSON.stringify(getHitResourceEvent("0", resource.id)))
             }
         }
