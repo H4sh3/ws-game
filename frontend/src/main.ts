@@ -167,22 +167,6 @@ export class Game extends Container {
 
     handleResourceEvent(parsed: ResourcePositionsEvent) {
         parsed.resources.forEach(r => {
-
-            const container = new Container()
-            container.x = r.pos.x
-            container.y = r.pos.y
-            const sprite = new Sprite(this.app.loader.resources['assets/stone.png'].texture)
-            container.addChild(sprite)
-
-            const hpBar = new Graphics();
-            // Rectangle
-            hpBar.lineStyle(2, 0xFEEB77, 1);
-            hpBar.beginFill(0xff0000);
-            hpBar.drawRect(0, -10, 50, 10);
-            hpBar.endFill();
-            container.addChild(hpBar)
-
-
             const resource: Resource = new Resource(r.id, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints.max, r.isSolid, this.app.loader, this.ws)
             this.resources.push(resource)
             this.worldContainer.addChild(resource.container);
@@ -244,7 +228,7 @@ export class Game extends Container {
                 r.container.removeChild(r.sprite)
                 this.removeChild(r.container)
 
-                this.resources.filter(r => r.id !== r.id)
+                this.resources = this.resources.filter(r => r.id !== r.id)
             }
         }
     }
