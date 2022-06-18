@@ -114,7 +114,6 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 	for _, resource := range h.Resources {
 		if !resource.IsSolid {
 			continue
-
 		}
 		if newPos.Dist(&resource.Pos) < 40 {
 			collision = true
@@ -139,6 +138,8 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 		if h.Resources[i].Id == event.Id {
 			resource := &h.Resources[i]
 			resource.Hitpoints.Current -= 10
+
+			// Even broadcast updates with resources below 0 hp to inform the client to destroy this resource
 			h.broadcast <- events.NewUpdateResourceEvent(resource.Id, resource.Hitpoints.Current, resource.Hitpoints.Max)
 
 			if resource.Hitpoints.Current <= 0 {
