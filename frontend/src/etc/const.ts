@@ -1,5 +1,3 @@
-import * as PIXI from "pixi.js";
-
 export enum EVENT_TYPES {
     NEW_USER_EVENT = "NEW_USER_EVENT",
     ASSIGN_USER_ID_EVENT = "ASSIGN_USER_ID_EVENT",

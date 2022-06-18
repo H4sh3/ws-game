@@ -1,85 +1,8 @@
-import { Application, Container, Graphics, Loader, Point, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, getHitResourceEvent, UpdateResourceEvent, Hitpoints, IResource } from './events/events';
+import { Application, Container, Sprite } from 'pixi.js';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
-import Vector from './types/vector';
-
-
-class Resource {
-    id: number
-    pos: Vector
-    hitPoints: Hitpoints
-    isSolid: boolean
-    resourceType: string
-
-    // render stuff
-    container: Container
-    sprite: Sprite
-    healthBar?: Graphics
-    healthBarBase?: Graphics
-
-    constructor(id: number, resourceType: string, pos: Vector, hp: number, isSolid: boolean, loader: Loader, ws: WebSocket) {
-        this.id = id
-        this.pos = pos
-        this.hitPoints = {
-            current: hp,
-            max: hp
-        }
-        this.isSolid = isSolid
-        this.resourceType = resourceType
-
-
-        this.container = new Container()
-        this.container.x = this.pos.x
-        this.container.y = this.pos.y
-        this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}.png`].texture)
-        this.container.addChild(this.sprite)
-
-        this.updateHealthbar()
-
-        this.sprite.interactive = true
-
-        this.sprite.anchor.set(0.5)
-        this.sprite.on('click', () => {
-            ws.send(getHitResourceEvent("1", this.id))
-        });
-
-        this.sprite.on('mouseover', () => {
-            const scale = new Point(1.1, 1.1)
-            this.sprite.scale = scale
-        });
-
-        this.sprite.on('mouseout', () => {
-            const scale = new Point(1, 1)
-            this.sprite.scale = scale
-        });
-    }
-
-    updateHealthbar() {
-        if (this.hitPoints.current === this.hitPoints.max) {
-            return
-        }
-        const width = 50
-        if (this.healthBar) {
-            this.container.removeChild(this.healthBar)
-        }
-        this.healthBar = new Graphics();
-        this.healthBar.lineStyle(2, 0x666666, 1);
-        //this.healthBar.beginFill(0xCCCCCC);
-        this.healthBar.drawRect(-25, -20, width, 10);
-        this.healthBar.endFill();
-
-        if (this.healthBarBase) {
-            this.container.removeChild(this.healthBarBase)
-        }
-        this.healthBarBase = new Graphics();
-        this.healthBarBase.beginFill(0x00ff00);
-        this.healthBarBase.drawRect(-25, -20, width * (this.hitPoints.current / this.hitPoints.max), 10);
-        this.healthBarBase.endFill();
-        this.container.addChild(this.healthBarBase)
-        this.container.addChild(this.healthBar)
-    }
-}
+import { Resource } from './types/resource';
 
 export class Game extends Container {
     app: Application;
@@ -167,7 +90,7 @@ export class Game extends Container {
 
     handleResourceEvent(parsed: ResourcePositionsEvent) {
         parsed.resources.forEach(r => {
-            const resource: Resource = new Resource(r.id, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints.max, r.isSolid, this.app.loader, this.ws)
+            const resource: Resource = new Resource(r.id, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints, r.isSolid, this.app.loader, this.ws)
             this.resources.push(resource)
             this.worldContainer.addChild(resource.container);
         })
@@ -221,6 +144,8 @@ export class Game extends Container {
             r.hitPoints.max = parsed.hitpoints.max
             r.updateHealthbar()
             if (r.hitPoints.current <= 0) {
+
+                // remove sprites
                 if (r.healthBar && r.healthBarBase) {
                     r.container.removeChild(r.healthBar)
                     r.container.removeChild(r.healthBarBase)
@@ -228,7 +153,7 @@ export class Game extends Container {
                 r.container.removeChild(r.sprite)
                 this.removeChild(r.container)
 
-                this.resources = this.resources.filter(r => r.id !== r.id)
+                this.resources = this.resources.filter(oR => oR.id !== r.id)
             }
         }
     }
