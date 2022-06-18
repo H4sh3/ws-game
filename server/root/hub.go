@@ -139,8 +139,8 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 			resource := &h.Resources[i]
 			resource.Hitpoints.Current -= 10
 
-			// Even broadcast updates with resources below 0 hp to inform the client to destroy this resource
-			h.broadcast <- events.NewUpdateResourceEvent(resource.Id, resource.Hitpoints.Current, resource.Hitpoints.Max)
+			remove := resource.Hitpoints.Current <= 0
+			h.broadcast <- events.NewUpdateResourceEvent(resource.Id, resource.Hitpoints.Current, resource.Hitpoints.Max, remove)
 
 			if resource.Hitpoints.Current <= 0 {
 				toRemoveIndex = i
@@ -166,6 +166,41 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 		}
 
 		// resource got destroyed -> remove resource
+		h.Resources = append(h.Resources[:toRemoveIndex], h.Resources[toRemoveIndex+1:]...)
+	}
+}
+
+func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
+	toRemoveIndex := -1
+	for i := range h.Resources {
+		r := h.Resources[i]
+		if r.Id == event.Id {
+			toRemoveIndex = i
+
+			// add to user inventory or inc count
+			foundInInventory := false
+			for n := range c.Inventory {
+				invRes := c.Inventory[n]
+
+				// exists in inventory
+				if invRes.ResourceType == r.ResourceType {
+
+					foundInInventory = true
+					c.Inventory[n].Quantity += r.Quantity
+				}
+			}
+
+			// resourceType not found in inventory -> use this one
+			if !foundInInventory {
+				c.Inventory = append(c.Inventory, r)
+			}
+
+			// broadcast update event that removes the resource
+			h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true)
+		}
+	}
+
+	if toRemoveIndex != -1 {
 		h.Resources = append(h.Resources[:toRemoveIndex], h.Resources[toRemoveIndex+1:]...)
 	}
 }

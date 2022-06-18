@@ -140,6 +140,11 @@ export class Game extends Container {
     updateResourceEvent(parsed: UpdateResourceEvent) {
         const r = this.resources.find(r => r.id == parsed.id)
         if (r) {
+
+            if (parsed.remove) {
+                this.resources = this.resources.filter(rO => rO.id !== parsed.id)
+            }
+
             r.hitPoints.current = parsed.hitpoints.current
             r.hitPoints.max = parsed.hitpoints.max
             r.updateHealthbar()

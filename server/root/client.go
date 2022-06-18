@@ -197,5 +197,12 @@ func UnmarshalClientEvents(jsonInput []byte, h *Hub, c *Client) {
 			panic(err)
 		}
 		h.HandleResourceHit(*event, c)
+
+	case events.LOOT_RESOURCE_EVENT:
+		event := &events.LootResourceEvent{}
+		if err := json.Unmarshal(event_data.Payload, &event); err != nil {
+			panic(err)
+		}
+		h.HandleLootResource(*event, c)
 	}
 }

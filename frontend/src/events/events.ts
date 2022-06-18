@@ -107,7 +107,8 @@ export function isResourcePositionsEvent(value: any): value is ResourcePositions
 
 export interface UpdateResourceEvent {
     id: number,
-    hitpoints: Hitpoints
+    hitpoints: Hitpoints,
+    remove: boolean
 }
 
 export function isUpdateResourceEvent(value: any): value is UpdateResourceEvent {
