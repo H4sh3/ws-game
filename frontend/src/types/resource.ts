@@ -62,7 +62,6 @@ export class Resource {
     }
 
     updateHealthbar() {
-        console.log(this.hitPoints)
         if (this.hitPoints.current === this.hitPoints.max) {
             return
         }
