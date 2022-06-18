@@ -1,13 +1,15 @@
 import { Sprite, Graphics, Loader, Point, Container } from "pixi.js"
-import { Hitpoints, getHitResourceEvent } from "../events/events"
+import { Hitpoints, getHitResourceEvent, getLootResourceEvent } from "../events/events"
 import Vector from "./vector"
 
 
 export class Resource {
     id: number
+    quantity: number
     pos: Vector
     hitPoints: Hitpoints
     isSolid: boolean
+    isLootable: boolean
     resourceType: string
 
     // render stuff
@@ -16,14 +18,16 @@ export class Resource {
     healthBar?: Graphics
     healthBarBase?: Graphics
 
-    constructor(id: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket) {
+    constructor(id: number, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean) {
         this.id = id
+        this.quantity = quantity
         this.pos = pos
         this.hitPoints = {
             current: hp.current,
             max: hp.max
         }
         this.isSolid = isSolid
+        this.isLootable = isLootable
         this.resourceType = resourceType
 
 
@@ -39,7 +43,11 @@ export class Resource {
 
         this.sprite.anchor.set(0.5)
         this.sprite.on('click', () => {
-            ws.send(getHitResourceEvent("1", this.id))
+            if (this.isLootable) {
+                ws.send(getLootResourceEvent(this.id))
+            } else {
+                ws.send(getHitResourceEvent("1", this.id))
+            }
         });
 
         this.sprite.on('mouseover', () => {

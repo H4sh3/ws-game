@@ -1,6 +1,6 @@
 import { Container, Graphics, Sprite } from "pixi.js"
 import { EVENT_TYPES } from "../etc/const"
-import Vector, { IVector } from "../types/vector"
+import Vector from "../types/vector"
 
 export function createVector(x: number, y: number): Vector {
     return new Vector(x, y)
@@ -39,8 +39,6 @@ export interface AssignIdEvent extends BaseEvent {
         y: number
     }
 }
-
-
 
 export interface PlayerTargetPositionEvent extends BaseEvent {
     id: number
@@ -86,9 +84,11 @@ export interface Hitpoints {
 export interface IResource {
     resourceType: string,
     id: number,
+    quantity: number,
     pos: Vector,
     hitpoints: Hitpoints
     isSolid: boolean,
+    isLootable: boolean,
     sprite: Sprite,
     container: Container,
     healtbar: Graphics
@@ -132,13 +132,14 @@ interface KeyBoardEvent extends BaseEvent {
 }
 
 export function getKeyBoardEvent(key: string, value: KeyStates): string {
-    return JSON.stringify({
+    const e: KeyBoardEvent = {
         "eventType": EVENT_TYPES.KEYBOARD_EVENT,
         "payload": {
             "key": key,
             "value": value,
         }
-    } as KeyBoardEvent)
+    }
+    return JSON.stringify(e)
 }
 
 interface HitResourceEvent extends BaseEvent {
@@ -149,13 +150,14 @@ interface HitResourceEvent extends BaseEvent {
 }
 
 export function getHitResourceEvent(skill: string, id: number): string {
-    return JSON.stringify({
+    const e: HitResourceEvent = {
         "eventType": EVENT_TYPES.HIT_RESOURCE_EVENT,
         "payload": {
             "skill": skill,
             "id": id,
         }
-    } as HitResourceEvent)
+    }
+    return JSON.stringify(e)
 }
 
 interface LootResourceEvent extends BaseEvent {

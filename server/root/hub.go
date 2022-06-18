@@ -45,7 +45,7 @@ func NewHub(n int) *Hub {
 				X: 100 * x,
 				Y: 100 * y,
 			}
-			resources = append(resources, *resource.NewResource(resource.Stone, pos, hub.ResIdCnt, true, 100))
+			resources = append(resources, *resource.NewResource(resource.Stone, pos, hub.ResIdCnt, 1, true, 100, false))
 			hub.ResIdCnt++
 		}
 	}
@@ -157,7 +157,7 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 				pos := shared.Vector{X: h.Resources[toRemoveIndex].Pos.X, Y: h.Resources[toRemoveIndex].Pos.Y}
 				pos.X += shared.RandIntInRange(-10, 10)
 				pos.Y += shared.RandIntInRange(-10, 10)
-				resource := resource.NewResource(resource.Brick, pos, h.ResIdCnt, false, -1)
+				resource := resource.NewResource(resource.Brick, pos, h.ResIdCnt, 1, false, -1, true)
 				newResources = append(newResources, *resource)
 				h.ResIdCnt++
 			}

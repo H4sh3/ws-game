@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 	"ws-game/events"
+	"ws-game/resource"
 	"ws-game/shared"
 
 	"github.com/gorilla/websocket"
@@ -52,9 +53,10 @@ type Client struct {
 	conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send chan []byte
-	Id   int
-	Pos  shared.Vector
+	send      chan []byte
+	Id        int
+	Pos       shared.Vector
+	Inventory []resource.Resource
 }
 
 // readPump pumps messages from the websocket connection to the hub.
