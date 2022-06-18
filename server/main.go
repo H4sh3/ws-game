@@ -12,7 +12,7 @@ var addr = flag.String("addr", ":7777", "http service address")
 
 func main() {
 	flag.Parse()
-	hub := root.NewHub(60)
+	hub := root.NewHub(10)
 	go hub.Run()
 
 	var m sync.Mutex
