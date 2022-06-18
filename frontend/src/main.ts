@@ -109,6 +109,8 @@ export class Game extends Container {
             const newPos = createVector(parsed.pos.x, parsed.pos.y)
             if (newPos.dist(this.player.targetPos) > 50) {
                 console.log("clientside update!")
+                console.log("newPos: ", newPos)
+                console.log("tarPos: ", this.player.targetPos)
                 // only update players target pos with server side pos if a threshold is exceeded
                 this.player.targetPos = newPos
             }
