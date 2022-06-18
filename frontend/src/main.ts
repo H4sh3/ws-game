@@ -199,8 +199,11 @@ export class Game extends Container {
 
     handlePlayerTargetPositionEvent(parsed: PlayerTargetPositionEvent) {
         if (parsed.id === this.player.id) {
-            this.player.targetPos.x = parsed.pos.x
-            this.player.targetPos.y = parsed.pos.y
+            const newPos = createVector(parsed.pos.x, parsed.pos.y)
+            if (newPos.dist(this.player.targetPos) > 50) {
+                // only update players target pos with server side pos if a threshold is exceeded
+                this.player.targetPos = newPos
+            }
         } else {
             const player = this.players.get(parsed.id)
             if (player) {
