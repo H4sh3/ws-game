@@ -41,12 +41,6 @@ export interface AssignIdEvent extends BaseEvent {
 }
 
 
-export interface KeyChangeEvent extends BaseEvent {
-    payload: {
-        key: string,
-        value: KeyStates,
-    }
-}
 
 export interface PlayerTargetPositionEvent extends BaseEvent {
     id: number
@@ -70,34 +64,6 @@ export function isPlayerTargetPositionEvent(value: any): value is PlayerTargetPo
         isBaseEvent(value) &&
         value.eventType == EVENT_TYPES.PLAYER_TARGET_POSITION_EVENT
     )
-}
-
-export function getKeyBoardEvent(key: string, value: KeyStates): string {
-    return JSON.stringify({
-        "eventType": EVENT_TYPES.KEYBOARD_EVENT,
-        "payload": {
-            "key": key,
-            "value": value,
-        }
-    })
-}
-
-
-interface HitResourceEvent extends BaseEvent {
-    payload: {
-        skill: string,
-        id: number,
-    }
-}
-
-export function getHitResourceEvent(skill: string, id: number): string {
-    return JSON.stringify({
-        "eventType": EVENT_TYPES.HIT_RESOURCE_EVENT,
-        "payload": {
-            "skill": skill,
-            "id": id,
-        }
-    })
 }
 
 export function isAssignUserIdEvent(value: any): value is AssignIdEvent {
@@ -149,4 +115,45 @@ export function isUpdateResourceEvent(value: any): value is UpdateResourceEvent 
         isBaseEvent(value) &&
         value.eventType === EVENT_TYPES.UPDATE_RESOURCE_EVENT
     )
+}
+
+
+
+/*
+ Events bellow are send from client to server 
+*/
+
+
+interface KeyBoardEvent extends BaseEvent {
+    payload: {
+        key: string,
+        value: KeyStates,
+    }
+}
+
+export function getKeyBoardEvent(key: string, value: KeyStates): string {
+    return JSON.stringify({
+        "eventType": EVENT_TYPES.KEYBOARD_EVENT,
+        "payload": {
+            "key": key,
+            "value": value,
+        }
+    } as KeyBoardEvent)
+}
+
+interface HitResourceEvent extends BaseEvent {
+    payload: {
+        skill: string,
+        id: number,
+    }
+}
+
+export function getHitResourceEvent(skill: string, id: number): string {
+    return JSON.stringify({
+        "eventType": EVENT_TYPES.HIT_RESOURCE_EVENT,
+        "payload": {
+            "skill": skill,
+            "id": id,
+        }
+    } as HitResourceEvent)
 }
