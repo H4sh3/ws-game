@@ -1,7 +1,6 @@
 package root
 
 import (
-	"fmt"
 	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
@@ -124,7 +123,6 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 
 	if !collision {
 		c.Pos = *newPos
-		fmt.Printf("x:%d y:%d\n", c.Pos.X, c.Pos.Y)
 	}
 
 	h.broadcast <- events.NewPlayerTargetPositionEvent(c.Pos, c.Id)
