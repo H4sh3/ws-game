@@ -13,6 +13,7 @@ export class Resource {
     isLootable: boolean
     resourceType: string
     player: Player
+    clickHandler: (r: Resource) => void
 
     // render stuff
     container: Container
@@ -20,9 +21,9 @@ export class Resource {
     healthBar?: Graphics
     healthBarBase?: Graphics
 
-    constructor(id: number, player: Player, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean) {
+    constructor(id: number, clickHandler: (r: Resource) => void, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean) {
         this.id = id
-        this.player = player
+        this.clickHandler = clickHandler
         this.quantity = quantity
         this.pos = pos
         this.hitPoints = {
@@ -45,13 +46,7 @@ export class Resource {
 
         this.sprite.anchor.set(0.5)
         this.sprite.on('click', () => {
-            if (this.pos.dist(this.player.currentPos) < 150) {
-                if (this.isLootable) {
-                    ws.send(getLootResourceEvent(this.id))
-                } else {
-                    ws.send(getHitResourceEvent("1", this.id))
-                }
-            }
+            this.clickHandler(this)
         });
 
         this.sprite.on('mouseover', () => {

@@ -1,5 +1,5 @@
-import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent } from './events/events';
+import { Application, Container, Graphics, Sprite } from 'pixi.js';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
@@ -18,6 +18,14 @@ export class Game extends Container {
     constructor(app: Application) {
         super();
         this.app = app;
+
+        const background = new Graphics();
+        //background.lineStyle(2, 0x666666, 1);
+        background.beginFill(0x2BB130);
+        background.drawRect(0, 0, 500, 500);
+        background.endFill();
+
+        this.addChild(background)
         this.update = this.update.bind(this);
 
         this.keyHandler = new KeyboardHandler()
@@ -89,8 +97,17 @@ export class Game extends Container {
     }
 
     handleResourceEvent(parsed: ResourcePositionsEvent) {
+        const resourceClicked = (r: Resource) => {
+            if (r.pos.dist(this.player.currentPos) < 150) {
+                if (r.isLootable) {
+                    this.ws.send(getLootResourceEvent(r.id))
+                } else {
+                    this.ws.send(getHitResourceEvent("1", r.id))
+                }
+            }
+        }
         parsed.resources.forEach(r => {
-            const resource: Resource = new Resource(r.id, this.player, r.quantity, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
+            const resource: Resource = new Resource(r.id, resourceClicked, r.quantity, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
             this.resources.push(resource)
             this.worldContainer.addChild(resource.container);
         })
