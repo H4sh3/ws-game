@@ -6,6 +6,8 @@ import (
 	"ws-game/shared"
 )
 
+const MAX_LOOT_RANGE = 150
+
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
@@ -139,7 +141,7 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 		if h.Resources[i].Id == event.Id {
 
 			// if dist is greater than this skip
-			if h.Resources[i].Pos.Dist((&c.Pos)) < 70 {
+			if h.Resources[i].Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
 				resource := &h.Resources[i]
 				resource.Hitpoints.Current -= 10
 
@@ -181,7 +183,7 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 	for i := range h.Resources {
 		r := h.Resources[i]
 		if r.Id == event.Id {
-			if h.Resources[i].Pos.Dist((&c.Pos)) < 70 {
+			if h.Resources[i].Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
 
 				toRemoveIndex = i
 				// add to user inventory or inc count

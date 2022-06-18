@@ -45,7 +45,7 @@ export class Resource {
 
         this.sprite.anchor.set(0.5)
         this.sprite.on('click', () => {
-            if (this.pos.dist(this.player.currentPos) < 70) {
+            if (this.pos.dist(this.player.currentPos) < 150) {
                 if (this.isLootable) {
                     ws.send(getLootResourceEvent(this.id))
                 } else {
