@@ -108,6 +108,7 @@ export class Game extends Container {
         if (parsed.id === this.player.id) {
             const newPos = createVector(parsed.pos.x, parsed.pos.y)
             if (newPos.dist(this.player.targetPos) > 50) {
+                console.log("clientside update!")
                 // only update players target pos with server side pos if a threshold is exceeded
                 this.player.targetPos = newPos
             }
@@ -157,8 +158,6 @@ export class Game extends Container {
                 }
                 r.container.removeChild(r.sprite)
                 this.removeChild(r.container)
-
-                this.resources = this.resources.filter(oR => oR.id !== r.id)
             }
         }
     }
