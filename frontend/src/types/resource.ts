@@ -1,5 +1,6 @@
 import { Sprite, Graphics, Loader, Point, Container } from "pixi.js"
 import { Hitpoints, getHitResourceEvent, getLootResourceEvent } from "../events/events"
+import { Player } from "./player"
 import Vector from "./vector"
 
 
@@ -11,6 +12,7 @@ export class Resource {
     isSolid: boolean
     isLootable: boolean
     resourceType: string
+    player: Player
 
     // render stuff
     container: Container
@@ -18,8 +20,9 @@ export class Resource {
     healthBar?: Graphics
     healthBarBase?: Graphics
 
-    constructor(id: number, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean) {
+    constructor(id: number, player: Player, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean) {
         this.id = id
+        this.player = player
         this.quantity = quantity
         this.pos = pos
         this.hitPoints = {
@@ -29,7 +32,6 @@ export class Resource {
         this.isSolid = isSolid
         this.isLootable = isLootable
         this.resourceType = resourceType
-
 
         this.container = new Container()
         this.container.x = this.pos.x
@@ -43,10 +45,12 @@ export class Resource {
 
         this.sprite.anchor.set(0.5)
         this.sprite.on('click', () => {
-            if (this.isLootable) {
-                ws.send(getLootResourceEvent(this.id))
-            } else {
-                ws.send(getHitResourceEvent("1", this.id))
+            if (this.pos.dist(this.player.currentPos) < 70) {
+                if (this.isLootable) {
+                    ws.send(getLootResourceEvent(this.id))
+                } else {
+                    ws.send(getHitResourceEvent("1", this.id))
+                }
             }
         });
 

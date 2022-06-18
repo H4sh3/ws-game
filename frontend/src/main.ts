@@ -90,7 +90,7 @@ export class Game extends Container {
 
     handleResourceEvent(parsed: ResourcePositionsEvent) {
         parsed.resources.forEach(r => {
-            const resource: Resource = new Resource(r.id, r.quantity, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
+            const resource: Resource = new Resource(r.id, this.player, r.quantity, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
             this.resources.push(resource)
             this.worldContainer.addChild(resource.container);
         })

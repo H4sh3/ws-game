@@ -135,16 +135,22 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 			continue
 		}
 
+		// found correct resource
 		if h.Resources[i].Id == event.Id {
-			resource := &h.Resources[i]
-			resource.Hitpoints.Current -= 10
 
-			remove := resource.Hitpoints.Current <= 0
-			h.broadcast <- events.NewUpdateResourceEvent(resource.Id, resource.Hitpoints.Current, resource.Hitpoints.Max, remove)
+			// if dist is greater than this skip
+			if h.Resources[i].Pos.Dist((&c.Pos)) < 70 {
+				resource := &h.Resources[i]
+				resource.Hitpoints.Current -= 10
 
-			if resource.Hitpoints.Current <= 0 {
-				toRemoveIndex = i
+				remove := resource.Hitpoints.Current <= 0
+				h.broadcast <- events.NewUpdateResourceEvent(resource.Id, resource.Hitpoints.Current, resource.Hitpoints.Max, remove)
+
+				if resource.Hitpoints.Current <= 0 {
+					toRemoveIndex = i
+				}
 			}
+			break
 		}
 	}
 
@@ -175,28 +181,31 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 	for i := range h.Resources {
 		r := h.Resources[i]
 		if r.Id == event.Id {
-			toRemoveIndex = i
+			if h.Resources[i].Pos.Dist((&c.Pos)) < 70 {
 
-			// add to user inventory or inc count
-			foundInInventory := false
-			for n := range c.Inventory {
-				invRes := c.Inventory[n]
+				toRemoveIndex = i
+				// add to user inventory or inc count
+				foundInInventory := false
+				for n := range c.Inventory {
+					invRes := c.Inventory[n]
 
-				// exists in inventory
-				if invRes.ResourceType == r.ResourceType {
+					// exists in inventory
+					if invRes.ResourceType == r.ResourceType {
 
-					foundInInventory = true
-					c.Inventory[n].Quantity += r.Quantity
+						foundInInventory = true
+						c.Inventory[n].Quantity += r.Quantity
+					}
 				}
-			}
 
-			// resourceType not found in inventory -> use this one
-			if !foundInInventory {
-				c.Inventory = append(c.Inventory, r)
-			}
+				// resourceType not found in inventory -> use this one
+				if !foundInInventory {
+					c.Inventory = append(c.Inventory, r)
+				}
 
-			// broadcast update event that removes the resource
-			h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true)
+				// broadcast update event that removes the resource
+				h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true)
+			}
+			break
 		}
 	}
 
