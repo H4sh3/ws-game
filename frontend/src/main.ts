@@ -108,9 +108,6 @@ export class Game extends Container {
         if (parsed.id === this.player.id) {
             const newPos = createVector(parsed.pos.x, parsed.pos.y)
             if (newPos.dist(this.player.targetPos) > 50) {
-                console.log("clientside update!")
-                console.log("newPos: ", newPos)
-                console.log("tarPos: ", this.player.targetPos)
                 // only update players target pos with server side pos if a threshold is exceeded
                 this.player.targetPos = newPos
             }
@@ -192,6 +189,7 @@ function handleKeyBoard(keyHandler: KeyboardHandler, player: Player, ws: WebSock
             const hasCollision = resources.filter(r => r.isSolid).some(r => r.pos.dist(newPos) < 40)
             if (!hasCollision) {
                 player.targetPos = newPos
+                console.log(`x:${player.targetPos.x} y:${player.targetPos.y}`)
                 ws.send(getKeyBoardEvent(key, value))
             }
         }
