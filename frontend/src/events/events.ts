@@ -157,3 +157,19 @@ export function getHitResourceEvent(skill: string, id: number): string {
         }
     } as HitResourceEvent)
 }
+
+interface LootResourceEvent extends BaseEvent {
+    payload: {
+        id: number,
+    }
+}
+
+export function getLootResourceEvent(resourceId: number): string {
+    const e: LootResourceEvent = {
+        "eventType": EVENT_TYPES.LOOT_RESOURCE_EVENT,
+        "payload": {
+            "id": resourceId,
+        }
+    }
+    return JSON.stringify(e)
+}
