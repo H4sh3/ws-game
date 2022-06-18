@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, IPoint, Loader, Point, Sprite } from 'pixi.js';
+import { Application, Container, Graphics, InteractionEvent, Loader, Point, Sprite } from 'pixi.js';
 import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, getHitResourceEvent, UpdateResourceEvent, Hitpoints, IResource } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
@@ -37,21 +37,22 @@ class Resource {
 
         this.updateHealthbar()
 
-        //this.sprite.interactive = true
+        this.sprite.interactive = true
+
         this.sprite.anchor.set(0.5)
-        /*         this.sprite.addListener("click", () => {
-                    ws.send(getHitResourceEvent("1", this.id))
-                })
-        
-                this.sprite.addListener("mouseover", () => {
-                    const scale = new Point(1.1, 1.1)
-                    this.sprite.scale = scale
-                })
-        
-                this.sprite.addListener("mouseout", () => {
-                    const scale = new Point(1, 1)
-                    this.sprite.scale = scale
-                }) */
+        this.sprite.on('click', () => {
+            ws.send(getHitResourceEvent("1", this.id))
+        });
+
+        this.sprite.on('mouseover', () => {
+            const scale = new Point(1.1, 1.1)
+            this.sprite.scale = scale
+        });
+
+        this.sprite.on('mouseout', () => {
+            const scale = new Point(1, 1)
+            this.sprite.scale = scale
+        });
     }
 
     updateHealthbar() {

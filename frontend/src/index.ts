@@ -2,8 +2,6 @@ import './styles/index.css';
 
 import * as PIXI from 'pixi.js';
 import { Game } from './main';
-import { Loader } from 'pixi.js';
-Loader.shared.resources;
 
 const load = (app: PIXI.Application, asset: string) => {
     return new Promise<void>((resolve) => {

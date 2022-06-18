@@ -485,6 +485,13 @@
   resolved "https://registry.yarnpkg.com/@types/parse-json/-/parse-json-4.0.0.tgz#2f8bb441434d163b35fb8ffdccd7138927ffb8c0"
   integrity sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==
 
+"@types/pixi.js@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@types/pixi.js/-/pixi.js-5.0.0.tgz#3fbd6d9d26cb563a0f2870e0ea767bc62dddf1b8"
+  integrity sha512-yZqQBR043lRBlBZci2cx6hgmX0fvBfYIqFm6VThlnueXEjitxd3coy+BGsqsZ7+ary7O//+ks4aJRhC5MJoHqA==
+  dependencies:
+    pixi.js "*"
+
 "@types/qs@*":
   version "6.9.7"
   resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.9.7.tgz#63bb7d067db107cc1e457c303bc25d511febf6cb"
@@ -2340,7 +2347,7 @@ pify@^2.3.0:
   resolved "https://registry.yarnpkg.com/pify/-/pify-2.3.0.tgz#ed141a6ac043a849ea588498e7dca8b15330e90c"
   integrity sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog==
 
-pixi.js@^6.4.2:
+pixi.js@*, pixi.js@^6.4.2:
   version "6.4.2"
   resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-6.4.2.tgz#1cbac71a6535568f59a8684274792aa1bd271646"
   integrity sha512-8fjWgBfuSinIz0J5qXdsz10KAeDYyaa8XOcp4E1f+ug5ckE5rTPCcrSwQ8LNWA/YpdJ5irGOjv0rEA4sOcWVeQ==
