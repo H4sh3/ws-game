@@ -143,7 +143,7 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 			// if dist is greater than this skip
 			if h.Resources[i].Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
 				resource := &h.Resources[i]
-				resource.Hitpoints.Current -= 10
+				resource.Hitpoints.Current -= 34
 
 				remove := resource.Hitpoints.Current <= 0
 				h.broadcast <- events.NewUpdateResourceEvent(resource.Id, resource.Hitpoints.Current, resource.Hitpoints.Max, remove)
