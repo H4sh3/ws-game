@@ -11,7 +11,3 @@ export enum EVENT_TYPES {
     HIT_RESOURCE_EVENT = "HIT_RESOURCE_EVENT",
     UPDATE_RESOURCE_EVENT = "UPDATE_RESOURCE_EVENT"
 }
-
-const local = "ws://127.0.0.1:7777"
-const prod = "wss://game.gymcadia.com/websocket"
-//export const wsUrl = import.meta.env.MODE === 'development' ? local : prod

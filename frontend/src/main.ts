@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, InteractionEvent, Loader, Point, Sprite } from 'pixi.js';
+import { Application, Container, Graphics, Loader, Point, Sprite } from 'pixi.js';
 import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, getHitResourceEvent, UpdateResourceEvent, Hitpoints, IResource } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
@@ -99,7 +99,7 @@ export class Game extends Container {
 
         this.keyHandler = new KeyboardHandler()
 
-        this.ws = new WebSocket("ws://localhost:7777")
+        this.ws = new WebSocket(process.env.WS_API)
         this.worldContainer = new Container();
         this.resources = []
 
