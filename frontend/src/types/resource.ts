@@ -50,13 +50,13 @@ export class Resource {
         });
 
         this.sprite.on('mouseover', () => {
-            const scale = new Point(1.1, 1.1)
-            this.sprite.scale = scale
+            this.sprite.scale.x = 1.1
+            this.sprite.scale.y = 1.1
         });
 
         this.sprite.on('mouseout', () => {
-            const scale = new Point(1, 1)
-            this.sprite.scale = scale
+            this.sprite.scale.x = 1
+            this.sprite.scale.y = 1
         });
     }
 

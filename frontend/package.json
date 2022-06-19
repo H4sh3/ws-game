@@ -4,7 +4,7 @@
   "description": "A modern Webpack 5, Tailwind CSS 3, and TypeScript Web Apps Starter Template",
   "private": true,
   "scripts": {
-    "dev": "webpack serve --mode=development --open",
+    "dev": "webpack serve --mode=development --open --port 3000",
     "build": "webpack --mode=production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -28,6 +28,6 @@
   },
   "dependencies": {
     "@types/pixi.js": "^5.0.0",
-    "pixi.js": "^6.4.2"
+    "pixi.js": "6.3.0"
   }
 }

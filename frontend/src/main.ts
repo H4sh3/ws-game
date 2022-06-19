@@ -1,8 +1,9 @@
 import { Application, Container, Graphics, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
+import Vector from './types/vector';
 
 export class Game extends Container {
     app: Application;
@@ -14,6 +15,11 @@ export class Game extends Container {
     player: Player
 
     players: Map<number, Player>
+
+    cursorSprite: Sprite
+    blockadeSprite: Sprite
+
+    cursorPos: Vector
 
     constructor(app: Application) {
         super();
@@ -34,11 +40,43 @@ export class Game extends Container {
         this.worldContainer = new Container();
         this.resources = []
 
-        this.player = new Player(-1, createVector(0, 0), new Sprite(app.loader.resources['assets/player0.png'].texture))
-        this.player.sprite.x = 250
-        this.player.sprite.y = 250
-        this.player.sprite.anchor.set(0.5)
+        const playerSprite = new Sprite(app.loader.resources['assets/player0.png'].texture)
+        playerSprite.x = 250
+        playerSprite.y = 250
+        playerSprite.anchor.set(0.5)
+        this.player = new Player(-1, createVector(0, 0), playerSprite)
 
+        this.cursorSprite = new Sprite(app.loader.resources['assets/cursor.png'].texture)
+        this.cursorSprite.anchor.set(0.5)
+        this.cursorSprite.x = 0
+        this.cursorSprite.y = 450
+        playerSprite.addChild(this.cursorSprite)
+
+        this.cursorPos = createVector(0, 0)
+
+        this.app.stage.interactive = true
+        this.app.stage.on("pointermove", (e) => {
+            const { x, y } = e.data.global
+            this.cursorPos.x = x
+            this.cursorPos.y = y
+        })
+        this.app.stage.on("click", (e) => {
+            const pX = this.player.currentPos.x % 50
+            const pY = this.player.currentPos.y % 50
+            const cX = this.cursorPos.x
+            const cY = this.cursorPos.y
+            const x1 = Math.floor((cX + 25 + pX) / 50) * 50
+            const y1 = Math.floor((cY + 25 + pY) / 50) * 50
+            const x = -250 + x1 - pX + this.player.currentPos.x
+            const y = -250 + y1 - pY + this.player.currentPos.y
+            const spawn = createVector(Math.trunc(x), Math.trunc(y))
+            this.ws.send(getPlayerPlacedResourceEvent("blockade", spawn))
+        })
+
+        this.blockadeSprite = new Sprite(app.loader.resources['assets/blockade.png'].texture)
+        this.blockadeSprite.x = 50
+        this.blockadeSprite.y = 450
+        this.addChild(this.blockadeSprite)
 
         this.addChild(this.player.sprite)
 
@@ -87,6 +125,15 @@ export class Game extends Container {
         this.player.updatePosition()
         this.worldContainer.x = -this.player.currentPos.x + 250
         this.worldContainer.y = -this.player.currentPos.y + 250
+
+        const pX = this.player.currentPos.x % 50
+        const pY = this.player.currentPos.y % 50
+        const cX = this.cursorPos.x
+        const cY = this.cursorPos.y
+        const x1 = Math.floor((cX + 25 + pX) / 50) * 50
+        const y1 = Math.floor((cY + 25 + pY) / 50) * 50
+        this.cursorSprite.x = -250 + x1 - pX
+        this.cursorSprite.y = -250 + y1 - pY
 
         // update other players positions
         Array.from(this.players.values()).map(p => {

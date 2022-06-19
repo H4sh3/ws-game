@@ -19,6 +19,8 @@ const main = async () => {
     await load(app, 'assets/stone.png');
     await load(app, 'assets/player0.png');
     await load(app, 'assets/brick.png');
+    await load(app, 'assets/cursor.png');
+    await load(app, 'assets/blockade.png');
 
 
     const x = document.getElementById("mainView")

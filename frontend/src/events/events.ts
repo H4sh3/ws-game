@@ -176,3 +176,21 @@ export function getLootResourceEvent(resourceId: number): string {
     }
     return JSON.stringify(e)
 }
+
+interface PlayerPlacedResourceEvent extends BaseEvent {
+    payload: {
+        resourceType: string,
+        pos: Vector
+    }
+}
+
+export function getPlayerPlacedResourceEvent(resourceType: string, pos: Vector): string {
+    const e: PlayerPlacedResourceEvent = {
+        "eventType": EVENT_TYPES.PLAYER_PLACED_RESOURCE_EVENT,
+        "payload": {
+            "resourceType": resourceType,
+            "pos": pos
+        }
+    }
+    return JSON.stringify(e)
+}
