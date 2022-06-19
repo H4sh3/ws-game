@@ -28,7 +28,6 @@ export class Game extends Container {
         this.app = app;
 
         const background = new Graphics();
-        //background.lineStyle(2, 0x666666, 1);
         background.beginFill(0x2BB130);
         background.drawRect(0, 0, 500, 500);
         background.endFill();
@@ -53,8 +52,13 @@ export class Game extends Container {
         this.cursorSprite = new Sprite(app.loader.resources['assets/cursor.png'].texture)
         this.cursorSprite.anchor.set(0.5)
         this.cursorSprite.x = 0
-        this.cursorSprite.y = 450
+        this.cursorSprite.y = 445
         playerSprite.addChild(this.cursorSprite)
+
+        const inventoryBackground = new Graphics()
+        inventoryBackground.beginFill(0xAAAAAA);
+        inventoryBackground.drawRect(0, 440, 500, 60);
+        inventoryBackground.endFill();
 
         this.cursorPos = createVector(0, 0)
 
@@ -80,24 +84,7 @@ export class Game extends Container {
             this.ws.send(getPlayerPlacedResourceEvent("blockade", spawn))
         })
 
-        this.blockadeSprite = new Sprite(app.loader.resources['assets/blockade.png'].texture)
-        this.blockadeSprite.x = 50
-        this.blockadeSprite.y = 450
-        this.blockadeSprite.interactive = true
-        this.blockadeSprite.on("click", () => {
-            this.isEditing = !this.isEditing
-            if (this.isEditing) {
-                this.cursorSprite.texture = app.loader.resources['assets/blockade.png'].texture
-                this.blockadeSprite.texture = app.loader.resources['assets/cursor.png'].texture
-            } else {
-                this.cursorSprite.texture = app.loader.resources['assets/cursor.png'].texture
-                this.blockadeSprite.texture = app.loader.resources['assets/blockade.png'].texture
-            }
-        })
 
-        this.addChild(this.blockadeSprite)
-
-        this.addChild(this.player.sprite)
 
         this.players = new Map()
 
@@ -135,6 +122,26 @@ export class Game extends Container {
 
         // render loop
         app.ticker.add(this.update);
+
+        this.addChild(inventoryBackground)
+        this.blockadeSprite = new Sprite(app.loader.resources['assets/blockade.png'].texture)
+        this.blockadeSprite.x = 50
+        this.blockadeSprite.y = 445
+        this.blockadeSprite.interactive = true
+        this.blockadeSprite.on("click", () => {
+            this.isEditing = !this.isEditing
+            if (this.isEditing) {
+                this.cursorSprite.texture = app.loader.resources['assets/blockade.png'].texture
+                this.blockadeSprite.texture = app.loader.resources['assets/cursor.png'].texture
+            } else {
+                this.cursorSprite.texture = app.loader.resources['assets/cursor.png'].texture
+                this.blockadeSprite.texture = app.loader.resources['assets/blockade.png'].texture
+            }
+        })
+
+        this.addChild(this.blockadeSprite)
+
+        this.addChild(this.player.sprite)
     }
 
     update(delta: number) {
