@@ -44,8 +44,8 @@ func NewHub(n int) *Hub {
 	for x := 1; x < n; x++ {
 		for y := 1; y < n; y++ {
 			pos := shared.Vector{
-				X: 100 * x,
-				Y: 100 * y,
+				X: 50 * x,
+				Y: 50 * y,
 			}
 			resources = append(resources, *resource.NewResource(resource.Stone, pos, hub.ResIdCnt, 1, true, 100, false))
 			hub.ResIdCnt++
@@ -214,4 +214,12 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 	if toRemoveIndex != -1 {
 		h.Resources = append(h.Resources[:toRemoveIndex], h.Resources[toRemoveIndex+1:]...)
 	}
+}
+
+func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent, c *Client) {
+	r := resource.Resource{ResourceType: resource.ResourceType(event.ResourceType), Pos: event.Pos, Id: h.ResIdCnt, Quantity: 1, Hitpoints: resource.Hitpoints{Current: 100, Max: 100}, IsSolid: false, IsLootable: false}
+	h.ResIdCnt += 1
+	rArr := []resource.Resource{r}
+	h.broadcast <- events.NewResourcePositionsEvent(rArr)
+	h.Resources = append(h.Resources, r)
 }

@@ -20,6 +20,7 @@ const (
 	HIT_RESOURCE_EVENT           EventType = "HIT_RESOURCE_EVENT"
 	UPDATE_RESOURCE_EVENT        EventType = "UPDATE_RESOURCE_EVENT"
 	LOOT_RESOURCE_EVENT          EventType = "LOOT_RESOURCE_EVENT"
+	PLAYER_PLACED_RESOURCE_EVENT EventType = "PLAYER_PLACED_RESOURCE_EVENT"
 )
 
 type NewPlayerEvent struct {
@@ -154,4 +155,9 @@ type HitResourceEvent struct {
 
 type LootResourceEvent struct {
 	Id int `json:"id"`
+}
+
+type PlayerPlacedResourceEvent struct {
+	ResourceType string        `json:"resourceType"`
+	Pos          shared.Vector `json:"pos"`
 }
