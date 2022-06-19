@@ -56,7 +56,8 @@ export class Game extends Container {
         playerSprite.addChild(this.cursorSprite)
 
         const inventoryBackground = new Graphics()
-        inventoryBackground.beginFill(0xAAAAAA);
+        inventoryBackground.beginFill(0xCCCCCC);
+        inventoryBackground.lineStyle(2, 0x666666, 1);
         inventoryBackground.drawRect(0, 440, 500, 60);
         inventoryBackground.endFill();
 
@@ -236,12 +237,6 @@ export class Game extends Container {
             r.hitPoints.max = parsed.hitpoints.max
             r.updateHealthbar()
             if (r.hitPoints.current <= 0) {
-
-                // remove sprites
-                if (r.healthBar && r.healthBarBase) {
-                    r.container.removeChild(r.healthBar)
-                    r.container.removeChild(r.healthBarBase)
-                }
                 r.container.removeChild(r.sprite)
                 this.removeChild(r.container)
             }
