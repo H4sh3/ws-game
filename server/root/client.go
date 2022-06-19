@@ -53,10 +53,11 @@ type Client struct {
 	conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send      chan []byte
-	Id        int
-	Pos       shared.Vector
-	Inventory []resource.Resource
+	send chan []byte
+	Id   int
+	Pos  shared.Vector
+	// Inventory []resource.Resource
+	Inventory map[resource.ResourceType]resource.Resource
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -151,7 +152,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 
 	m.Lock()
 	clientPostion := shared.Vector{X: 0, Y: 0}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: clientPostion}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: clientPostion, Inventory: make(map[resource.ResourceType]resource.Resource)}
 	client.send <- events.GetAssignUserIdEvent(id_cnt)
 
 	// provide the new player with all players positions

@@ -163,7 +163,7 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 		quantity := 0
 		subType := resource.Brick
 		if h.Resources[toRemoveIndex].ResourceType == resource.Stone {
-			quantity = shared.RandIntInRange(1, 2)
+			quantity = shared.RandIntInRange(1, 3)
 			subType = resource.Brick
 		} else if h.Resources[toRemoveIndex].ResourceType == resource.Blockade {
 			quantity = shared.RandIntInRange(2, 5)
@@ -196,22 +196,13 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 			if h.Resources[i].Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
 
 				toRemoveIndex = i
-				// add to user inventory or inc count
-				foundInInventory := false
-				for n := range c.Inventory {
-					invRes := c.Inventory[n]
 
-					// exists in inventory
-					if invRes.ResourceType == r.ResourceType {
-
-						foundInInventory = true
-						c.Inventory[n].Quantity += r.Quantity
-					}
-				}
-
-				// resourceType not found in inventory -> use this one
-				if !foundInInventory {
-					c.Inventory = append(c.Inventory, r)
+				if invRes, ok := c.Inventory[r.ResourceType]; ok {
+					// already exists in inventory
+					invRes.Quantity += r.Quantity
+					c.Inventory[r.ResourceType] = invRes
+				} else {
+					c.Inventory[r.ResourceType] = r
 				}
 
 				// broadcast update event that removes the resource
@@ -227,18 +218,31 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 }
 
 func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent, c *Client) {
-	r := resource.Resource{ResourceType: resource.ResourceType(event.ResourceType),
-		Pos:      event.Pos,
-		Id:       h.ResIdCnt,
-		Quantity: 1,
-		Hitpoints: resource.Hitpoints{
-			Current: 500,
-			Max:     500},
-		IsSolid:    true,
-		IsLootable: false,
+	// blockade is 5 bricks
+
+	if event.ResourceType == string(resource.Blockade) {
+		costs := 5
+		if invRes, ok := c.Inventory[resource.Brick]; ok {
+			// check if enough materials in inventory to build this resource
+			if invRes.Quantity >= costs {
+				invRes.Quantity -= costs
+				c.Inventory[resource.Brick] = invRes
+				r := resource.Resource{ResourceType: resource.ResourceType(event.ResourceType),
+					Pos:      event.Pos,
+					Id:       h.ResIdCnt,
+					Quantity: 1,
+					Hitpoints: resource.Hitpoints{
+						Current: 500,
+						Max:     500},
+					IsSolid:    true,
+					IsLootable: false,
+				}
+				h.ResIdCnt += 1
+				rArr := []resource.Resource{r}
+				h.broadcast <- events.NewResourcePositionsEvent(rArr)
+				h.Resources = append(h.Resources, r)
+			}
+		}
+
 	}
-	h.ResIdCnt += 1
-	rArr := []resource.Resource{r}
-	h.broadcast <- events.NewResourcePositionsEvent(rArr)
-	h.Resources = append(h.Resources, r)
 }
