@@ -217,7 +217,16 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 }
 
 func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent, c *Client) {
-	r := resource.Resource{ResourceType: resource.ResourceType(event.ResourceType), Pos: event.Pos, Id: h.ResIdCnt, Quantity: 1, Hitpoints: resource.Hitpoints{Current: 100, Max: 100}, IsSolid: false, IsLootable: false}
+	r := resource.Resource{ResourceType: resource.ResourceType(event.ResourceType),
+		Pos:      event.Pos,
+		Id:       h.ResIdCnt,
+		Quantity: 1,
+		Hitpoints: resource.Hitpoints{
+			Current: 10000,
+			Max:     10000},
+		IsSolid:    false,
+		IsLootable: false,
+	}
 	h.ResIdCnt += 1
 	rArr := []resource.Resource{r}
 	h.broadcast <- events.NewResourcePositionsEvent(rArr)

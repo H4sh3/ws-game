@@ -21,6 +21,8 @@ export class Game extends Container {
 
     cursorPos: Vector
 
+    isEditing: boolean
+
     constructor(app: Application) {
         super();
         this.app = app;
@@ -30,6 +32,8 @@ export class Game extends Container {
         background.beginFill(0x2BB130);
         background.drawRect(0, 0, 500, 500);
         background.endFill();
+
+        this.isEditing = false
 
         this.addChild(background)
         this.update = this.update.bind(this);
@@ -60,11 +64,14 @@ export class Game extends Container {
             this.cursorPos.x = x
             this.cursorPos.y = y
         })
+
         this.app.stage.on("click", (e) => {
-            const pX = this.player.currentPos.x % 50
-            const pY = this.player.currentPos.y % 50
             const cX = this.cursorPos.x
             const cY = this.cursorPos.y
+            if (!this.isEditing || cY > 400) return
+
+            const pX = this.player.currentPos.x % 50
+            const pY = this.player.currentPos.y % 50
             const x1 = Math.floor((cX + 25 + pX) / 50) * 50
             const y1 = Math.floor((cY + 25 + pY) / 50) * 50
             const x = -250 + x1 - pX + this.player.currentPos.x
@@ -76,6 +83,18 @@ export class Game extends Container {
         this.blockadeSprite = new Sprite(app.loader.resources['assets/blockade.png'].texture)
         this.blockadeSprite.x = 50
         this.blockadeSprite.y = 450
+        this.blockadeSprite.interactive = true
+        this.blockadeSprite.on("click", () => {
+            this.isEditing = !this.isEditing
+            if (this.isEditing) {
+                this.cursorSprite.texture = app.loader.resources['assets/blockade.png'].texture
+                this.blockadeSprite.texture = app.loader.resources['assets/cursor.png'].texture
+            } else {
+                this.cursorSprite.texture = app.loader.resources['assets/cursor.png'].texture
+                this.blockadeSprite.texture = app.loader.resources['assets/blockade.png'].texture
+            }
+        })
+
         this.addChild(this.blockadeSprite)
 
         this.addChild(this.player.sprite)
@@ -132,8 +151,14 @@ export class Game extends Container {
         const cY = this.cursorPos.y
         const x1 = Math.floor((cX + 25 + pX) / 50) * 50
         const y1 = Math.floor((cY + 25 + pY) / 50) * 50
-        this.cursorSprite.x = -250 + x1 - pX
-        this.cursorSprite.y = -250 + y1 - pY
+
+        if (this.isEditing) {
+            this.cursorSprite.x = -250 + x1 - pX
+            this.cursorSprite.y = -250 + y1 - pY
+        } else {
+            this.cursorSprite.x = 0
+            this.cursorSprite.y = 450
+        }
 
         // update other players positions
         Array.from(this.players.values()).map(p => {
@@ -144,17 +169,8 @@ export class Game extends Container {
     }
 
     handleResourceEvent(parsed: ResourcePositionsEvent) {
-        const resourceClicked = (r: Resource) => {
-            if (r.pos.dist(this.player.currentPos) < 150) {
-                if (r.isLootable) {
-                    this.ws.send(getLootResourceEvent(r.id))
-                } else {
-                    this.ws.send(getHitResourceEvent("1", r.id))
-                }
-            }
-        }
         parsed.resources.forEach(r => {
-            const resource: Resource = new Resource(r.id, resourceClicked, r.quantity, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
+            const resource: Resource = new Resource(r.id, this.player, r.quantity, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
             this.resources.push(resource)
             this.worldContainer.addChild(resource.container);
         })
