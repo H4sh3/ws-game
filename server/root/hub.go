@@ -222,8 +222,8 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 		Id:       h.ResIdCnt,
 		Quantity: 1,
 		Hitpoints: resource.Hitpoints{
-			Current: 10000,
-			Max:     10000},
+			Current: 500,
+			Max:     500},
 		IsSolid:    true,
 		IsLootable: false,
 	}
