@@ -19,7 +19,6 @@ export class Resource {
     container: Container
     sprite: Sprite
     healthBar?: Graphics
-    healthBarBase?: Graphics
 
     constructor(id: number, player: Player, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean) {
         this.id = id
@@ -69,27 +68,28 @@ export class Resource {
     }
 
     updateHealthbar() {
-        if (this.hitPoints.current === this.hitPoints.max) {
-            return
-        }
-        const width = 50
         if (this.healthBar) {
             this.container.removeChild(this.healthBar)
         }
+        if (this.hitPoints.current === this.hitPoints.max || this.hitPoints.current <= 0) {
+            return
+        }
+
+        const width = 50
         this.healthBar = new Graphics();
-        this.healthBar.lineStyle(2, 0x666666, 1);
-        //this.healthBar.beginFill(0xCCCCCC);
+
+        this.healthBar.beginFill(0xcccccc);
         this.healthBar.drawRect(-25, -20, width, 10);
         this.healthBar.endFill();
 
-        if (this.healthBarBase) {
-            this.container.removeChild(this.healthBarBase)
-        }
-        this.healthBarBase = new Graphics();
-        this.healthBarBase.beginFill(0x00ff00);
-        this.healthBarBase.drawRect(-25, -20, width * (this.hitPoints.current / this.hitPoints.max), 10);
-        this.healthBarBase.endFill();
-        this.container.addChild(this.healthBarBase)
+        this.healthBar.beginFill(0x00ff00);
+        this.healthBar.drawRect(-25, -20, width * (this.hitPoints.current / this.hitPoints.max), 10);
+        this.healthBar.endFill();
+
+        this.healthBar.lineStyle(2, 0x666666, 1);
+        this.healthBar.drawRect(-25, -20, width, 10);
+        this.healthBar.endFill();
+
         this.container.addChild(this.healthBar)
     }
 }
