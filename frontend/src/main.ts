@@ -4,6 +4,9 @@ import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
 import Vector from './types/vector';
+import getBackgroundGraphics, { getInventoryBackground } from './sprites/background';
+import { getOwnPlayerSprite } from './sprites/player';
+import { getBlockadeSprite, getCursorSprite } from './sprites/etc';
 
 export class Game extends Container {
     app: Application;
@@ -23,43 +26,26 @@ export class Game extends Container {
 
     isEditing: boolean
 
+    wsReady: boolean
+
     constructor(app: Application) {
         super();
         this.app = app;
 
-        const background = new Graphics();
-        background.beginFill(0x2BB130);
-        background.drawRect(0, 0, 500, 500);
-        background.endFill();
-
+        this.ws = new WebSocket(process.env.WS_API)
         this.isEditing = false
+        this.resources = []
+        this.players = new Map()
 
-        this.addChild(background)
+        this.worldContainer = new Container();
+        this.keyHandler = new KeyboardHandler()
         this.update = this.update.bind(this);
 
-        this.keyHandler = new KeyboardHandler()
+        this.addChild(getBackgroundGraphics())
 
-        this.ws = new WebSocket(process.env.WS_API)
-        this.worldContainer = new Container();
-        this.resources = []
-
-        const playerSprite = new Sprite(app.loader.resources['assets/player0.png'].texture)
-        playerSprite.x = 250
-        playerSprite.y = 250
-        playerSprite.anchor.set(0.5)
-        this.player = new Player(-1, createVector(0, 0), playerSprite)
-
-        this.cursorSprite = new Sprite(app.loader.resources['assets/cursor.png'].texture)
-        this.cursorSprite.anchor.set(0.5)
-        this.cursorSprite.x = 0
-        this.cursorSprite.y = 445
-        playerSprite.addChild(this.cursorSprite)
-
-        const inventoryBackground = new Graphics()
-        inventoryBackground.beginFill(0xCCCCCC);
-        inventoryBackground.lineStyle(2, 0x666666, 1);
-        inventoryBackground.drawRect(0, 440, 500, 60);
-        inventoryBackground.endFill();
+        this.player = new Player(-1, createVector(0, 0), getOwnPlayerSprite(app.loader))
+        this.cursorSprite = getCursorSprite(app.loader)
+        this.player.sprite.addChild(this.cursorSprite)
 
         this.cursorPos = createVector(0, 0)
 
@@ -86,8 +72,15 @@ export class Game extends Container {
         })
 
 
+        this.addChild(this.worldContainer)
+        this.addChild(getInventoryBackground())
 
-        this.players = new Map()
+        this.blockadeSprite = getBlockadeSprite(this)
+
+
+        this.addChild(this.blockadeSprite)
+        this.addChild(this.player.sprite)
+
 
         this.ws.onerror = (error) => {
             console.log(error)
@@ -119,30 +112,9 @@ export class Game extends Container {
                 }
             })
         }
-        this.addChild(this.worldContainer)
 
         // render loop
         app.ticker.add(this.update);
-
-        this.addChild(inventoryBackground)
-        this.blockadeSprite = new Sprite(app.loader.resources['assets/blockade.png'].texture)
-        this.blockadeSprite.x = 5
-        this.blockadeSprite.y = 445
-        this.blockadeSprite.interactive = true
-        this.blockadeSprite.on("click", () => {
-            this.isEditing = !this.isEditing
-            if (this.isEditing) {
-                this.cursorSprite.texture = app.loader.resources['assets/blockade.png'].texture
-                this.blockadeSprite.texture = app.loader.resources['assets/cursor.png'].texture
-            } else {
-                this.cursorSprite.texture = app.loader.resources['assets/cursor.png'].texture
-                this.blockadeSprite.texture = app.loader.resources['assets/blockade.png'].texture
-            }
-        })
-
-        this.addChild(this.blockadeSprite)
-
-        this.addChild(this.player.sprite)
     }
 
     update(delta: number) {
