@@ -126,7 +126,7 @@ export class Game extends Container {
 
         this.addChild(inventoryBackground)
         this.blockadeSprite = new Sprite(app.loader.resources['assets/blockade.png'].texture)
-        this.blockadeSprite.x = 50
+        this.blockadeSprite.x = 5
         this.blockadeSprite.y = 445
         this.blockadeSprite.interactive = true
         this.blockadeSprite.on("click", () => {
