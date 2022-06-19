@@ -159,19 +159,29 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 	if toRemoveIndex != -1 {
 		// spawn subtype resources
 
+		// check how many should be spawned
+		quantity := 0
+		subType := resource.Brick
 		if h.Resources[toRemoveIndex].ResourceType == resource.Stone {
-			newResources := []resource.Resource{}
-			for i := 0; i < 3; i++ {
-				pos := shared.Vector{X: h.Resources[toRemoveIndex].Pos.X, Y: h.Resources[toRemoveIndex].Pos.Y}
-				pos.X += shared.RandIntInRange(-10, 10)
-				pos.Y += shared.RandIntInRange(-10, 10)
-				resource := resource.NewResource(resource.Brick, pos, h.ResIdCnt, 1, false, -1, true)
-				newResources = append(newResources, *resource)
-				h.ResIdCnt++
-			}
-			h.Resources = append(h.Resources, newResources...)
-			h.broadcast <- events.NewResourcePositionsEvent(newResources)
+			quantity = shared.RandIntInRange(1, 2)
+			subType = resource.Brick
+		} else if h.Resources[toRemoveIndex].ResourceType == resource.Blockade {
+			quantity = shared.RandIntInRange(2, 5)
+			subType = resource.Brick
+		} else if h.Resources[toRemoveIndex].ResourceType == resource.Tree {
+			quantity = shared.RandIntInRange(3, 5)
+			subType = resource.Wood
 		}
+
+		// create resource of type and quantity
+		pos := shared.Vector{X: h.Resources[toRemoveIndex].Pos.X, Y: h.Resources[toRemoveIndex].Pos.Y}
+		newResources := []resource.Resource{}
+		resource := resource.NewResource(subType, pos, h.ResIdCnt, quantity, false, -1, true)
+		h.ResIdCnt++
+
+		newResources = append(newResources, *resource)
+		h.Resources = append(h.Resources, newResources...)
+		h.broadcast <- events.NewResourcePositionsEvent(newResources)
 
 		// resource got destroyed -> remove resource
 		h.Resources = append(h.Resources[:toRemoveIndex], h.Resources[toRemoveIndex+1:]...)

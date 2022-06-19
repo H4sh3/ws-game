@@ -14,6 +14,8 @@ const (
 	Iron     ResourceType = "iron"
 	Gold     ResourceType = "gold"
 	Blockade ResourceType = "blockade"
+	Tree     ResourceType = "tree"
+	Wood     ResourceType = "wood"
 )
 
 type Hitpoints struct {
