@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	GridCellSize = 100
+	GridCellSize = 500
 )
 
 type GridSubscription struct {
@@ -23,13 +23,31 @@ func (sub *GridSubscription) expired() bool {
 type GridCell struct {
 	Pos                 shared.Vector
 	Key                 string
-	PlayerSubscriptions map[int]GridSubscription // client id to subscription; used for event distribution
-	Players             map[int]*Client          // players inside this cell atm
-	Resources           []resource.Resource      // resources located in this cell
+	PlayerSubscriptions map[int]GridSubscription   // client id to subscription; used for event distribution
+	Players             map[int]*Client            // players inside this cell atm
+	Resources           map[int]*resource.Resource // resources located in this cell
 }
 
 func GetGridCellKey(x int, y int) string {
 	return fmt.Sprintf("%d:%d", x, y)
+}
+
+func (cell *GridCell) Broadcast(data []byte) {
+	for _, sub := range cell.PlayerSubscriptions {
+		if sub.Player.Connected {
+			sub.Player.send <- data
+		} else {
+			delete(cell.PlayerSubscriptions, sub.Player.Id)
+		}
+	}
+}
+
+func (gm *GridManager) AddResource(cell GridCell, r *resource.Resource) {
+	offsetX := cell.Pos.X * GridCellSize
+	offsetY := cell.Pos.Y * GridCellSize
+	r.Pos.X += offsetX
+	r.Pos.Y += offsetY
+	cell.Resources[r.Id] = r
 }
 
 func (gm *GridManager) GetCellFromPos(clientPos shared.Vector) *GridCell {
@@ -49,7 +67,7 @@ func NewCell(x int, y int) *GridCell {
 		Key:                 GetGridCellKey(x, y),
 		PlayerSubscriptions: make(map[int]GridSubscription),
 		Players:             make(map[int]*Client),
-		Resources:           []resource.Resource{},
+		Resources:           make(map[int]*resource.Resource),
 	}
 }
 
@@ -64,12 +82,28 @@ func (cell *GridCell) subscribe(client *Client) {
 			Player:  client,
 			SubTick: client.ZoneChangeTick,
 		}
+
 		// if a client subs to a new cell provide him with players inside this cell
 		for _, player := range cell.Players {
 			if player.Id == client.Id {
 				continue
 			}
 			client.send <- events.GetNewPlayerEvent(player.Id, player.Pos)
+		}
+		// provide player with resources
+
+		if len(cell.Resources) > 0 {
+			resources := make(map[int]resource.Resource)
+			for idx, r := range cell.Resources {
+				fmt.Println(r)
+				if r.Remove {
+					delete(cell.Resources, idx)
+				} else {
+					resources[r.Id] = *r
+				}
+
+			}
+			client.send <- events.NewResourcePositionsEvent(resources)
 		}
 	}
 }
@@ -80,6 +114,7 @@ type GridManager struct {
 }
 
 func NewGridManager() *GridManager {
+
 	gm := &GridManager{
 		Grid: make(map[int]map[int]GridCell),
 	}

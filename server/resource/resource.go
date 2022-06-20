@@ -31,10 +31,11 @@ type Resource struct {
 	Hitpoints    Hitpoints     `json:"hitpoints"`
 	IsSolid      bool          `json:"isSolid"`
 	IsLootable   bool          `json:"isLootable"`
+	Remove       bool
 }
 
-func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity int, isSolid bool, hitpoints int, isLootable bool) *Resource {
-	return &Resource{
+func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity int, isSolid bool, hitpoints int, isLootable bool) Resource {
+	return Resource{
 		ResourceType: resourceType,
 		Pos:          pos,
 		Id:           id,
@@ -45,5 +46,6 @@ func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity 
 		},
 		IsSolid:    isSolid,
 		IsLootable: isLootable,
+		Remove:     false,
 	}
 }

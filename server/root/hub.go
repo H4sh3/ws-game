@@ -24,7 +24,8 @@ type Hub struct {
 	// Unregister requests from clients.
 	unregister chan *Client
 
-	GridManager *GridManager
+	GridManager     *GridManager
+	ResourceManager *resource.ResourceManager
 
 	// resources in the world
 	Resources []resource.Resource
@@ -32,30 +33,27 @@ type Hub struct {
 }
 
 func NewHub(n int) *Hub {
-	resources := []resource.Resource{}
+
+	gridManager := NewGridManager()
+	resourceManager := resource.NewResourceManager()
 
 	hub := &Hub{
-		broadcast:   make(chan []byte),
-		register:    make(chan *Client),
-		unregister:  make(chan *Client),
-		clients:     make(map[int]*Client),
-		GridManager: NewGridManager(),
-		Resources:   resources,
-		ResIdCnt:    0,
+		broadcast:       make(chan []byte),
+		register:        make(chan *Client),
+		unregister:      make(chan *Client),
+		clients:         make(map[int]*Client),
+		GridManager:     gridManager,
+		ResourceManager: resourceManager,
+		ResIdCnt:        0,
 	}
 
-	for x := 1; x < n; x++ {
-		for y := 1; y < n; y++ {
-			pos := shared.Vector{
-				X: 50 * x,
-				Y: 50 * y,
-			}
-			resources = append(resources, *resource.NewResource(resource.Stone, pos, hub.ResIdCnt, 1, true, 100, false))
-			hub.ResIdCnt++
+	for _, row := range gridManager.Grid {
+		for _, col := range row {
+			r1 := resource.NewResource(resource.Stone, shared.Vector{X: 250, Y: 250}, resourceManager.GetResourceId(), 1, true, 100, false)
+			resourceManager.Add(&r1)
+			gridManager.AddResource(col, &r1)
 		}
 	}
-
-	hub.Resources = append(hub.Resources, resources...)
 
 	return hub
 }
@@ -164,89 +162,83 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 }
 
 func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
-	toRemoveIndex := -1
-	for i := range h.Resources {
-		if h.Resources[i].Hitpoints.Max == -1 {
-			continue
-		}
+	//toRemoveIndex := -1
 
-		// found correct resource
-		if h.Resources[i].Id == event.Id {
+	resourceDestroyed := false
+	r := h.ResourceManager.Resources[event.Id]
+	if r == nil {
+		fmt.Println("is nil")
+		return
+	}
+	if r.Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
+		r.Hitpoints.Current -= 34
 
-			// if dist is greater than this skip
-			if h.Resources[i].Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
-				resource := &h.Resources[i]
-				resource.Hitpoints.Current -= 34
+		remove := r.Hitpoints.Current <= 0
+		h.broadcast <- events.NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove)
 
-				remove := resource.Hitpoints.Current <= 0
-				h.broadcast <- events.NewUpdateResourceEvent(resource.Id, resource.Hitpoints.Current, resource.Hitpoints.Max, remove)
-
-				if resource.Hitpoints.Current <= 0 {
-					toRemoveIndex = i
-				}
-			}
-			break
+		if r.Hitpoints.Current <= 0 {
+			h.ResourceManager.Resources[event.Id].Remove = true
+			delete(h.ResourceManager.Resources, event.Id)
+			resourceDestroyed = true
 		}
 	}
 
-	if toRemoveIndex != -1 {
+	if resourceDestroyed {
 		// spawn subtype resources
 
 		// check how many should be spawned
 		quantity := 0
 		subType := resource.Brick
-		if h.Resources[toRemoveIndex].ResourceType == resource.Stone {
+		if r.ResourceType == resource.Stone {
 			quantity = shared.RandIntInRange(1, 3)
 			subType = resource.Brick
-		} else if h.Resources[toRemoveIndex].ResourceType == resource.Blockade {
+		} else if r.ResourceType == resource.Blockade {
 			quantity = shared.RandIntInRange(2, 5)
 			subType = resource.Brick
-		} else if h.Resources[toRemoveIndex].ResourceType == resource.Tree {
+		} else if r.ResourceType == resource.Tree {
 			quantity = shared.RandIntInRange(3, 5)
 			subType = resource.Wood
 		}
 
 		// create resource of type and quantity
-		pos := shared.Vector{X: h.Resources[toRemoveIndex].Pos.X, Y: h.Resources[toRemoveIndex].Pos.Y}
-		newResources := []resource.Resource{}
-		resource := resource.NewResource(subType, pos, h.ResIdCnt, quantity, false, -1, true)
-		h.ResIdCnt++
+		pos := shared.Vector{X: r.Pos.X, Y: r.Pos.Y}
+		r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true)
 
-		newResources = append(newResources, *resource)
-		h.Resources = append(h.Resources, newResources...)
-		h.broadcast <- events.NewResourcePositionsEvent(newResources)
+		cellToBroadCast := h.GridManager.GetCellFromPos(r.Pos)
+		// set on cell
+		cellToBroadCast.Resources[r.Id] = &r
+		// set to resource manager
+		h.ResourceManager.Resources[r.Id] = &r
 
-		// resource got destroyed -> remove resource
-		h.Resources = append(h.Resources[:toRemoveIndex], h.Resources[toRemoveIndex+1:]...)
+		// add function that broadcasts single resource
+		newResources := make(map[int]resource.Resource)
+		newResources[r.Id] = r
+		cellToBroadCast.Broadcast(events.NewResourcePositionsEvent(newResources))
+		// h.Resources = append(h.Resources, newResources...)
+
+		// Use Grid broadcast for this!
+		// h.broadcast <- events.NewResourcePositionsEvent(newResources)
 	}
 }
 
 func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
-	toRemoveIndex := -1
-	for i := range h.Resources {
-		r := h.Resources[i]
-		if r.Id == event.Id {
-			if h.Resources[i].Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
 
-				toRemoveIndex = i
+	r := h.ResourceManager.Resources[event.Id]
 
-				if invRes, ok := c.Inventory[r.ResourceType]; ok {
-					// already exists in inventory
-					invRes.Quantity += r.Quantity
-					c.Inventory[r.ResourceType] = invRes
-				} else {
-					c.Inventory[r.ResourceType] = r
-				}
-
-				// broadcast update event that removes the resource
-				h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true)
-			}
-			break
+	if r.Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
+		r.Remove = true
+		if invRes, ok := c.Inventory[r.ResourceType]; ok {
+			// already exists in inventory
+			invRes.Quantity += r.Quantity
+			c.Inventory[r.ResourceType] = invRes
+		} else {
+			c.Inventory[r.ResourceType] = *r
 		}
-	}
 
-	if toRemoveIndex != -1 {
-		h.Resources = append(h.Resources[:toRemoveIndex], h.Resources[toRemoveIndex+1:]...)
+		// broadcast update event that removes the resource
+		h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true)
+
+		delete(h.ResourceManager.Resources, event.Id)
 	}
 }
 
@@ -271,8 +263,9 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 					IsLootable: false,
 				}
 				h.ResIdCnt += 1
-				rArr := []resource.Resource{r}
-				h.broadcast <- events.NewResourcePositionsEvent(rArr)
+				rMap := make(map[int]resource.Resource)
+				rMap[r.Id] = r
+				h.broadcast <- events.NewResourcePositionsEvent(rMap)
 				h.Resources = append(h.Resources, r)
 			}
 		}

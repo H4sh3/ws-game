@@ -184,7 +184,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	}
 
 	// provide the new player with all resources
-	client.send <- events.NewResourcePositionsEvent(hub.Resources)
+	// client.send <- events.NewResourcePositionsEvent(hub.Resources)
 
 	client.hub.register <- client
 	hub.new_client(client)

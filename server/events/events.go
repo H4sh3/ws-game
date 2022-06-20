@@ -84,8 +84,15 @@ type ResourcePositionsEvent struct {
 	Resources []resource.Resource `json:"resources"`
 }
 
-func NewResourcePositionsEvent(resources []resource.Resource) []byte {
-	u := &ResourcePositionsEvent{EventType: RESOURCE_POSITIONS_EVENT, Resources: resources}
+func NewResourcePositionsEvent(resources map[int]resource.Resource) []byte {
+
+	v := make([]resource.Resource, 0, len(resources))
+
+	for _, value := range resources {
+		v = append(v, value)
+	}
+
+	u := &ResourcePositionsEvent{EventType: RESOURCE_POSITIONS_EVENT, Resources: v}
 
 	value, err := json.Marshal(u)
 
