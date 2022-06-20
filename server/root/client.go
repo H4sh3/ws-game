@@ -59,7 +59,25 @@ type Client struct {
 	// Inventory []resource.Resource
 	Inventory      map[resource.ResourceType]resource.Resource
 	ZoneChangeTick int
-	GridCell       GridCell
+	GridCell       *GridCell
+	Connected      bool
+}
+
+func NewClient(hub *Hub, conn *websocket.Conn) *Client {
+	clientPostion := shared.Vector{X: 0, Y: shared.RandIntInRange(-50, 0)}
+	inventory := make(map[resource.ResourceType]resource.Resource)
+	sendChan := make(chan []byte, 256)
+
+	gridCell := hub.GridManager.GetCellFromPos(clientPostion)
+	client := &Client{hub: hub, conn: conn, send: sendChan, Id: id_cnt, Pos: clientPostion, Inventory: inventory, GridCell: gridCell, Connected: true}
+	gridCell.Players[client.Id] = client
+
+	// subscribe to current and all surrounding cells
+	for _, cell := range hub.GridManager.getCells(gridCell.Pos.X, gridCell.Pos.Y) {
+		cell.subscribe(client)
+	}
+
+	return client
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -153,14 +171,16 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	}
 
 	m.Lock()
-	clientPostion := shared.Vector{X: 0, Y: 0}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: clientPostion, Inventory: make(map[resource.ResourceType]resource.Resource)}
+	client := NewClient(hub, conn) //&Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: clientPostion, Inventory: make(map[resource.ResourceType]resource.Resource)}
 	client.send <- events.GetAssignUserIdEvent(id_cnt)
 
-	// provide the new player with all players positions
-	for _, c := range hub.clients {
-		new_client_message := []byte(events.GetNewPlayerEvent(c.Id, c.Pos))
-		client.send <- new_client_message
+	// send message to all clients subscribed to the cell where the player spawned
+	for _, subscription := range client.GridCell.PlayerSubscriptions {
+		new_client_message := []byte(events.GetNewPlayerEvent(subscription.Player.Id, subscription.Player.Pos))
+
+		if subscription.Player.Connected {
+			subscription.Player.send <- new_client_message
+		}
 	}
 
 	// provide the new player with all resources

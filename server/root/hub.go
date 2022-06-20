@@ -1,6 +1,7 @@
 package root
 
 import (
+	"fmt"
 	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
@@ -23,22 +24,24 @@ type Hub struct {
 	// Unregister requests from clients.
 	unregister chan *Client
 
+	GridManager *GridManager
+
 	// resources in the world
 	Resources []resource.Resource
 	ResIdCnt  int
 }
 
 func NewHub(n int) *Hub {
-
 	resources := []resource.Resource{}
 
 	hub := &Hub{
-		broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		clients:    make(map[int]*Client),
-		Resources:  resources,
-		ResIdCnt:   0,
+		broadcast:   make(chan []byte),
+		register:    make(chan *Client),
+		unregister:  make(chan *Client),
+		clients:     make(map[int]*Client),
+		GridManager: NewGridManager(),
+		Resources:   resources,
+		ResIdCnt:    0,
 	}
 
 	for x := 1; x < n; x++ {
@@ -64,13 +67,23 @@ func (h *Hub) Run() {
 			h.clients[client.Id] = client
 		case client := <-h.unregister:
 			if _, ok := h.clients[client.Id]; ok {
-				for clientId := range h.clients {
-					if clientId == client.Id {
+
+				for _, sub := range client.GridCell.PlayerSubscriptions {
+					if sub.Player.Id == client.Id {
 						continue
 					}
-					h.clients[clientId].send <- events.NewPlayerDisconnectedEvent(client.Id)
+
+					if sub.Player.Connected {
+						sub.Player.send <- events.NewPlayerDisconnectedEvent(client.Id)
+					}
 				}
+
+				// remove from its cell
+				delete(client.GridCell.Players, client.Id)
+
+				// remove from hub
 				delete(h.clients, client.Id)
+				client.Connected = false
 				close(client.send)
 			}
 		case message := <-h.broadcast:
@@ -125,6 +138,26 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 
 	if !collision {
 		c.Pos = *newPos
+
+		// check if cell changed
+		newX := c.Pos.X / GridCellSize
+		newY := c.Pos.Y / GridCellSize
+
+		if newX != c.GridCell.Pos.X || newY != c.GridCell.Pos.Y {
+			// client is no longer in old cell
+			delete(c.GridCell.Players, c.Id)
+
+			// set client to new cell
+			gridCell := h.GridManager.GetCellFromPos(c.Pos)
+			fmt.Printf("client with id: %d moved to cell %d %d\n", c.Id, gridCell.Pos.X, gridCell.Pos.Y)
+			c.GridCell = gridCell
+			gridCell.Players[c.Id] = c
+
+			for _, surroudingCells := range h.GridManager.getCells(gridCell.Pos.X, gridCell.Pos.Y) {
+				surroudingCells.subscribe(c)
+			}
+		}
+
 	}
 
 	h.broadcast <- events.NewPlayerTargetPositionEvent(c.Pos, c.Id)
