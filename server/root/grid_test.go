@@ -13,7 +13,7 @@ func TestGridManager(t *testing.T) {
 	n := 0
 	for x := -1; x <= 1; x++ {
 		for y := -1; y <= 1; y++ {
-			manager.add(x, y, GridCell{Id: n})
+			manager.add(x, y)
 			n++
 		}
 	}
