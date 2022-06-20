@@ -55,10 +55,16 @@ func (gm *GridManager) GetCellFromPos(clientPos shared.Vector) *GridCell {
 	x := clientPos.X / GridCellSize
 	y := clientPos.Y / GridCellSize
 
-	a := gm.Grid[x]
-	b := a[y]
+	row := gm.Grid[x]
+	cell, oky := row[y]
 
-	return &b
+	// Todo fix this hacky stuff
+	if !oky {
+		gm.add(x, y)
+	}
+	cell = row[y]
+
+	return &cell
 }
 
 func NewCell(x int, y int) *GridCell {
@@ -72,30 +78,30 @@ func NewCell(x int, y int) *GridCell {
 }
 
 func (cell *GridCell) subscribe(client *Client) {
+	// if a client subs to a new cell provide him with players inside this cell
+	for _, player := range cell.Players {
+		if player.Id == client.Id {
+			continue
+		}
+		client.send <- events.GetNewPlayerEvent(player.Id, player.Pos)
+	}
+
 	if subscription, ok := cell.PlayerSubscriptions[client.Id]; ok {
-		fmt.Printf("Renewed sub x: %d y: %d\n", cell.Pos.X, cell.Pos.Y)
+		//fmt.Printf("Renewed sub x: %d y: %d\n", cell.Pos.X, cell.Pos.Y)
 		// player has already subbed to this cell -> renew by updating the tick value
 		subscription.SubTick = client.ZoneChangeTick
 	} else {
-		fmt.Printf("Added   sub x: %d y: %d\n", cell.Pos.X, cell.Pos.Y)
+		//fmt.Printf("Added   sub x: %d y: %d\n", cell.Pos.X, cell.Pos.Y)
 		cell.PlayerSubscriptions[client.Id] = GridSubscription{
 			Player:  client,
 			SubTick: client.ZoneChangeTick,
 		}
 
-		// if a client subs to a new cell provide him with players inside this cell
-		for _, player := range cell.Players {
-			if player.Id == client.Id {
-				continue
-			}
-			client.send <- events.GetNewPlayerEvent(player.Id, player.Pos)
-		}
 		// provide player with resources
 
 		if len(cell.Resources) > 0 {
 			resources := make(map[int]resource.Resource)
 			for idx, r := range cell.Resources {
-				fmt.Println(r)
 				if r.Remove {
 					delete(cell.Resources, idx)
 				} else {
@@ -119,10 +125,14 @@ func NewGridManager() *GridManager {
 		Grid: make(map[int]map[int]GridCell),
 	}
 
+	n := 2
+	c := 0
 	// init cells around 0 0
-	for x := -30; x <= 30; x++ {
-		for y := -30; y <= 30; y++ {
+	for x := -n; x <= n; x++ {
+		for y := -n; y <= n; y++ {
 			gm.add(x, y)
+			fmt.Printf("%d/%d\n", c, n*n*4)
+			c++
 		}
 	}
 
@@ -131,6 +141,8 @@ func NewGridManager() *GridManager {
 
 func (gm *GridManager) clientMovedCell(newCellX int, newCellY int, client *Client) {
 	cells := gm.getCells(newCellX, newCellY)
+	fmt.Println(newCellX)
+	fmt.Println(newCellY)
 
 	// This counter is increased each zone change
 	// the cell subscriptions get assign the tick when the zone was changed
@@ -146,9 +158,22 @@ func (gm *GridManager) clientMovedCell(newCellX int, newCellY int, client *Clien
 
 func (gm *GridManager) getCells(x int, y int) []GridCell {
 	neighbourCells := []GridCell{}
-	for xOffset := -1; xOffset < 2; xOffset++ {
-		for yOffset := -1; yOffset < 2; yOffset++ {
-			cell := gm.Grid[x+xOffset][y+yOffset]
+	for xOffset := -2; xOffset <= 2; xOffset++ {
+		for yOffset := -2; yOffset <= 2; yOffset++ {
+			xIdx := x + xOffset
+			yIdx := x + xOffset
+			row, ok := gm.Grid[xIdx]
+
+			if !ok {
+				fmt.Printf("Added %d %d\n", xIdx, yIdx)
+				gm.add(xIdx, yIdx)
+				row = gm.Grid[xIdx]
+			}
+			cell, cellOk := row[yIdx]
+			if !cellOk {
+				gm.add(xIdx, yIdx)
+				cell = row[yIdx]
+			}
 			neighbourCells = append(neighbourCells, cell)
 		}
 	}
@@ -167,5 +192,4 @@ func (gm *GridManager) add(x int, y int) {
 		gm.Grid[x] = make(map[int]GridCell)
 		gm.Grid[x][y] = cell
 	}
-
 }

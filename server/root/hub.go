@@ -32,7 +32,7 @@ type Hub struct {
 	ResIdCnt  int
 }
 
-func NewHub(n int) *Hub {
+func NewHub() *Hub {
 
 	gridManager := NewGridManager()
 	resourceManager := resource.NewResourceManager()
@@ -47,11 +47,20 @@ func NewHub(n int) *Hub {
 		ResIdCnt:        0,
 	}
 
+	spawnPositions := []shared.Vector{}
+	spawnPositions = append(spawnPositions, shared.Vector{X: 200, Y: 200})
+	spawnPositions = append(spawnPositions, shared.Vector{X: 450, Y: 0})
+	spawnPositions = append(spawnPositions, shared.Vector{X: 450, Y: 450})
+	spawnPositions = append(spawnPositions, shared.Vector{X: 0, Y: 450})
+
 	for _, row := range gridManager.Grid {
 		for _, col := range row {
-			r1 := resource.NewResource(resource.Stone, shared.Vector{X: 250, Y: 250}, resourceManager.GetResourceId(), 1, true, 100, false)
-			resourceManager.Add(&r1)
-			gridManager.AddResource(col, &r1)
+
+			for _, pos := range spawnPositions {
+				r1 := resource.NewResource(resource.Stone, pos, resourceManager.GetResourceId(), 1, true, 100, false)
+				resourceManager.Add(&r1)
+				gridManager.AddResource(col, &r1)
+			}
 		}
 	}
 
@@ -142,7 +151,7 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 		newY := c.Pos.Y / GridCellSize
 
 		if newX != c.GridCell.Pos.X || newY != c.GridCell.Pos.Y {
-			// client is no longer in old cell
+			// remove client from old cell
 			delete(c.GridCell.Players, c.Id)
 
 			// set client to new cell
@@ -151,9 +160,7 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 			c.GridCell = gridCell
 			gridCell.Players[c.Id] = c
 
-			for _, surroudingCells := range h.GridManager.getCells(gridCell.Pos.X, gridCell.Pos.Y) {
-				surroudingCells.subscribe(c)
-			}
+			h.GridManager.clientMovedCell(gridCell.Pos.X, gridCell.Pos.Y, c)
 		}
 
 	}
@@ -214,10 +221,6 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 		newResources := make(map[int]resource.Resource)
 		newResources[r.Id] = r
 		cellToBroadCast.Broadcast(events.NewResourcePositionsEvent(newResources))
-		// h.Resources = append(h.Resources, newResources...)
-
-		// Use Grid broadcast for this!
-		// h.broadcast <- events.NewResourcePositionsEvent(newResources)
 	}
 }
 
