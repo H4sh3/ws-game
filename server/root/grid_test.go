@@ -1,4 +1,4 @@
-package grid
+package root
 
 import (
 	"fmt"
@@ -18,6 +18,6 @@ func TestGridManager(t *testing.T) {
 		}
 	}
 
-	neighbours := manager.getNeighbours(0, 0)
+	neighbours := manager.getCells(0, 0)
 	fmt.Println(neighbours)
 }

@@ -57,7 +57,9 @@ type Client struct {
 	Id   int
 	Pos  shared.Vector
 	// Inventory []resource.Resource
-	Inventory map[resource.ResourceType]resource.Resource
+	Inventory      map[resource.ResourceType]resource.Resource
+	ZoneChangeTick int
+	GridCell       GridCell
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -156,7 +158,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	client.send <- events.GetAssignUserIdEvent(id_cnt)
 
 	// provide the new player with all players positions
-	for c := range hub.clients {
+	for _, c := range hub.clients {
 		new_client_message := []byte(events.GetNewPlayerEvent(c.Id, c.Pos))
 		client.send <- new_client_message
 	}

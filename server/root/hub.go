@@ -12,7 +12,7 @@ const MAX_LOOT_RANGE = 150
 // clients.
 type Hub struct {
 	// Registered clients.
-	clients map[*Client]bool
+	clients map[int]*Client
 
 	// Inbound messages from the clients.
 	broadcast chan []byte
@@ -36,7 +36,7 @@ func NewHub(n int) *Hub {
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		clients:    make(map[*Client]bool),
+		clients:    make(map[int]*Client),
 		Resources:  resources,
 		ResIdCnt:   0,
 	}
@@ -61,25 +61,25 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
-			h.clients[client] = true
+			h.clients[client.Id] = client
 		case client := <-h.unregister:
-			if _, ok := h.clients[client]; ok {
-				for c := range h.clients {
-					if c.Id == client.Id {
+			if _, ok := h.clients[client.Id]; ok {
+				for clientId := range h.clients {
+					if clientId == client.Id {
 						continue
 					}
-					c.send <- events.NewPlayerDisconnectedEvent(client.Id)
+					h.clients[clientId].send <- events.NewPlayerDisconnectedEvent(client.Id)
 				}
-				delete(h.clients, client)
+				delete(h.clients, client.Id)
 				close(client.send)
 			}
 		case message := <-h.broadcast:
-			for client := range h.clients {
+			for clientId := range h.clients {
 				select {
-				case client.send <- message:
+				case h.clients[clientId].send <- message:
 				default:
-					close(client.send)
-					delete(h.clients, client)
+					close(h.clients[clientId].send)
+					delete(h.clients, clientId)
 				}
 			}
 		}
