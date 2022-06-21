@@ -159,7 +159,6 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 
 			// set client to new cell
 			gridCell := h.GridManager.GetCellFromPos(c.Pos)
-			fmt.Printf("client with id: %d moved to cell %d %d\n", c.Id, gridCell.Pos.X, gridCell.Pos.Y)
 			c.GridCell = gridCell
 			gridCell.Players[c.Id] = c
 
@@ -178,10 +177,8 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 	}
 
 	dist := r.Pos.Dist((&c.Pos))
-	fmt.Printf("dist: %f \n", dist)
 	if dist < MAX_LOOT_RANGE {
 		r.Hitpoints.Current -= 34
-		fmt.Printf("hit: %d\n", r.Hitpoints.Current)
 
 		remove := r.Hitpoints.Current <= 0
 		cellToBroadCast := h.GridManager.GetCellFromPos(r.Pos)

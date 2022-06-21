@@ -2,7 +2,6 @@ package resource
 
 import (
 	"errors"
-	"fmt"
 )
 
 type ResourceManager struct {
@@ -20,7 +19,6 @@ func (gm *ResourceManager) GetResource(id int) (*Resource, error) {
 }
 
 func (gm *ResourceManager) SetResource(r *Resource) {
-	fmt.Println(r.Hitpoints)
 	gm.resources[r.Id] = r
 }
 

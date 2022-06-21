@@ -84,11 +84,9 @@ func (cell *GridCell) subscribe(client *Client) {
 	}
 
 	if subscription, ok := cell.PlayerSubscriptions[client.Id]; ok {
-		//fmt.Printf("Renewed sub x: %d y: %d\n", cell.Pos.X, cell.Pos.Y)
 		// player has already subbed to this cell -> renew by updating the tick value
 		subscription.SubTick = client.ZoneChangeTick
 	} else {
-		//fmt.Printf("Added   sub x: %d y: %d\n", cell.Pos.X, cell.Pos.Y)
 		cell.PlayerSubscriptions[client.Id] = GridSubscription{
 			Player:  client,
 			SubTick: client.ZoneChangeTick,
@@ -137,8 +135,6 @@ func NewGridManager() *GridManager {
 
 func (gm *GridManager) clientMovedCell(newCellX int, newCellY int, client *Client) {
 	cells := gm.getCells(newCellX, newCellY)
-	fmt.Println(newCellX)
-	fmt.Println(newCellY)
 
 	// This counter is increased each zone change
 	// When a client subs to a cell its current Tick is stored on the sub
@@ -225,7 +221,6 @@ func (gm *GridManager) drawGrid() {
 		}
 	}
 
-	fmt.Println(minY, maxY, minX, maxX)
 	s := ""
 
 	for y := minY - 1; y < maxY+2; y++ {
