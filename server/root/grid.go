@@ -44,10 +44,6 @@ func (cell *GridCell) Broadcast(data []byte) {
 }
 
 func (gm *GridManager) AddResource(cell GridCell, r *resource.Resource) {
-	offsetX := cell.Pos.X * GridCellSize
-	offsetY := cell.Pos.Y * GridCellSize
-	r.Pos.X += offsetX
-	r.Pos.Y += offsetY
 	cell.Resources[r.Id] = r
 }
 
@@ -126,7 +122,7 @@ func NewGridManager() *GridManager {
 		Grid: make(map[int]map[int]GridCell),
 	}
 
-	n := 2
+	n := 5
 	c := 0
 	// init cells around 0 0
 	for x := -n; x <= n; x++ {
@@ -146,21 +142,34 @@ func (gm *GridManager) clientMovedCell(newCellX int, newCellY int, client *Clien
 	fmt.Println(newCellY)
 
 	// This counter is increased each zone change
-	// the cell subscriptions get assign the tick when the zone was changed
-	// if a players subscription for the same zone is renewed he gets zone updates for a longer time
-	// if a player moves away from a once subscribed zone the difference between the subscriptions tick value and his current tick value gets bigger
-	// if a certain threshold is exceeded, the subscription gets removed and the player wont get no longer updates(events) from that zone
+	// When a client subs to a cell its current Tick is stored on the sub
+	// If the tick value on the sub and the latest tick value of the client are to different we can asume the client is far aways and can be unsubbed from the cell
 	client.ZoneChangeTick += 1
 
 	for _, cell := range cells {
 		cell.subscribe(client)
 	}
+
+	gm.drawGrid()
+
+	// Todo: do this only every n-th ticks or somethign
+	for x, col := range gm.Grid {
+		for y, cell := range col {
+			for i, sub := range cell.PlayerSubscriptions {
+				diff := sub.Player.ZoneChangeTick - sub.SubTick
+				if diff > 5 {
+					delete(gm.Grid[x][y].PlayerSubscriptions, i)
+				}
+			}
+		}
+	}
 }
 
 func (gm *GridManager) getCells(x int, y int) []GridCell {
 	neighbourCells := []GridCell{}
-	for xOffset := -1; xOffset <= 1; xOffset++ {
-		for yOffset := -1; yOffset <= 1; yOffset++ {
+	area := 2
+	for xOffset := -area; xOffset <= area; xOffset++ {
+		for yOffset := -area; yOffset <= area; yOffset++ {
 			xIdx := x + xOffset
 			yIdx := y + yOffset
 			col, ok := gm.Grid[xIdx]
@@ -179,6 +188,20 @@ func (gm *GridManager) getCells(x int, y int) []GridCell {
 		}
 	}
 	return neighbourCells
+}
+
+func (gm *GridManager) add(x int, y int) {
+	cell := *NewCell(x, y)
+	col, ok := gm.Grid[x]
+
+	if ok {
+		// col exists set cell
+		col[y] = cell
+	} else {
+		// add col and add cell
+		gm.Grid[x] = make(map[int]GridCell)
+		gm.Grid[x][y] = cell
+	}
 }
 
 func (gm *GridManager) drawGrid() {
@@ -216,7 +239,11 @@ func (gm *GridManager) drawGrid() {
 				if !ok {
 					s += " "
 				} else {
-					s += "+"
+					if len(col[y].PlayerSubscriptions) > 0 {
+						s += "+"
+					} else {
+						s += "-"
+					}
 				}
 			}
 
@@ -224,19 +251,4 @@ func (gm *GridManager) drawGrid() {
 		s += "\n"
 	}
 	fmt.Println(s)
-}
-
-func (gm *GridManager) add(x int, y int) {
-	cell := *NewCell(x, y)
-	col, ok := gm.Grid[x]
-
-	if ok {
-		// col exists set cell
-		col[y] = cell
-	} else {
-		// add col and add cell
-		gm.Grid[x] = make(map[int]GridCell)
-		gm.Grid[x][y] = cell
-	}
-	gm.drawGrid()
 }
