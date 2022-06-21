@@ -2,6 +2,7 @@ package root
 
 import (
 	"fmt"
+	"math"
 	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
@@ -158,26 +159,71 @@ func (gm *GridManager) clientMovedCell(newCellX int, newCellY int, client *Clien
 
 func (gm *GridManager) getCells(x int, y int) []GridCell {
 	neighbourCells := []GridCell{}
-	for xOffset := -2; xOffset <= 2; xOffset++ {
-		for yOffset := -2; yOffset <= 2; yOffset++ {
+	for xOffset := -1; xOffset <= 1; xOffset++ {
+		for yOffset := -1; yOffset <= 1; yOffset++ {
 			xIdx := x + xOffset
-			yIdx := x + xOffset
-			row, ok := gm.Grid[xIdx]
+			yIdx := y + yOffset
+			col, ok := gm.Grid[xIdx]
 
 			if !ok {
-				fmt.Printf("Added %d %d\n", xIdx, yIdx)
 				gm.add(xIdx, yIdx)
-				row = gm.Grid[xIdx]
+				col = gm.Grid[xIdx]
 			}
-			cell, cellOk := row[yIdx]
+
+			cell, cellOk := col[yIdx]
 			if !cellOk {
 				gm.add(xIdx, yIdx)
-				cell = row[yIdx]
+				cell = col[yIdx]
 			}
 			neighbourCells = append(neighbourCells, cell)
 		}
 	}
 	return neighbourCells
+}
+
+func (gm *GridManager) drawGrid() {
+	minY := 0 //int(math.Inf(1))
+	maxY := int(math.Inf(-1))
+	minX := 0 //int(math.Inf(1))
+	maxX := int(math.Inf(-1))
+	for x, col := range gm.Grid {
+		if x < minX {
+			minX = x
+		}
+		if x > maxX {
+			maxX = x
+		}
+		for y, _ := range col {
+			if y < minY {
+				minY = y
+			}
+			if y > maxY {
+				maxY = y
+			}
+		}
+	}
+
+	fmt.Println(minY, maxY, minX, maxX)
+	s := ""
+
+	for y := minY - 1; y < maxY+2; y++ {
+		for x := minX - 1; x < maxX+2; x++ {
+			col, ok := gm.Grid[x]
+			if !ok {
+				s += "o"
+			} else {
+				_, ok = col[y]
+				if !ok {
+					s += "o"
+				} else {
+					s += "+"
+				}
+			}
+
+		}
+		s += "\n"
+	}
+	fmt.Println(s)
 }
 
 func (gm *GridManager) add(x int, y int) {
@@ -192,4 +238,5 @@ func (gm *GridManager) add(x int, y int) {
 		gm.Grid[x] = make(map[int]GridCell)
 		gm.Grid[x][y] = cell
 	}
+	gm.drawGrid()
 }

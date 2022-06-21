@@ -48,14 +48,13 @@ func NewHub() *Hub {
 	}
 
 	spawnPositions := []shared.Vector{}
-	spawnPositions = append(spawnPositions, shared.Vector{X: 200, Y: 200})
+	spawnPositions = append(spawnPositions, shared.Vector{X: 0, Y: 0})
 	spawnPositions = append(spawnPositions, shared.Vector{X: 450, Y: 0})
 	spawnPositions = append(spawnPositions, shared.Vector{X: 450, Y: 450})
 	spawnPositions = append(spawnPositions, shared.Vector{X: 0, Y: 450})
 
 	for _, row := range gridManager.Grid {
 		for _, col := range row {
-
 			for _, pos := range spawnPositions {
 				r1 := resource.NewResource(resource.Stone, pos, resourceManager.GetResourceId(), 1, true, 100, false)
 				resourceManager.Add(&r1)
@@ -164,8 +163,6 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 		}
 
 	}
-
-	h.broadcast <- events.NewPlayerTargetPositionEvent(c.Pos, c.Id)
 }
 
 func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
