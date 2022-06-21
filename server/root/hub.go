@@ -169,11 +169,12 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 	//toRemoveIndex := -1
 
 	resourceDestroyed := false
-	r := h.ResourceManager.Resources[event.Id]
-	if r == nil {
-		fmt.Println("is nil")
+	r, err := h.ResourceManager.GetResource(event.Id)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
 		return
 	}
+
 	if r.Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
 		r.Hitpoints.Current -= 34
 
@@ -181,11 +182,13 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 		h.broadcast <- events.NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove)
 
 		if r.Hitpoints.Current <= 0 {
-			h.ResourceManager.Resources[event.Id].Remove = true
-			delete(h.ResourceManager.Resources, event.Id)
+			r.Remove = true
+			//h.ResourceManager.Resources[event.Id]
+			h.ResourceManager.DeleteResource(event.Id)
 			resourceDestroyed = true
 		}
 	}
+	h.ResourceManager.SetResource(r)
 
 	if resourceDestroyed {
 		// spawn subtype resources
@@ -212,7 +215,7 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 		// set on cell
 		cellToBroadCast.Resources[r.Id] = &r
 		// set to resource manager
-		h.ResourceManager.Resources[r.Id] = &r
+		h.ResourceManager.SetResource(&r) //resources[r.Id] = &r
 
 		// add function that broadcasts single resource
 		newResources := make(map[int]resource.Resource)
@@ -223,7 +226,11 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 
 func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 
-	r := h.ResourceManager.Resources[event.Id]
+	r, err := h.ResourceManager.GetResource(event.Id)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		return
+	}
 
 	if r.Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
 		r.Remove = true
@@ -238,7 +245,7 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 		// broadcast update event that removes the resource
 		h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true)
 
-		delete(h.ResourceManager.Resources, event.Id)
+		h.ResourceManager.DeleteResource(event.Id)
 	}
 }
 
