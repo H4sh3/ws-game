@@ -210,11 +210,11 @@ func (gm *GridManager) drawGrid() {
 		for x := minX - 1; x < maxX+2; x++ {
 			col, ok := gm.Grid[x]
 			if !ok {
-				s += "o"
+				s += " "
 			} else {
 				_, ok = col[y]
 				if !ok {
-					s += "o"
+					s += " "
 				} else {
 					s += "+"
 				}
