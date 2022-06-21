@@ -6,7 +6,7 @@ import (
 )
 
 type ResourceManager struct {
-	resources map[int]Resource
+	resources map[int]*Resource
 	idCnt     int
 }
 
@@ -15,22 +15,23 @@ func (gm *ResourceManager) GetResource(id int) (*Resource, error) {
 	if !ok {
 		return nil, errors.New("resource does not exist")
 	} else {
-		return &r, nil
+		return r, nil
 	}
 }
 
-func (gm *ResourceManager) SetResource(r Resource) {
+func (gm *ResourceManager) SetResource(r *Resource) {
 	fmt.Println(r.Hitpoints)
 	gm.resources[r.Id] = r
 }
 
 func (gm *ResourceManager) DeleteResource(id int) {
+	gm.resources[id].Remove = true
 	delete(gm.resources, id)
 }
 
 func NewResourceManager() *ResourceManager {
 	return &ResourceManager{
-		resources: make(map[int]Resource),
+		resources: make(map[int]*Resource),
 		idCnt:     0,
 	}
 }

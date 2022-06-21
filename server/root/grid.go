@@ -128,7 +128,6 @@ func NewGridManager() *GridManager {
 	for x := -n; x <= n; x++ {
 		for y := -n; y <= n; y++ {
 			gm.add(x, y)
-			fmt.Printf("%d/%d\n", c, n*n*4)
 			c++
 		}
 	}

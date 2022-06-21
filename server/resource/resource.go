@@ -34,8 +34,8 @@ type Resource struct {
 	Remove       bool
 }
 
-func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity int, isSolid bool, hitpoints int, isLootable bool) Resource {
-	return Resource{
+func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity int, isSolid bool, hitpoints int, isLootable bool) *Resource {
+	return &Resource{
 		ResourceType: resourceType,
 		Pos:          pos,
 		Id:           id,

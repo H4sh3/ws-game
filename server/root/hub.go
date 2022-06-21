@@ -46,24 +46,26 @@ func NewHub() *Hub {
 		ResIdCnt:        0,
 	}
 
-	for x, row := range gridManager.Grid {
-		for y, col := range row {
-			spawnPositions := []shared.Vector{}
-			spawnPositions = append(spawnPositions, shared.Vector{X: 50 + x*(GridCellSize/2), Y: y * (GridCellSize / 2)})
-			spawnPositions = append(spawnPositions, shared.Vector{X: 50 + x*(GridCellSize/2), Y: 50 - y*(GridCellSize/2)})
-			spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: y * (GridCellSize / 2)})
-			spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: 50 - y*(GridCellSize/2)})
-			for _, pos := range spawnPositions {
-				r1 := resource.NewResource(resource.Stone, pos, resourceManager.GetResourceId(), 1, true, 100, false)
+	x := 0
+	y := 0
+	spawnPositions := []shared.Vector{}
+	spawnPositions = append(spawnPositions, shared.Vector{X: 50 + x*(GridCellSize/2), Y: y * (GridCellSize / 2)})
+	//spawnPositions = append(spawnPositions, shared.Vector{X: 50 + x*(GridCellSize/2), Y: 50 - y*(GridCellSize/2)})
+	//spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: y * (GridCellSize / 2)})
+	//spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: 50 - y*(GridCellSize/2)})
+	for _, pos := range spawnPositions {
+		r1 := resource.NewResource(resource.Stone, pos, resourceManager.GetResourceId(), 1, true, 100, false)
 
-				// Store the variable in resource manager
-				resourceManager.SetResource(r1)
+		// Store the variable in resource manager
+		resourceManager.SetResource(r1)
 
-				// Store adress to this resource in grid manager
-				gridManager.AddResource(col, &r1)
-			}
-		}
+		// Store adress to this resource in grid manager
+		gridManager.AddResource(gridManager.Grid[0][0], r1)
 	}
+	/* for x, row := range gridManager.Grid {
+		for y, col := range row {
+		}
+	} */
 
 	return hub
 }
@@ -187,11 +189,13 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 
 		if r.Hitpoints.Current <= 0 {
 			h.SpawnLoot(*r, c)
-			h.RemoveResource(*r)
+			h.RemoveResource(r)
 		}
+
+		// update the changed resource
+		h.ResourceManager.SetResource(r)
 	}
 
-	h.ResourceManager.SetResource(*r)
 }
 
 func (h *Hub) SpawnLoot(destroyedResource resource.Resource, c *Client) {
@@ -219,13 +223,13 @@ func (h *Hub) SpawnLoot(destroyedResource resource.Resource, c *Client) {
 
 	cellToBroadCast := h.GridManager.GetCellFromPos(r.Pos)
 	// set on cell
-	cellToBroadCast.Resources[r.Id] = &r
+	cellToBroadCast.Resources[r.Id] = r
 	// set to resource manager
 	h.ResourceManager.SetResource(r) //resources[r.Id] = &r
 
 	// add function that broadcasts single resource
 	newResources := make(map[int]resource.Resource)
-	newResources[r.Id] = r
+	newResources[r.Id] = *r
 	cellToBroadCast.Broadcast(events.NewResourcePositionsEvent(newResources))
 }
 
@@ -250,12 +254,11 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 		// broadcast update event that removes the resource
 		h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true)
 
-		h.RemoveResource(*r)
+		h.RemoveResource(r)
 	}
 }
 
-func (h *Hub) RemoveResource(r resource.Resource) {
-	r.Remove = true
+func (h *Hub) RemoveResource(r *resource.Resource) {
 	h.ResourceManager.DeleteResource(r.Id)
 }
 
