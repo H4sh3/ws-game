@@ -11,7 +11,7 @@ var API_WS_URL = {
 
 
 module.exports = (_, argv) => {
-  console.log(`Using websocket: ${API_WS_URL[argv.mode]}`)
+  console.log(`Websocket url: ${API_WS_URL[argv.mode]}`)
   const config = {
     entry: "./src/index.ts",
     mode: "development",
