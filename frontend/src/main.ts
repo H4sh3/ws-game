@@ -7,6 +7,7 @@ import Vector from './types/vector';
 import getBackgroundGraphics, { getInventoryBackground } from './sprites/background';
 import { getOwnPlayerSprite } from './sprites/player';
 import { getBlockadeSprite, getCursorSprite } from './sprites/etc';
+import { SCREEN_SIZE } from './etc/const';
 
 export class Game extends Container {
     app: Application;
@@ -59,14 +60,14 @@ export class Game extends Container {
         this.app.stage.on("click", (e) => {
             const cX = this.cursorPos.x
             const cY = this.cursorPos.y
-            if (!this.isEditing || cY > 400) return
+            if (!this.isEditing || cY > SCREEN_SIZE - 100) return
 
             const pX = this.player.currentPos.x % 50
             const pY = this.player.currentPos.y % 50
             const x1 = Math.floor((cX + 25 + pX) / 50) * 50
             const y1 = Math.floor((cY + 25 + pY) / 50) * 50
-            const x = -250 + x1 - pX + this.player.currentPos.x
-            const y = -250 + y1 - pY + this.player.currentPos.y
+            const x = -(SCREEN_SIZE / 2) + x1 - pX + this.player.currentPos.x
+            const y = -(SCREEN_SIZE / 2) + y1 - pY + this.player.currentPos.y
             const spawn = createVector(Math.trunc(x), Math.trunc(y))
             this.ws.send(getPlayerPlacedResourceEvent("blockade", spawn))
         })
@@ -122,8 +123,8 @@ export class Game extends Container {
 
         // update world container based on players position
         this.player.updatePosition()
-        this.worldContainer.x = -this.player.currentPos.x + 250
-        this.worldContainer.y = -this.player.currentPos.y + 250
+        this.worldContainer.x = -this.player.currentPos.x + (SCREEN_SIZE / 2)
+        this.worldContainer.y = -this.player.currentPos.y + (SCREEN_SIZE / 2)
 
         const pX = this.player.currentPos.x % 50
         const pY = this.player.currentPos.y % 50
@@ -133,11 +134,11 @@ export class Game extends Container {
         const y1 = Math.floor((cY + 25 + pY) / 50) * 50
 
         if (this.isEditing) {
-            this.cursorSprite.x = -250 + x1 - pX
-            this.cursorSprite.y = -250 + y1 - pY
+            this.cursorSprite.x = -(SCREEN_SIZE / 2) + x1 - pX
+            this.cursorSprite.y = -(SCREEN_SIZE / 2) + y1 - pY
         } else {
             this.cursorSprite.x = 0
-            this.cursorSprite.y = 450
+            this.cursorSprite.y = SCREEN_SIZE - 50
         }
 
         // update other players positions

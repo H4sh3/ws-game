@@ -2,6 +2,7 @@ import './styles/index.css';
 
 import * as PIXI from 'pixi.js';
 import { Game } from './main';
+import { SCREEN_SIZE } from './etc/const';
 
 const load = (app: PIXI.Application, asset: string) => {
     return new Promise<void>((resolve) => {
@@ -13,7 +14,7 @@ const load = (app: PIXI.Application, asset: string) => {
 
 const main = async () => {
     // Main app
-    const app = new PIXI.Application({ width: 500, height: 500 });
+    const app = new PIXI.Application({ width: SCREEN_SIZE, height: SCREEN_SIZE });
 
     // Load assets
     await load(app, 'assets/stone.png');
