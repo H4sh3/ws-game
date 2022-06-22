@@ -152,6 +152,29 @@ func NewLoadInventoryEvent(inventory map[resource.ResourceType]resource.Resource
 	}
 }
 
+type UpdateInventoryEvent struct {
+	EventType EventType         `json:"eventType"`
+	Item      resource.Resource `json:"item"`
+	Remove    bool              `json:"remove"`
+}
+
+func NewUpdateInventoryEvent(r resource.Resource, remove bool) []byte {
+	event := &UpdateInventoryEvent{
+		EventType: UPDATE_INVENTORY_EVENT,
+		Item:      r,
+		Remove:    remove,
+	}
+
+	value, err := json.Marshal(event)
+
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return []byte{}
+	} else {
+		return value
+	}
+}
+
 func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool) []byte {
 	hitpoints := resource.Hitpoints{Current: currentHp, Max: maxHp}
 	u := &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Remove: remove, Hitpoints: hitpoints}

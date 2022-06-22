@@ -129,6 +129,17 @@ export function isLoadInventoryEvent(value: any): value is LoadInventoryEvent {
     )
 }
 
+export interface UpdateInventoryEvent extends BaseEvent {
+    item: Resource,
+    remove: boolean
+}
+export function isUpdateInventoryEvent(value: any): value is UpdateInventoryEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType === EVENT_TYPES.UPDATE_INVENTORY_EVENT
+    )
+}
+
 /*
  Events bellow are send from client to server 
 */

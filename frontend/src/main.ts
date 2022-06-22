@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
@@ -105,6 +105,9 @@ export class Game extends Container {
                     this.handlePlayerTargetPositionEvent(parsed)
                 } else if (isLoadInventoryEvent(parsed)) {
                     this.inventory.initLoad(parsed.items, this.player, this.app.loader, this.ws)
+                } else if (isUpdateInventoryEvent(parsed)) {
+                    this.inventory.update(parsed, this.player, this.app.loader, this.ws)
+                    this.inventory.log()
                 } else if (isUpdateResourceEvent(parsed)) {
                     this.updateResourceEvent(parsed)
                 } else if (isResourcePositionsEvent(parsed)) {
@@ -211,7 +214,6 @@ export class Game extends Container {
     updateResourceEvent(parsed: UpdateResourceEvent) {
         const r = this.resources.find(r => r.id == parsed.id)
         if (r) {
-
             if (parsed.remove) {
                 this.resources = this.resources.filter(rO => rO.id !== parsed.id)
             }
@@ -254,7 +256,6 @@ function handleKeyBoard(keyHandler: KeyboardHandler, player: Player, ws: WebSock
             const hasCollision = resources.filter(r => r.isSolid).some(r => r.pos.dist(newPos) < 40)
             if (!hasCollision) {
                 player.targetPos = newPos
-                console.log("my target pos ", newPos)
                 ws.send(getKeyBoardEvent(key, value))
             }
         }

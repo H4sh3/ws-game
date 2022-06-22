@@ -23,10 +23,6 @@ type Hub struct {
 
 	GridManager     *GridManager
 	ResourceManager *resource.ResourceManager
-
-	// resources in the world
-	Resources []resource.Resource
-	ResIdCnt  int
 }
 
 const MAX_LOOT_RANGE = 150
@@ -38,7 +34,6 @@ func NewHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[int]*Client),
-		ResIdCnt:   0,
 	}
 
 	c := make(chan *GridCell)
@@ -150,7 +145,12 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 	}
 
 	collision := false
-	for _, resource := range h.Resources {
+	for _, resource := range c.GridCell.Resources {
+
+		if resource.Remove {
+			delete(c.GridCell.Resources, resource.Id)
+			continue
+		}
 		if !resource.IsSolid {
 			continue
 		}
@@ -171,7 +171,6 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 		gridCell.Broadcast(events.NewPlayerTargetPositionEvent(c.Pos, c.Id))
 
 		if newX != c.GridCell.Pos.X || newY != c.GridCell.Pos.Y {
-
 			h.GridManager.clientMovedCell(*c.GridCell, *gridCell, c)
 		}
 
@@ -265,6 +264,7 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 
 		// broadcast update event that removes the resource
 		h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true)
+		c.send <- events.NewUpdateInventoryEvent(*r, false)
 
 		h.RemoveResource(r)
 	}
@@ -286,7 +286,7 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 				c.Inventory[resource.Brick] = invRes
 				r := &resource.Resource{ResourceType: resource.ResourceType(event.ResourceType),
 					Pos:      event.Pos,
-					Id:       h.ResIdCnt,
+					Id:       h.ResourceManager.GetResourceId(),
 					Quantity: 1,
 					Hitpoints: resource.Hitpoints{
 						Current: 500,
@@ -294,18 +294,14 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 					IsSolid:    true,
 					IsLootable: false,
 				}
-				h.ResIdCnt += 1
 				rMap := make(map[int]resource.Resource)
 				rMap[r.Id] = *r
 
 				cell := h.GridManager.GetCellFromPos(event.Pos)
-				fmt.Printf("placed resource in %d %d", cell.Pos.X, cell.Pos.Y)
+				fmt.Printf("placed resource in %d %d\n", cell.Pos.X, cell.Pos.Y)
 				h.spawnResource(cell, r)
-				// Store the variable in resource manager
-				/* h.ResourceManager.SetResource(r)
-				// Store adress to this resource in grid manager
-				cell.Resources[r.Id] = r */
 
+				c.send <- events.NewUpdateInventoryEvent(*r, true)
 				cell.Broadcast(events.NewResourcePositionsEvent(rMap))
 
 			}
