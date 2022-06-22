@@ -21,6 +21,9 @@ export class Player {
 
     updatePosition() {
         const step = this.targetPos.copy().sub(this.currentPos).mult(0.2)
+        if (step.mag() == 0) {
+            return
+        }
         if (step.mag() > 0.1) {
             this.currentPos.add(step)
         } else {

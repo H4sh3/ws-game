@@ -175,8 +175,7 @@ export class Game extends Container {
         } else {
             const player = this.players.get(parsed.id)
             if (player) {
-                player.targetPos.x = parsed.pos.x
-                player.targetPos.y = parsed.pos.y
+                player.targetPos = createVector(parsed.pos.x, parsed.pos.y)
             }
         }
     }
@@ -250,6 +249,7 @@ function handleKeyBoard(keyHandler: KeyboardHandler, player: Player, ws: WebSock
             const hasCollision = resources.filter(r => r.isSolid).some(r => r.pos.dist(newPos) < 40)
             if (!hasCollision) {
                 player.targetPos = newPos
+                console.log("my target pos ", newPos)
                 ws.send(getKeyBoardEvent(key, value))
             }
         }
