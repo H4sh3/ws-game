@@ -49,8 +49,7 @@ func NewHub() *Hub {
 	return hub
 }
 
-func (h *Hub) spawnResource(r *resource.Resource) {
-	cell := h.GridManager.GetCellFromPos(r.Pos)
+func (h *Hub) spawnResource(cell *GridCell, r *resource.Resource) {
 	// Store the variable in resource manager
 	h.ResourceManager.SetResource(r)
 	// Store adress to this resource in grid manager
@@ -69,18 +68,17 @@ func (h *Hub) initializeCellResources(channel chan *GridCell) {
 			pos := shared.Vector{X: x, Y: y}
 			id := h.ResourceManager.GetResourceId()
 			r := resource.NewResource(resource.Stone, pos, id, 100, true, 100, false)
-			h.spawnResource(r)
+			h.spawnResource(cell, r)
 		}
 
 		// spawn trees
 		for n := 0; n < shared.RandIntInRange(2, 5); n++ {
-
 			x := (cell.Pos.X * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
 			y := (cell.Pos.Y * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
 			pos := shared.Vector{X: x, Y: y}
 			id := h.ResourceManager.GetResourceId()
 			r := resource.NewResource(resource.Tree, pos, id, 100, true, 100, false)
-			h.spawnResource(r)
+			h.spawnResource(cell, r)
 		}
 	}
 }
@@ -299,9 +297,8 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 				rMap := make(map[int]resource.Resource)
 				rMap[r.Id] = *r
 
-				h.spawnResource(r)
-
 				cell := h.GridManager.GetCellFromPos(event.Pos)
+				h.spawnResource(cell, r)
 				// Store the variable in resource manager
 				/* h.ResourceManager.SetResource(r)
 				// Store adress to this resource in grid manager

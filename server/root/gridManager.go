@@ -113,7 +113,7 @@ func (gm *GridManager) clientMovedCell(oldCell GridCell, newCell GridCell, c *Cl
 // cells provided to a client entering a new cell
 func (gm *GridManager) getCells(x int, y int) []*GridCell {
 	neighbourCells := []*GridCell{}
-	area := 1
+	area := 2
 	for xOffset := -area; xOffset <= area; xOffset++ {
 		for yOffset := -area; yOffset <= area; yOffset++ {
 			xIdx := x + xOffset
@@ -130,7 +130,6 @@ func (gm *GridManager) getCells(x int, y int) []*GridCell {
 				gm.add(xIdx, yIdx)
 				cell = col[yIdx]
 			}
-			*gm.CellHydrationChan <- cell
 			neighbourCells = append(neighbourCells, cell)
 		}
 	}
@@ -139,6 +138,7 @@ func (gm *GridManager) getCells(x int, y int) []*GridCell {
 
 func (gm *GridManager) add(x int, y int) {
 	cell := NewCell(x, y)
+	*gm.CellHydrationChan <- cell
 
 	col, ok := gm.Grid[x]
 
