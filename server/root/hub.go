@@ -50,7 +50,7 @@ func NewHub() *Hub {
 		for y := range col {
 			spawnPositions := []shared.Vector{}
 			// spawn one resource in center for testing
-			spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: y * (GridCellSize / 2)})
+			spawnPositions = append(spawnPositions, shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2})
 			//spawnPositions = append(spawnPositions, shared.Vector{X: 50 + x*(GridCellSize/2), Y: 50 - y*(GridCellSize/2)})
 			//spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: y * (GridCellSize / 2)})
 			//spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: 50 - y*(GridCellSize/2)})
