@@ -156,10 +156,10 @@ func (gm *GridManager) clientMovedCell(oldCell GridCell, newCell GridCell, c *Cl
 	// Unsibscribe players from cells they haven't been to in a while
 	for x, col := range gm.Grid {
 		for y, cell := range col {
-			for i, sub := range cell.PlayerSubscriptions {
+			for _, sub := range cell.PlayerSubscriptions {
 				diff := sub.Player.ZoneChangeTick - sub.SubTick
-				if diff > 5 {
-					delete(gm.Grid[x][y].PlayerSubscriptions, i)
+				if !sub.Player.Connected || diff > 5 {
+					delete(gm.Grid[x][y].PlayerSubscriptions, sub.Player.Id)
 				}
 			}
 		}
@@ -184,9 +184,10 @@ func (gm *GridManager) clientMovedCell(oldCell GridCell, newCell GridCell, c *Cl
 	gm.drawGrid()
 }
 
+// cells provided to a client entering a new cell
 func (gm *GridManager) getCells(x int, y int) []GridCell {
 	neighbourCells := []GridCell{}
-	area := 2
+	area := 1
 	for xOffset := -area; xOffset <= area; xOffset++ {
 		for yOffset := -area; yOffset <= area; yOffset++ {
 			xIdx := x + xOffset
