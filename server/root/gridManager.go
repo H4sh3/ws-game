@@ -51,6 +51,7 @@ func (gm *GridManager) GetCellFromPos(clientPos shared.Vector) *GridCell {
 
 	gm.add(x, y)
 	cell := gm.Grid[x][y]
+
 	return cell
 }
 
@@ -129,6 +130,7 @@ func (gm *GridManager) getCells(x int, y int) []*GridCell {
 				gm.add(xIdx, yIdx)
 				cell = col[yIdx]
 			}
+			*gm.CellHydrationChan <- cell
 			neighbourCells = append(neighbourCells, cell)
 		}
 	}
@@ -148,8 +150,6 @@ func (gm *GridManager) add(x int, y int) {
 		gm.Grid[x] = make(map[int]*GridCell)
 		gm.Grid[x][y] = cell
 	}
-
-	*gm.CellHydrationChan <- cell
 }
 
 func (gm *GridManager) drawGrid() {

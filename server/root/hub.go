@@ -60,11 +60,25 @@ func (h *Hub) spawnResource(r *resource.Resource) {
 func (h *Hub) initializeCellResources(channel chan *GridCell) {
 	for {
 		cell := <-channel
+		// spawn Stones
+		oX := shared.RandIntInRange(-25, 25)
+		oY := shared.RandIntInRange(-25, 25)
 		for i := 0; i < shared.RandIntInRange(5, 20); i++ {
-			x := (cell.Pos.X * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25)
-			y := (cell.Pos.Y * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25)
+			x := (cell.Pos.X * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25) + oX
+			y := (cell.Pos.Y * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25) + oY
 			pos := shared.Vector{X: x, Y: y}
-			r := resource.NewResource(resource.Stone, pos, h.ResourceManager.GetResourceId(), 100, true, 100, false)
+			id := h.ResourceManager.GetResourceId()
+			r := resource.NewResource(resource.Stone, pos, id, 100, true, 100, false)
+			h.spawnResource(r)
+		}
+
+		// spawn trees
+		for n := 0; n < 5; n++ {
+			x := (cell.Pos.X * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
+			y := (cell.Pos.Y * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
+			pos := shared.Vector{X: x, Y: y}
+			id := h.ResourceManager.GetResourceId()
+			r := resource.NewResource(resource.Tree, pos, id, 100, true, 100, false)
 			h.spawnResource(r)
 		}
 	}
@@ -211,7 +225,8 @@ func (h *Hub) SpawnLoot(destroyedResource resource.Resource, c *Client) {
 		subType = resource.Brick
 	} else if destroyedResource.ResourceType == resource.Tree {
 		quantity = shared.RandIntInRange(3, 5)
-		subType = resource.Wood
+		subType = resource.Log
+		fmt.Println("spawned log")
 	}
 
 	// create resource of type and quantity

@@ -22,6 +22,8 @@ const main = async () => {
     await load(app, 'assets/brick.png');
     await load(app, 'assets/cursor.png');
     await load(app, 'assets/blockade.png');
+    await load(app, 'assets/tree.png');
+    await load(app, 'assets/log.png');
 
 
     const x = document.getElementById("mainView")
