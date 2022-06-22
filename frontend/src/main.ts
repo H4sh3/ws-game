@@ -104,7 +104,7 @@ export class Game extends Container {
                 if (isPlayerTargetPositionEvent(parsed)) {
                     this.handlePlayerTargetPositionEvent(parsed)
                 } else if (isLoadInventoryEvent(parsed)) {
-                    console.log(parsed)
+                    this.inventory.initLoad(parsed.items, this.player, this.app.loader, this.ws)
                 } else if (isUpdateResourceEvent(parsed)) {
                     this.updateResourceEvent(parsed)
                 } else if (isResourcePositionsEvent(parsed)) {

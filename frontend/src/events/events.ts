@@ -90,9 +90,6 @@ export interface IResource {
     hitpoints: Hitpoints
     isSolid: boolean,
     isLootable: boolean,
-    sprite: Sprite,
-    container: Container,
-    healtbar: Graphics
 }
 
 export interface ResourcePositionsEvent extends BaseEvent {
@@ -119,11 +116,13 @@ export function isUpdateResourceEvent(value: any): value is UpdateResourceEvent 
     )
 }
 
+
+
 export interface LoadInventoryEvent extends BaseEvent {
-    items: Map<string, Resource>
+    items: { [key: string]: IResource }
 }
 
-export function isLoadInventoryEvent(value: any): value is UpdateResourceEvent {
+export function isLoadInventoryEvent(value: any): value is LoadInventoryEvent {
     return (
         isBaseEvent(value) &&
         value.eventType === EVENT_TYPES.LOAD_INVENTORY_EVENT
