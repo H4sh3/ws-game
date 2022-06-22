@@ -46,26 +46,25 @@ func NewHub() *Hub {
 		ResIdCnt:        0,
 	}
 
-	x := 0
-	y := 0
-	spawnPositions := []shared.Vector{}
-	spawnPositions = append(spawnPositions, shared.Vector{X: 50 + x*(GridCellSize/2), Y: y * (GridCellSize / 2)})
-	//spawnPositions = append(spawnPositions, shared.Vector{X: 50 + x*(GridCellSize/2), Y: 50 - y*(GridCellSize/2)})
-	//spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: y * (GridCellSize / 2)})
-	//spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: 50 - y*(GridCellSize/2)})
-	for _, pos := range spawnPositions {
-		r1 := resource.NewResource(resource.Stone, pos, resourceManager.GetResourceId(), 1, true, 100, false)
+	for x, col := range gridManager.Grid {
+		for y := range col {
+			spawnPositions := []shared.Vector{}
+			// spawn one resource in center for testing
+			spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: y * (GridCellSize / 2)})
+			//spawnPositions = append(spawnPositions, shared.Vector{X: 50 + x*(GridCellSize/2), Y: 50 - y*(GridCellSize/2)})
+			//spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: y * (GridCellSize / 2)})
+			//spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: 50 - y*(GridCellSize/2)})
+			for _, pos := range spawnPositions {
+				r1 := resource.NewResource(resource.Stone, pos, resourceManager.GetResourceId(), 1, true, 100, false)
 
-		// Store the variable in resource manager
-		resourceManager.SetResource(r1)
+				// Store the variable in resource manager
+				resourceManager.SetResource(r1)
 
-		// Store adress to this resource in grid manager
-		gridManager.AddResource(gridManager.Grid[0][0], r1)
-	}
-	/* for x, row := range gridManager.Grid {
-		for y, col := range row {
+				// Store adress to this resource in grid manager
+				gridManager.AddResource(gridManager.Grid[0][0], r1)
+			}
 		}
-	} */
+	}
 
 	return hub
 }
@@ -153,12 +152,14 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 		newX := c.Pos.X / GridCellSize
 		newY := c.Pos.Y / GridCellSize
 
+		gridCell := h.GridManager.GetCellFromPos(c.Pos)
+		gridCell.Broadcast(events.NewPlayerTargetPositionEvent(c.Pos, c.Id))
+
 		if newX != c.GridCell.Pos.X || newY != c.GridCell.Pos.Y {
 			// remove client from old cell
 			delete(c.GridCell.Players, c.Id)
 
 			// set client to new cell
-			gridCell := h.GridManager.GetCellFromPos(c.Pos)
 			c.GridCell = gridCell
 			gridCell.Players[c.Id] = c
 
