@@ -18,24 +18,15 @@ type GridSubscription struct {
 }
 
 type GridManager struct {
-	Grid map[int]map[int]*GridCell
-	Hub  Hub
+	Grid              map[int]map[int]*GridCell
+	CellHydrationChan *chan *GridCell
 }
 
-func NewGridManager() *GridManager {
+func NewGridManager(channel *chan *GridCell) *GridManager {
 
 	gm := GridManager{
-		Grid: make(map[int]map[int]*GridCell),
-	}
-
-	n := 5
-	c := 0
-	// init cells around 0 0
-	for x := -n; x <= n; x++ {
-		for y := -n; y <= n; y++ {
-			gm.add(x, y)
-			c++
-		}
+		Grid:              make(map[int]map[int]*GridCell),
+		CellHydrationChan: channel,
 	}
 
 	return &gm
@@ -51,14 +42,15 @@ func (gm *GridManager) GetCellFromPos(clientPos shared.Vector) *GridCell {
 	y := clientPos.Y / GridCellSize
 
 	row := gm.Grid[x]
-	cell, oky := row[y]
+	cell1, ok := row[y]
 
 	// Todo fix this hacky stuff
-	if !oky {
-		gm.add(x, y)
+	if ok {
+		return cell1
 	}
-	cell = row[y]
 
+	gm.add(x, y)
+	cell := gm.Grid[x][y]
 	return cell
 }
 
@@ -145,6 +137,8 @@ func (gm *GridManager) getCells(x int, y int) []*GridCell {
 
 func (gm *GridManager) add(x int, y int) {
 	cell := NewCell(x, y)
+	*gm.CellHydrationChan <- cell
+
 	col, ok := gm.Grid[x]
 
 	if ok {

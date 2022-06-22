@@ -3,21 +3,23 @@ package root
 import (
 	"fmt"
 	"testing"
+	"ws-game/shared"
 )
 
+func consumer(c chan shared.Vector) {
+	for {
+		x := <-c
+		fmt.Println(x)
+	}
+}
+
 func TestGridManager(t *testing.T) {
-	manager := GridManager{
-		Grid: make(map[int]map[int]GridCell),
-	}
 
-	n := 0
-	for x := -1; x <= 1; x++ {
-		for y := -1; y <= 1; y++ {
-			manager.add(x, y)
-			n++
-		}
-	}
+	channel := make(chan shared.Vector)
+	go consumer(channel)
+	gm := NewGridManager(&channel)
+	pos := gm.GetCellFromPos(shared.Vector{X: 0, Y: 0})
+	fmt.Println(pos)
 
-	neighbours := manager.getCells(0, 0)
-	fmt.Println(neighbours)
+	t.Fail()
 }

@@ -33,40 +33,40 @@ const MAX_LOOT_RANGE = 150
 
 func NewHub() *Hub {
 
-	gridManager := NewGridManager()
-	resourceManager := resource.NewResourceManager()
-
 	hub := &Hub{
-		broadcast:       make(chan []byte),
-		register:        make(chan *Client),
-		unregister:      make(chan *Client),
-		clients:         make(map[int]*Client),
-		GridManager:     gridManager,
-		ResourceManager: resourceManager,
-		ResIdCnt:        0,
+		broadcast:  make(chan []byte),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		clients:    make(map[int]*Client),
+		ResIdCnt:   0,
 	}
 
-	for x, col := range gridManager.Grid {
-		for y := range col {
-			spawnPositions := []shared.Vector{}
-			// spawn one resource in center for testing
-			spawnPositions = append(spawnPositions, shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2})
-			//spawnPositions = append(spawnPositions, shared.Vector{X: 50 + x*(GridCellSize/2), Y: 50 - y*(GridCellSize/2)})
-			//spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: y * (GridCellSize / 2)})
-			//spawnPositions = append(spawnPositions, shared.Vector{X: x * (GridCellSize / 2), Y: 50 - y*(GridCellSize/2)})
-			for _, pos := range spawnPositions {
-				r1 := resource.NewResource(resource.Stone, pos, resourceManager.GetResourceId(), 1, true, 100, false)
-
-				// Store the variable in resource manager
-				resourceManager.SetResource(r1)
-
-				// Store adress to this resource in grid manager
-				gridManager.AddResource(x, y, r1)
-			}
-		}
-	}
+	c := make(chan *GridCell)
+	go hub.hydrateCell(c)
+	hub.GridManager = NewGridManager(&c)
+	hub.ResourceManager = resource.NewResourceManager()
 
 	return hub
+}
+
+func (h *Hub) AddStoneToCell(cell *GridCell) {
+	for i := 0; i < shared.RandIntInRange(5, 20); i++ {
+		x := (cell.Pos.X * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25)
+		y := (cell.Pos.Y * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25)
+		pos := shared.Vector{X: x, Y: y}
+		r1 := resource.NewResource(resource.Stone, pos, h.ResourceManager.GetResourceId(), 1, true, 100, false)
+		// Store the variable in resource manager
+		h.ResourceManager.SetResource(r1)
+		// Store adress to this resource in grid manager
+		cell.Resources[r1.Id] = r1
+	}
+}
+
+func (h *Hub) hydrateCell(channel chan *GridCell) {
+	for {
+		cell := <-channel
+		h.AddStoneToCell(cell)
+	}
 }
 
 func (h *Hub) Run() {
