@@ -64,7 +64,7 @@ type Client struct {
 }
 
 func NewClient(hub *Hub, conn *websocket.Conn) *Client {
-	clientPostion := shared.Vector{X: 0, Y: shared.RandIntInRange(-50, 0)}
+	clientPostion := shared.Vector{X: shared.RandIntInRange(-50, 50), Y: shared.RandIntInRange(-50, 50)}
 	inventory := make(map[resource.ResourceType]resource.Resource)
 	sendChan := make(chan []byte, 256)
 

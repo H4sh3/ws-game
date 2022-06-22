@@ -137,7 +137,6 @@ func (gm *GridManager) getCells(x int, y int) []*GridCell {
 
 func (gm *GridManager) add(x int, y int) {
 	cell := NewCell(x, y)
-	*gm.CellHydrationChan <- cell
 
 	col, ok := gm.Grid[x]
 
@@ -149,6 +148,8 @@ func (gm *GridManager) add(x int, y int) {
 		gm.Grid[x] = make(map[int]*GridCell)
 		gm.Grid[x][y] = cell
 	}
+
+	*gm.CellHydrationChan <- cell
 }
 
 func (gm *GridManager) drawGrid() {

@@ -42,30 +42,31 @@ func NewHub() *Hub {
 	}
 
 	c := make(chan *GridCell)
-	go hub.hydrateCell(c)
+	go hub.initializeCellResources(c)
 	hub.GridManager = NewGridManager(&c)
 	hub.ResourceManager = resource.NewResourceManager()
 
 	return hub
 }
 
-func (h *Hub) AddStoneToCell(cell *GridCell) {
-	for i := 0; i < shared.RandIntInRange(5, 20); i++ {
-		x := (cell.Pos.X * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25)
-		y := (cell.Pos.Y * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25)
-		pos := shared.Vector{X: x, Y: y}
-		r1 := resource.NewResource(resource.Stone, pos, h.ResourceManager.GetResourceId(), 1, true, 100, false)
-		// Store the variable in resource manager
-		h.ResourceManager.SetResource(r1)
-		// Store adress to this resource in grid manager
-		cell.Resources[r1.Id] = r1
-	}
+func (h *Hub) spawnResource(r *resource.Resource) {
+	cell := h.GridManager.GetCellFromPos(r.Pos)
+	// Store the variable in resource manager
+	h.ResourceManager.SetResource(r)
+	// Store adress to this resource in grid manager
+	cell.Resources[r.Id] = r
 }
 
-func (h *Hub) hydrateCell(channel chan *GridCell) {
+func (h *Hub) initializeCellResources(channel chan *GridCell) {
 	for {
 		cell := <-channel
-		h.AddStoneToCell(cell)
+		for i := 0; i < shared.RandIntInRange(5, 20); i++ {
+			x := (cell.Pos.X * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25)
+			y := (cell.Pos.Y * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25)
+			pos := shared.Vector{X: x, Y: y}
+			r := resource.NewResource(resource.Stone, pos, h.ResourceManager.GetResourceId(), 100, true, 100, false)
+			h.spawnResource(r)
+		}
 	}
 }
 
@@ -206,7 +207,7 @@ func (h *Hub) SpawnLoot(destroyedResource resource.Resource, c *Client) {
 		quantity = shared.RandIntInRange(1, 3)
 		subType = resource.Brick
 	} else if destroyedResource.ResourceType == resource.Blockade {
-		quantity = shared.RandIntInRange(2, 5)
+		quantity = 5
 		subType = resource.Brick
 	} else if destroyedResource.ResourceType == resource.Tree {
 		quantity = shared.RandIntInRange(3, 5)
@@ -268,7 +269,7 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 			if invRes.Quantity >= costs {
 				invRes.Quantity -= costs
 				c.Inventory[resource.Brick] = invRes
-				r := resource.Resource{ResourceType: resource.ResourceType(event.ResourceType),
+				r := &resource.Resource{ResourceType: resource.ResourceType(event.ResourceType),
 					Pos:      event.Pos,
 					Id:       h.ResIdCnt,
 					Quantity: 1,
@@ -280,9 +281,18 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 				}
 				h.ResIdCnt += 1
 				rMap := make(map[int]resource.Resource)
-				rMap[r.Id] = r
-				h.broadcast <- events.NewResourcePositionsEvent(rMap)
-				h.Resources = append(h.Resources, r)
+				rMap[r.Id] = *r
+
+				h.spawnResource(r)
+
+				cell := h.GridManager.GetCellFromPos(event.Pos)
+				// Store the variable in resource manager
+				/* h.ResourceManager.SetResource(r)
+				// Store adress to this resource in grid manager
+				cell.Resources[r.Id] = r */
+
+				cell.Broadcast(events.NewResourcePositionsEvent(rMap))
+
 			}
 		}
 
