@@ -171,6 +171,10 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 		return
 	}
 
+	if r.Remove {
+		return
+	}
+
 	dist := r.Pos.Dist((&c.Pos))
 	if dist < MAX_LOOT_RANGE {
 		r.Hitpoints.Current -= 34
