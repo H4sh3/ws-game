@@ -185,11 +185,17 @@ export class Game extends Container {
             this.player.currentPos.x = parsed.pos.x
             this.player.currentPos.y = parsed.pos.y
         } else {
-            const sprite = new Sprite(this.app.loader.resources['assets/player0.png'].texture)
-            sprite.anchor.set(0.5)
-            const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), sprite)
-            this.worldContainer.addChild(sprite)
-            this.players.set(newP.id, newP)
+            const existing = this.players.get(parsed.id)
+            if (existing) {
+                existing.targetPos = createVector(parsed.pos.x, parsed.pos.y)
+                this.players.set(parsed.id, existing)
+            } else {
+                const sprite = new Sprite(this.app.loader.resources['assets/player0.png'].texture)
+                sprite.anchor.set(0.5)
+                const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), sprite)
+                this.worldContainer.addChild(sprite)
+                this.players.set(newP.id, newP)
+            }
         }
     }
 
