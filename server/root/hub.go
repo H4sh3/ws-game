@@ -83,7 +83,7 @@ func (h *Hub) Run() {
 					}
 
 					if sub.Player.Connected {
-						sub.Player.send <- events.NewPlayerDisconnectedEvent(client.Id)
+						sub.Player.send <- events.NewRemovePlayerEvent(client.Id)
 					}
 				}
 

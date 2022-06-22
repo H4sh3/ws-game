@@ -180,7 +180,7 @@ func (gm *GridManager) clientMovedCell(oldCell GridCell, newCell GridCell, c *Cl
 		}
 		if !subbedToNewCell {
 			// notify to delete player clientside
-			oldCellSub.Player.send <- events.NewPlayerDisconnectedEvent(c.Id)
+			oldCellSub.Player.send <- events.NewRemovePlayerEvent(c.Id)
 		}
 	}
 

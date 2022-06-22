@@ -16,7 +16,7 @@ const (
 	KEYBOARD_EVENT               EventType = "KEYBOARD_EVENT"
 	PLAYER_TARGET_POSITION_EVENT EventType = "PLAYER_TARGET_POSITION_EVENT"
 	RESOURCE_POSITIONS_EVENT     EventType = "RESOURCE_POSITIONS_EVENT"
-	PLAYER_DISCONNECTED_EVENT    EventType = "PLAYER_DISCONNECTED_EVENT"
+	REMOVE_PLAYER_EVENT          EventType = "REMOVE_PLAYER_EVENT"
 	HIT_RESOURCE_EVENT           EventType = "HIT_RESOURCE_EVENT"
 	UPDATE_RESOURCE_EVENT        EventType = "UPDATE_RESOURCE_EVENT"
 	LOOT_RESOURCE_EVENT          EventType = "LOOT_RESOURCE_EVENT"
@@ -104,13 +104,13 @@ func NewResourcePositionsEvent(resources map[int]resource.Resource) []byte {
 	}
 }
 
-type PlayerDisconnectedEvent struct {
+type RemovePlayerEvent struct {
 	EventType EventType `json:"eventType"`
 	Id        int       `json:"id"`
 }
 
-func NewPlayerDisconnectedEvent(id int) []byte {
-	u := &PlayerDisconnectedEvent{EventType: PLAYER_DISCONNECTED_EVENT, Id: id}
+func NewRemovePlayerEvent(id int) []byte {
+	u := &RemovePlayerEvent{EventType: REMOVE_PLAYER_EVENT, Id: id}
 
 	value, err := json.Marshal(u)
 

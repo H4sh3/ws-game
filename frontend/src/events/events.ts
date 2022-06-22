@@ -45,14 +45,14 @@ export interface PlayerTargetPositionEvent extends BaseEvent {
     pos: Vector
 }
 
-export interface PlayerDisconnectedEvent extends BaseEvent {
+export interface RemovePlayerEvent extends BaseEvent {
     id: number
 }
 
-export function isPlayerDisconnectedEvent(value: any): value is PlayerDisconnectedEvent {
+export function isRemovePlayerEvent(value: any): value is RemovePlayerEvent {
     return (
         isBaseEvent(value) &&
-        value.eventType == EVENT_TYPES.PLAYER_DISCONNECTED_EVENT
+        value.eventType == EVENT_TYPES.REMOVE_PLAYER_EVENT
     )
 }
 

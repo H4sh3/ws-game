@@ -1,5 +1,5 @@
-import { Application, Container, Graphics, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isPlayerDisconnectedEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, PlayerDisconnectedEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent } from './events/events';
+import { Application, Container, Sprite } from 'pixi.js';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
@@ -103,7 +103,7 @@ export class Game extends Container {
                     this.updateResourceEvent(parsed)
                 } else if (isResourcePositionsEvent(parsed)) {
                     this.handleResourceEvent(parsed)
-                } else if (isPlayerDisconnectedEvent(parsed)) {
+                } else if (isRemovePlayerEvent(parsed)) {
                     this.handlePlayerDisconnect(parsed)
                 } else if (isNewPlayerEvent(parsed)) {
                     this.handleNewPlayerEvent(parsed)
@@ -156,7 +156,7 @@ export class Game extends Container {
         })
     }
 
-    handlePlayerDisconnect(parsed: PlayerDisconnectedEvent) {
+    handlePlayerDisconnect(parsed: RemovePlayerEvent) {
         const p = this.players.get(parsed.id)
         if (p) {
             this.worldContainer.removeChild(p.sprite)
