@@ -88,6 +88,7 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.clients[client.Id] = client
+			client.send <- events.NewLoadInventoryEvent(client.Inventory)
 		case client := <-h.unregister:
 			if _, ok := h.clients[client.Id]; ok {
 
@@ -298,6 +299,7 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 				rMap[r.Id] = *r
 
 				cell := h.GridManager.GetCellFromPos(event.Pos)
+				fmt.Printf("placed resource in %d %d", cell.Pos.X, cell.Pos.Y)
 				h.spawnResource(cell, r)
 				// Store the variable in resource manager
 				/* h.ResourceManager.SetResource(r)

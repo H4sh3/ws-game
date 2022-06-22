@@ -21,6 +21,8 @@ const (
 	UPDATE_RESOURCE_EVENT        EventType = "UPDATE_RESOURCE_EVENT"
 	LOOT_RESOURCE_EVENT          EventType = "LOOT_RESOURCE_EVENT"
 	PLAYER_PLACED_RESOURCE_EVENT EventType = "PLAYER_PLACED_RESOURCE_EVENT"
+	LOAD_INVENTORY_EVENT         EventType = "LOAD_INVENTORY_EVENT"
+	UPDATE_INVENTORY_EVENT       EventType = "UPDATE_INVENTORY_EVENT"
 )
 
 type NewPlayerEvent struct {
@@ -127,6 +129,27 @@ type UpdateResourceEvent struct {
 	Id        int                `json:"id"`
 	Hitpoints resource.Hitpoints `json:"hitpoints"`
 	Remove    bool               `json:"remove"`
+}
+
+type LoadInventoryEvent struct {
+	EventType EventType                                   `json:"eventType"`
+	Items     map[resource.ResourceType]resource.Resource `json:"items"`
+}
+
+func NewLoadInventoryEvent(inventory map[resource.ResourceType]resource.Resource) []byte {
+	event := &LoadInventoryEvent{
+		EventType: LOAD_INVENTORY_EVENT,
+		Items:     inventory,
+	}
+
+	value, err := json.Marshal(event)
+
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return []byte{}
+	} else {
+		return value
+	}
 }
 
 func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool) []byte {

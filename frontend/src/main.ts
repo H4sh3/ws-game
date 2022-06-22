@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
@@ -8,6 +8,7 @@ import getBackgroundGraphics, { getInventoryBackground } from './sprites/backgro
 import { getOwnPlayerSprite } from './sprites/player';
 import { getBlockadeSprite, getCursorSprite } from './sprites/etc';
 import { SCREEN_SIZE } from './etc/const';
+import { Inventory } from './types/inventory';
 
 export class Game extends Container {
     app: Application;
@@ -19,6 +20,7 @@ export class Game extends Container {
     player: Player
 
     players: Map<number, Player>
+    inventory: Inventory
 
     cursorSprite: Sprite
     blockadeSprite: Sprite
@@ -37,6 +39,7 @@ export class Game extends Container {
         this.isEditing = false
         this.resources = []
         this.players = new Map()
+        this.inventory = new Inventory()
 
         this.worldContainer = new Container();
         this.keyHandler = new KeyboardHandler()
@@ -100,6 +103,8 @@ export class Game extends Container {
                 let parsed: any = JSON.parse(message)
                 if (isPlayerTargetPositionEvent(parsed)) {
                     this.handlePlayerTargetPositionEvent(parsed)
+                } else if (isLoadInventoryEvent(parsed)) {
+                    console.log(parsed)
                 } else if (isUpdateResourceEvent(parsed)) {
                     this.updateResourceEvent(parsed)
                 } else if (isResourcePositionsEvent(parsed)) {

@@ -1,5 +1,6 @@
 import { Container, Graphics, Sprite } from "pixi.js"
 import { EVENT_TYPES } from "../etc/const"
+import { Resource } from "../types/resource"
 import Vector from "../types/vector"
 
 export function createVector(x: number, y: number): Vector {
@@ -118,7 +119,16 @@ export function isUpdateResourceEvent(value: any): value is UpdateResourceEvent 
     )
 }
 
+export interface LoadInventoryEvent extends BaseEvent {
+    items: Map<string, Resource>
+}
 
+export function isLoadInventoryEvent(value: any): value is UpdateResourceEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType === EVENT_TYPES.LOAD_INVENTORY_EVENT
+    )
+}
 
 /*
  Events bellow are send from client to server 
