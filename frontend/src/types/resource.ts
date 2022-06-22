@@ -50,6 +50,7 @@ export class Resource {
                 if (this.isLootable) {
                     this.ws.send(getLootResourceEvent(this.id))
                 } else {
+                    // is hitable
                     this.ws.send(getHitResourceEvent("1", this.id))
                 }
             }

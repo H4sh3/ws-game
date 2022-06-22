@@ -73,7 +73,8 @@ func (h *Hub) initializeCellResources(channel chan *GridCell) {
 		}
 
 		// spawn trees
-		for n := 0; n < 5; n++ {
+		for n := 0; n < shared.RandIntInRange(2, 5); n++ {
+
 			x := (cell.Pos.X * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
 			y := (cell.Pos.Y * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
 			pos := shared.Vector{X: x, Y: y}
