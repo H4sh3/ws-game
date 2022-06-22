@@ -156,14 +156,8 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 		gridCell.Broadcast(events.NewPlayerTargetPositionEvent(c.Pos, c.Id))
 
 		if newX != c.GridCell.Pos.X || newY != c.GridCell.Pos.Y {
-			// remove client from old cell
-			delete(c.GridCell.Players, c.Id)
 
-			// set client to new cell
-			c.GridCell = gridCell
-			gridCell.Players[c.Id] = c
-
-			h.GridManager.clientMovedCell(gridCell.Pos.X, gridCell.Pos.Y, c)
+			h.GridManager.clientMovedCell(*c.GridCell, *gridCell, c)
 		}
 
 	}

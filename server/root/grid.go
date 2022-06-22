@@ -133,21 +133,31 @@ func NewGridManager() *GridManager {
 	return gm
 }
 
-func (gm *GridManager) clientMovedCell(newCellX int, newCellY int, client *Client) {
-	cells := gm.getCells(newCellX, newCellY)
+func (gm *GridManager) clientMovedCell(oldCell GridCell, newCell GridCell, c *Client) {
+
+	// remove client from old cell
+	delete(oldCell.Players, c.Id)
+
+	// set client to new cell
+	c.GridCell = &newCell
+	newCell.Players[c.Id] = c
 
 	// This counter is increased each zone change
 	// When a client subs to a cell its current Tick is stored on the sub
 	// If the tick value on the sub and the latest tick value of the client are to different we can asume the client is far aways and can be unsubbed from the cell
-	client.ZoneChangeTick += 1
+	c.ZoneChangeTick += 1
 
+	// Subscribe to the new cell and its surrounding cells
+	// # # #
+	// # x #	x -> is current cell
+	// # # #
+	cells := gm.getCells(newCell.Pos.X, newCell.Pos.Y)
 	for _, cell := range cells {
-		cell.subscribe(client)
+		cell.subscribe(c)
 	}
 
-	gm.drawGrid()
-
 	// Todo: do this only every n-th ticks or somethign
+	// Unsibscribe players from cells they haven't been to in a while
 	for x, col := range gm.Grid {
 		for y, cell := range col {
 			for i, sub := range cell.PlayerSubscriptions {
@@ -158,6 +168,24 @@ func (gm *GridManager) clientMovedCell(newCellX int, newCellY int, client *Clien
 			}
 		}
 	}
+
+	// Notify clients to remove player if he moved to a cell they are not subscribed to
+	for _, oldCellSub := range oldCell.PlayerSubscriptions {
+		subbedToNewCell := false
+		for _, newCellSub := range newCell.PlayerSubscriptions {
+			if oldCellSub.Player.Id == newCellSub.Player.Id {
+				subbedToNewCell = true
+				break
+			}
+		}
+		if !subbedToNewCell {
+			// notify to delete player clientside
+			oldCellSub.Player.send <- events.NewPlayerDisconnectedEvent(c.Id)
+		}
+	}
+
+	// Todo: Add debug flag for this?
+	gm.drawGrid()
 }
 
 func (gm *GridManager) getCells(x int, y int) []GridCell {
