@@ -184,7 +184,6 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 		cellToBroadCast.Broadcast(events.NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove))
 
 		if r.Hitpoints.Current <= 0 {
-			fmt.Printf("spawn loot for %d\n", r.Id)
 			h.SpawnLoot(*r, c)
 			h.RemoveResource(r)
 		}
