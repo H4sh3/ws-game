@@ -18,14 +18,14 @@ type GridSubscription struct {
 }
 
 type GridManager struct {
-	Grid map[int]map[int]GridCell
+	Grid map[int]map[int]*GridCell
 	Hub  Hub
 }
 
 func NewGridManager() *GridManager {
 
-	gm := &GridManager{
-		Grid: make(map[int]map[int]GridCell),
+	gm := GridManager{
+		Grid: make(map[int]map[int]*GridCell),
 	}
 
 	n := 5
@@ -38,11 +38,11 @@ func NewGridManager() *GridManager {
 		}
 	}
 
-	return gm
+	return &gm
 }
 
-func (gm *GridManager) AddResource(cell GridCell, r *resource.Resource) {
-	cell.Resources[r.Id] = r
+func (gm *GridManager) AddResource(x int, y int, r *resource.Resource) {
+	gm.Grid[x][y].Resources[r.Id] = r
 }
 
 func (gm *GridManager) GetCellFromPos(clientPos shared.Vector) *GridCell {
@@ -59,7 +59,7 @@ func (gm *GridManager) GetCellFromPos(clientPos shared.Vector) *GridCell {
 	}
 	cell = row[y]
 
-	return &cell
+	return cell
 }
 
 func (gm *GridManager) clientMovedCell(oldCell GridCell, newCell GridCell, c *Client) {
@@ -118,8 +118,8 @@ func (gm *GridManager) clientMovedCell(oldCell GridCell, newCell GridCell, c *Cl
 }
 
 // cells provided to a client entering a new cell
-func (gm *GridManager) getCells(x int, y int) []GridCell {
-	neighbourCells := []GridCell{}
+func (gm *GridManager) getCells(x int, y int) []*GridCell {
+	neighbourCells := []*GridCell{}
 	area := 1
 	for xOffset := -area; xOffset <= area; xOffset++ {
 		for yOffset := -area; yOffset <= area; yOffset++ {
@@ -144,7 +144,7 @@ func (gm *GridManager) getCells(x int, y int) []GridCell {
 }
 
 func (gm *GridManager) add(x int, y int) {
-	cell := *NewCell(x, y)
+	cell := NewCell(x, y)
 	col, ok := gm.Grid[x]
 
 	if ok {
@@ -152,7 +152,7 @@ func (gm *GridManager) add(x int, y int) {
 		col[y] = cell
 	} else {
 		// add col and add cell
-		gm.Grid[x] = make(map[int]GridCell)
+		gm.Grid[x] = make(map[int]*GridCell)
 		gm.Grid[x][y] = cell
 	}
 }

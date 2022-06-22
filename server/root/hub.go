@@ -61,7 +61,7 @@ func NewHub() *Hub {
 				resourceManager.SetResource(r1)
 
 				// Store adress to this resource in grid manager
-				gridManager.AddResource(gridManager.Grid[0][0], r1)
+				gridManager.AddResource(x, y, r1)
 			}
 		}
 	}
