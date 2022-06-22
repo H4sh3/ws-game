@@ -29,10 +29,6 @@ type GridCell struct {
 	Resources           map[int]*resource.Resource // resources located in this cell
 }
 
-func GetGridCellKey(x int, y int) string {
-	return fmt.Sprintf("%d:%d", x, y)
-}
-
 func (cell *GridCell) Broadcast(data []byte) {
 	for _, sub := range cell.PlayerSubscriptions {
 		if sub.Player.Connected {
@@ -67,7 +63,6 @@ func (gm *GridManager) GetCellFromPos(clientPos shared.Vector) *GridCell {
 func NewCell(x int, y int) *GridCell {
 	return &GridCell{
 		Pos:                 shared.Vector{X: x, Y: y},
-		Key:                 GetGridCellKey(x, y),
 		PlayerSubscriptions: make(map[int]GridSubscription),
 		Players:             make(map[int]*Client),
 		Resources:           make(map[int]*resource.Resource),
@@ -86,6 +81,7 @@ func (cell *GridCell) subscribe(client *Client) {
 	if subscription, ok := cell.PlayerSubscriptions[client.Id]; ok {
 		// player has already subbed to this cell -> renew by updating the tick value
 		subscription.SubTick = client.ZoneChangeTick
+		cell.PlayerSubscriptions[client.Id] = subscription
 	} else {
 		cell.PlayerSubscriptions[client.Id] = GridSubscription{
 			Player:  client,
@@ -239,7 +235,7 @@ func (gm *GridManager) drawGrid() {
 		if x > maxX {
 			maxX = x
 		}
-		for y, _ := range col {
+		for y := range col {
 			if y < minY {
 				minY = y
 			}
