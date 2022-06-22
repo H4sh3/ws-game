@@ -74,7 +74,7 @@ func NewClient(hub *Hub, conn *websocket.Conn) *Client {
 
 	// subscribe to current and all surrounding cells
 	for _, cell := range hub.GridManager.getCells(gridCell.Pos.X, gridCell.Pos.Y) {
-		cell.subscribe(client)
+		cell.Subscribe(client)
 	}
 
 	return client
