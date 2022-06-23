@@ -23,6 +23,7 @@ const (
 	PLAYER_PLACED_RESOURCE_EVENT EventType = "PLAYER_PLACED_RESOURCE_EVENT"
 	LOAD_INVENTORY_EVENT         EventType = "LOAD_INVENTORY_EVENT"
 	UPDATE_INVENTORY_EVENT       EventType = "UPDATE_INVENTORY_EVENT"
+	REMOVE_GRID_CELL             EventType = "REMOVE_GRID_CELL"
 )
 
 type NewPlayerEvent struct {
@@ -179,6 +180,24 @@ type UpdateResourceEvent struct {
 func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool, gridCellKey string) []byte {
 	hitpoints := resource.Hitpoints{Current: currentHp, Max: maxHp}
 	u := &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey}
+
+	value, err := json.Marshal(u)
+
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return []byte{}
+	} else {
+		return value
+	}
+}
+
+type RemoveGridCellEvent struct {
+	EventType   EventType `json:"eventType"`
+	GridCellKey string    `json:"gridCellKey"`
+}
+
+func NewRemoveGridCellEvent(gridCellKey string) []byte {
+	u := &RemoveGridCellEvent{EventType: REMOVE_GRID_CELL, GridCellKey: gridCellKey}
 
 	value, err := json.Marshal(u)
 

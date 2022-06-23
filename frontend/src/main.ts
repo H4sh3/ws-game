@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
@@ -123,6 +123,8 @@ export class Game extends Container {
                     this.handleNewPlayerEvent(parsed)
                 } else if (isAssignUserIdEvent(parsed)) {
                     this.handleAssignIdEvent(parsed)
+                } else if (isRemoveGridCellEvent(parsed)) {
+                    this.handleRemoveGridCellEvent(parsed)
                 }
             })
         }
@@ -206,6 +208,15 @@ export class Game extends Container {
         }
     }
 
+    handleRemoveGridCellEvent(parsed: RemoveGridCellEvent) {
+        const { gridCellKey } = parsed
+        if (this.resources.has(gridCellKey))
+            this.resources.get(gridCellKey).map(r => {
+                this.worldContainer.removeChild(r.container)
+            })
+        this.resources.delete(gridCellKey)
+    }
+
     handlePlayerTargetPositionEvent(parsed: PlayerTargetPositionEvent) {
         if (parsed.id === this.player.id) {
             const newPos = createVector(parsed.pos.x, parsed.pos.y)
@@ -279,7 +290,7 @@ function handleKeyBoard(keyHandler: KeyboardHandler, player: Player, ws: WebSock
 
             const newPos = player.targetPos.copy()
 
-            const stepSize = 5
+            const stepSize = 10
 
             switch (key) {
                 case "w":

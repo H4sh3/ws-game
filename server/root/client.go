@@ -132,6 +132,10 @@ func (client *Client) writePump() {
 	for {
 		select {
 		case message, ok := <-client.send:
+			if !client.Connected {
+				fmt.Println("Don't send events to disconnected client!")
+				return
+			}
 			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.

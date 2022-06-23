@@ -142,6 +142,19 @@ export function isUpdateInventoryEvent(value: any): value is UpdateInventoryEven
     )
 }
 
+
+export interface RemoveGridCellEvent extends BaseEvent {
+    gridCellKey: string
+}
+
+export function isRemoveGridCellEvent(value: any): value is RemoveGridCellEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType === EVENT_TYPES.REMOVE_GRID_CELL
+    )
+}
+
+
 /*
  Events bellow are send from client to server 
 */

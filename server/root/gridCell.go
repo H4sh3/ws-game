@@ -2,6 +2,7 @@ package root
 
 import (
 	"fmt"
+	"sync"
 	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
@@ -13,6 +14,7 @@ type GridCell struct {
 	PlayerSubscriptions map[int]GridSubscription   // client id to subscription; used for event distribution
 	Players             map[int]*Client            // players inside this cell atm
 	Resources           map[int]*resource.Resource // resources located in this cell
+	mutex               *sync.Mutex
 }
 
 func NewCell(x int, y int) *GridCell {
@@ -22,6 +24,7 @@ func NewCell(x int, y int) *GridCell {
 		PlayerSubscriptions: make(map[int]GridSubscription),
 		Players:             make(map[int]*Client),
 		Resources:           make(map[int]*resource.Resource),
+		mutex:               &sync.Mutex{},
 	}
 }
 
@@ -39,13 +42,22 @@ func (cell *GridCell) Broadcast(data []byte) {
 	}
 }
 
+func (cell *GridCell) AddResource(r *resource.Resource) {
+	cell.mutex.Lock()
+	cell.Resources[r.Id] = r
+	cell.mutex.Unlock()
+}
+
 func (cell *GridCell) Subscribe(client *Client) {
 	// if a client subs to a new cell provide him with players inside this cell
 	for _, player := range cell.Players {
 		if player.Id == client.Id {
 			continue
 		}
-		client.send <- events.GetNewPlayerEvent(player.Id, player.Pos)
+
+		if client.Connected {
+			client.send <- events.GetNewPlayerEvent(player.Id, player.Pos)
+		}
 	}
 
 	if subscription, ok := cell.PlayerSubscriptions[client.Id]; ok {
@@ -59,8 +71,8 @@ func (cell *GridCell) Subscribe(client *Client) {
 		}
 
 		// provide player with resources
-
 		if len(cell.Resources) > 0 {
+			cell.mutex.Lock()
 			resources := make(map[int]resource.Resource)
 			for idx, r := range cell.Resources {
 				if r.Remove {
@@ -70,7 +82,11 @@ func (cell *GridCell) Subscribe(client *Client) {
 				}
 
 			}
-			client.send <- events.NewResourcePositionsEvent(resources)
+			cell.mutex.Unlock()
+
+			if client.Connected {
+				client.send <- events.NewResourcePositionsEvent(resources)
+			}
 		}
 	}
 }

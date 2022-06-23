@@ -33,7 +33,10 @@ func NewGridManager(channel *chan *GridCell) *GridManager {
 }
 
 func (gm *GridManager) AddResource(x int, y int, r *resource.Resource) {
-	gm.Grid[x][y].Resources[r.Id] = r
+	cell, ok := gm.Grid[x][y]
+	if ok {
+		cell.AddResource(r)
+	}
 }
 
 func (gm *GridManager) GetCellFromPos(clientPos shared.Vector) *GridCell {
@@ -84,8 +87,16 @@ func (gm *GridManager) clientMovedCell(oldCell GridCell, newCell GridCell, c *Cl
 		for y, cell := range col {
 			for _, sub := range cell.PlayerSubscriptions {
 				diff := sub.Player.ZoneChangeTick - sub.SubTick
-				if !sub.Player.Connected || diff > 5 {
+
+				// Unsubscribe players that disconnected
+				if !sub.Player.Connected {
 					delete(gm.Grid[x][y].PlayerSubscriptions, sub.Player.Id)
+				}
+
+				// Unsubscribe connected players that moved a certain distance from the cell
+				if sub.Player.Connected && diff > 5 {
+					delete(gm.Grid[x][y].PlayerSubscriptions, sub.Player.Id)
+					sub.Player.send <- events.NewRemoveGridCellEvent(cell.GridCellKey)
 				}
 			}
 		}
@@ -100,6 +111,7 @@ func (gm *GridManager) clientMovedCell(oldCell GridCell, newCell GridCell, c *Cl
 				break
 			}
 		}
+
 		if !subbedToNewCell {
 			// notify to delete player clientside
 			oldCellSub.Player.send <- events.NewRemovePlayerEvent(c.Id)

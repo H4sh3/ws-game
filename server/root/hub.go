@@ -37,6 +37,7 @@ func NewHub() *Hub {
 	}
 
 	c := make(chan *GridCell)
+
 	go hub.initializeCellResources(c)
 	hub.GridManager = NewGridManager(&c)
 	hub.ResourceManager = resource.NewResourceManager()
@@ -48,7 +49,9 @@ func (h *Hub) spawnResource(cell *GridCell, r *resource.Resource) {
 	// Store the variable in resource manager
 	h.ResourceManager.SetResource(r)
 	// Store adress to this resource in grid manager
+	cell.mutex.Lock()
 	cell.Resources[r.Id] = r
+	cell.mutex.Unlock()
 }
 
 func (h *Hub) initializeCellResources(channel chan *GridCell) {
@@ -57,7 +60,7 @@ func (h *Hub) initializeCellResources(channel chan *GridCell) {
 		// spawn Stones
 		oX := shared.RandIntInRange(-25, 25)
 		oY := shared.RandIntInRange(-25, 25)
-		for i := 0; i < shared.RandIntInRange(1, 5); i++ {
+		for i := 0; i < shared.RandIntInRange(1, 50); i++ {
 			x := (cell.Pos.X * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-250, 250) + oX
 			y := (cell.Pos.Y * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-250, 250) + oY
 			pos := shared.Vector{X: x, Y: y}
@@ -67,7 +70,7 @@ func (h *Hub) initializeCellResources(channel chan *GridCell) {
 		}
 
 		// spawn trees
-		for n := 0; n < shared.RandIntInRange(2, 5); n++ {
+		for n := 0; n < shared.RandIntInRange(2, 50); n++ {
 			x := (cell.Pos.X * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
 			y := (cell.Pos.Y * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
 			pos := shared.Vector{X: x, Y: y}
@@ -125,7 +128,7 @@ func (h *Hub) new_client(client *Client) {
 
 func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 
-	stepSize := 5
+	stepSize := 10
 	newPos := &shared.Vector{X: c.Pos.X, Y: c.Pos.Y}
 
 	if event.Key == "w" {
@@ -178,7 +181,6 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 }
 
 func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
-	//toRemoveIndex := -1
 	r, err := h.ResourceManager.GetResource(event.Id)
 	fmt.Printf("cell key %s\n", r.GridCellKey)
 	fmt.Printf("resource id %d\n", r.Id)
