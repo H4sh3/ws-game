@@ -85,6 +85,7 @@ export interface Hitpoints {
 export interface IResource {
     resourceType: string,
     id: number,
+    gridCellKey: string,
     quantity: number,
     pos: Vector,
     hitpoints: Hitpoints
@@ -105,6 +106,7 @@ export function isResourcePositionsEvent(value: any): value is ResourcePositions
 
 export interface UpdateResourceEvent {
     id: number,
+    gridCellKey: string,
     hitpoints: Hitpoints,
     remove: boolean
 }

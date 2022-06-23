@@ -14,7 +14,7 @@ export class Game extends Container {
     app: Application;
     keyHandler: KeyboardHandler
     ws: WebSocket
-    resources: Resource[]
+    resources: Map<string, Resource[]>
     worldContainer: Container
 
     player: Player
@@ -38,7 +38,7 @@ export class Game extends Container {
 
         this.ws = new WebSocket(process.env.WS_API)
         this.isEditing = false
-        this.resources = []
+        this.resources = new Map()
         this.players = new Map()
         this.inventory = new Inventory()
 
@@ -112,7 +112,7 @@ export class Game extends Container {
                 } else if (isUpdateResourceEvent(parsed)) {
                     this.updateResourceEvent(parsed)
                 } else if (isResourcePositionsEvent(parsed)) {
-                    this.handleResourceEvent(parsed)
+                    this.addResourceEvent(parsed)
                 } else if (isRemovePlayerEvent(parsed)) {
                     this.handlePlayerDisconnect(parsed)
                 } else if (isNewPlayerEvent(parsed)) {
@@ -128,7 +128,14 @@ export class Game extends Container {
     }
 
     update(delta: number) {
-        handleKeyBoard(this.keyHandler, this.player, this.ws, this.resources)
+
+
+        // Todo: Make this more efficient by only generating the array if resources have changed
+        let allResources: Resource[] = []
+        for (let k of this.resources.keys()) {
+            allResources = [...allResources, ...this.resources.get(k)]
+        }
+        handleKeyBoard(this.keyHandler, this.player, this.ws, allResources)
 
         // update world container based on players position
         this.player.updatePosition()
@@ -161,11 +168,20 @@ export class Game extends Container {
         this.player.updateCooldown(delta)
     }
 
-    handleResourceEvent(parsed: ResourcePositionsEvent) {
+    addResourceEvent(parsed: ResourcePositionsEvent) {
         parsed.resources.forEach(r => {
             const resource: Resource = new Resource(r.id, this.player, r.quantity, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
-            this.resources.push(resource)
             this.worldContainer.addChild(resource.container);
+
+            const { gridCellKey } = r;
+            if (this.resources.has(gridCellKey)) {
+                const resources = this.resources.get(gridCellKey)
+                resources.push(resource)
+                this.resources.set(gridCellKey, resources)
+            } else {
+                // init new array if its a new cell
+                this.resources.set(gridCellKey, [resource])
+            }
         })
     }
 
@@ -216,10 +232,14 @@ export class Game extends Container {
     }
 
     updateResourceEvent(parsed: UpdateResourceEvent) {
-        const r = this.resources.find(r => r.id == parsed.id)
+
+
+        let resources = this.resources.get(parsed.gridCellKey)
+
+        const r = resources.find(r => r.id == parsed.id)
         if (r) {
             if (parsed.remove) {
-                this.resources = this.resources.filter(rO => rO.id !== parsed.id)
+                resources = resources.filter(rO => rO.id !== parsed.id)
             }
 
             r.hitPoints.current = parsed.hitpoints.current
@@ -229,6 +249,12 @@ export class Game extends Container {
                 r.container.removeChild(r.sprite)
                 this.removeChild(r.container)
             }
+
+            this.resources.set(parsed.gridCellKey, resources)
+        } else {
+            console.log("resourcen not found", parsed.gridCellKey)
+            console.log(this.resources)
+            console.log(parsed.id)
         }
     }
 }

@@ -31,10 +31,11 @@ type Resource struct {
 	Hitpoints    Hitpoints     `json:"hitpoints"`
 	IsSolid      bool          `json:"isSolid"`
 	IsLootable   bool          `json:"isLootable"`
+	GridCellKey  string        `json:"gridCellKey"`
 	Remove       bool
 }
 
-func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity int, isSolid bool, hitpoints int, isLootable bool) *Resource {
+func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity int, isSolid bool, hitpoints int, isLootable bool, gridCellKey string) *Resource {
 	return &Resource{
 		ResourceType: resourceType,
 		Pos:          pos,
@@ -44,8 +45,9 @@ func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity 
 			Current: hitpoints,
 			Max:     hitpoints,
 		},
-		IsSolid:    isSolid,
-		IsLootable: isLootable,
-		Remove:     false,
+		IsSolid:     isSolid,
+		IsLootable:  isLootable,
+		GridCellKey: gridCellKey,
+		Remove:      false,
 	}
 }

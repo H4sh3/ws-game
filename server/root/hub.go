@@ -57,12 +57,12 @@ func (h *Hub) initializeCellResources(channel chan *GridCell) {
 		// spawn Stones
 		oX := shared.RandIntInRange(-25, 25)
 		oY := shared.RandIntInRange(-25, 25)
-		for i := 0; i < shared.RandIntInRange(5, 20); i++ {
-			x := (cell.Pos.X * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25) + oX
-			y := (cell.Pos.Y * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-25, 25) + oY
+		for i := 0; i < shared.RandIntInRange(1, 5); i++ {
+			x := (cell.Pos.X * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-250, 250) + oX
+			y := (cell.Pos.Y * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-250, 250) + oY
 			pos := shared.Vector{X: x, Y: y}
 			id := h.ResourceManager.GetResourceId()
-			r := resource.NewResource(resource.Stone, pos, id, 100, true, 100, false)
+			r := resource.NewResource(resource.Stone, pos, id, 100, true, 100, false, cell.GridCellKey)
 			h.spawnResource(cell, r)
 		}
 
@@ -72,7 +72,7 @@ func (h *Hub) initializeCellResources(channel chan *GridCell) {
 			y := (cell.Pos.Y * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
 			pos := shared.Vector{X: x, Y: y}
 			id := h.ResourceManager.GetResourceId()
-			r := resource.NewResource(resource.Tree, pos, id, 100, true, 100, false)
+			r := resource.NewResource(resource.Tree, pos, id, 100, true, 100, false, cell.GridCellKey)
 			h.spawnResource(cell, r)
 		}
 	}
@@ -180,6 +180,8 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 	//toRemoveIndex := -1
 	r, err := h.ResourceManager.GetResource(event.Id)
+	fmt.Printf("cell key %s\n", r.GridCellKey)
+	fmt.Printf("resource id %d\n", r.Id)
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return
@@ -195,7 +197,7 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 
 		remove := r.Hitpoints.Current <= 0
 		cellToBroadCast := h.GridManager.GetCellFromPos(r.Pos)
-		cellToBroadCast.Broadcast(events.NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove))
+		cellToBroadCast.Broadcast(events.NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove, r.GridCellKey))
 
 		if r.Hitpoints.Current <= 0 {
 			h.SpawnLoot(*r, c)
@@ -230,7 +232,7 @@ func (h *Hub) SpawnLoot(destroyedResource resource.Resource, c *Client) {
 
 	// create resource of type and quantity
 	pos := destroyedResource.Pos.Copy()
-	r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true)
+	r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true, destroyedResource.GridCellKey)
 
 	cellToBroadCast := h.GridManager.GetCellFromPos(r.Pos)
 	// set on cell
@@ -263,7 +265,7 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 		}
 
 		// broadcast update event that removes the resource
-		h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true)
+		h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey)
 		c.send <- events.NewUpdateInventoryEvent(*r, false)
 
 		h.RemoveResource(r)

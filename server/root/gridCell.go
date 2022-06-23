@@ -1,6 +1,7 @@
 package root
 
 import (
+	"fmt"
 	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
@@ -8,7 +9,7 @@ import (
 
 type GridCell struct {
 	Pos                 shared.Vector
-	Key                 string
+	GridCellKey         string
 	PlayerSubscriptions map[int]GridSubscription   // client id to subscription; used for event distribution
 	Players             map[int]*Client            // players inside this cell atm
 	Resources           map[int]*resource.Resource // resources located in this cell
@@ -17,10 +18,15 @@ type GridCell struct {
 func NewCell(x int, y int) *GridCell {
 	return &GridCell{
 		Pos:                 shared.Vector{X: x, Y: y},
+		GridCellKey:         getKey(x, y),
 		PlayerSubscriptions: make(map[int]GridSubscription),
 		Players:             make(map[int]*Client),
 		Resources:           make(map[int]*resource.Resource),
 	}
+}
+
+func getKey(x int, y int) string {
+	return fmt.Sprintf("%d#%d", x, y)
 }
 
 func (cell *GridCell) Broadcast(data []byte) {

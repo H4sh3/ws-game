@@ -124,13 +124,6 @@ func NewRemovePlayerEvent(id int) []byte {
 	}
 }
 
-type UpdateResourceEvent struct {
-	EventType EventType          `json:"eventType"`
-	Id        int                `json:"id"`
-	Hitpoints resource.Hitpoints `json:"hitpoints"`
-	Remove    bool               `json:"remove"`
-}
-
 type LoadInventoryEvent struct {
 	EventType EventType                                   `json:"eventType"`
 	Items     map[resource.ResourceType]resource.Resource `json:"items"`
@@ -175,9 +168,17 @@ func NewUpdateInventoryEvent(r resource.Resource, remove bool) []byte {
 	}
 }
 
-func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool) []byte {
+type UpdateResourceEvent struct {
+	EventType   EventType          `json:"eventType"`
+	GridCellKey string             `json:"gridCellKey"`
+	Id          int                `json:"id"`
+	Hitpoints   resource.Hitpoints `json:"hitpoints"`
+	Remove      bool               `json:"remove"`
+}
+
+func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool, gridCellKey string) []byte {
 	hitpoints := resource.Hitpoints{Current: currentHp, Max: maxHp}
-	u := &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Remove: remove, Hitpoints: hitpoints}
+	u := &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey}
 
 	value, err := json.Marshal(u)
 
