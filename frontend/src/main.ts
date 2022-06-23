@@ -31,6 +31,8 @@ export class Game extends Container {
 
     wsReady: boolean
 
+    oldResourceLen: number
+
 
     constructor(app: Application) {
         super();
@@ -53,6 +55,8 @@ export class Game extends Container {
         this.player.sprite.addChild(this.cursorSprite)
 
         this.cursorPos = createVector(0, 0)
+
+        this.oldResourceLen = 0
 
         this.app.stage.interactive = true
         this.app.stage.on("pointermove", (e) => {
@@ -123,18 +127,27 @@ export class Game extends Container {
             })
         }
 
-        // render loop
         app.ticker.add(this.update);
     }
 
+
+    // main update loop
     update(delta: number) {
 
-
         // Todo: Make this more efficient by only generating the array if resources have changed
+
         let allResources: Resource[] = []
         for (let k of this.resources.keys()) {
             allResources = [...allResources, ...this.resources.get(k)]
         }
+
+        const currLength = allResources.length
+        if (this.oldResourceLen != currLength) {
+            this.oldResourceLen = currLength
+            console.log(this.oldResourceLen)
+            console.log("children on world container", this.worldContainer.children.length)
+        }
+
         handleKeyBoard(this.keyHandler, this.player, this.ws, allResources)
 
         // update world container based on players position
