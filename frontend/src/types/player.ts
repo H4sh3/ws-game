@@ -9,6 +9,8 @@ export class Player {
     vel: Vector
     frame: number
     sprite: Sprite
+    deltaCount: number
+    actionOnCooldown: boolean
 
     constructor(id: number, pos: Vector, sprite: Sprite) {
         this.vel = createVector(0, 0)
@@ -17,6 +19,20 @@ export class Player {
         this.id = id
         this.frame = 0
         this.sprite = sprite
+        this.deltaCount = 0
+        this.actionOnCooldown = true
+    }
+
+    canDoAction(): boolean {
+        if (this.deltaCount > 30) {
+            this.deltaCount = 0
+            return true
+        }
+        return false
+    }
+
+    updateCooldown(delta: number) {
+        this.deltaCount += delta
     }
 
     updatePosition() {

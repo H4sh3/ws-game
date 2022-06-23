@@ -31,6 +31,7 @@ export class Game extends Container {
 
     wsReady: boolean
 
+
     constructor(app: Application) {
         super();
         this.app = app;
@@ -155,6 +156,9 @@ export class Game extends Container {
             p.sprite.x = p.currentPos.x
             p.sprite.y = p.currentPos.y
         })
+
+
+        this.player.updateCooldown(delta)
     }
 
     handleResourceEvent(parsed: ResourcePositionsEvent) {

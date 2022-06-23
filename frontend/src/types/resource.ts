@@ -20,7 +20,12 @@ export class Resource {
     sprite: Sprite
     healthBar?: Graphics
 
-    constructor(id: number, player: Player, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean) {
+    canDoAction?: () => boolean
+    setCanDoAction?: (b: boolean) => void
+
+    constructor(id: number, player: Player, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean, canDoAction: () => boolean = () => { return true }, setCanDoAction: (b: boolean) => void = () => { }) {
+        this.canDoAction = canDoAction
+        this.setCanDoAction = setCanDoAction
         this.id = id
         this.ws = ws
         this.player = player
@@ -46,6 +51,9 @@ export class Resource {
 
         this.sprite.anchor.set(0.5)
         this.sprite.on('click', () => {
+            if (!this.isLootable && !this.player.canDoAction()) {
+                return
+            }
             if (this.pos.dist(this.player.currentPos) < 150) {
                 if (this.isLootable) {
                     this.ws.send(getLootResourceEvent(this.id))
