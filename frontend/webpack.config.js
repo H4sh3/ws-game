@@ -13,6 +13,7 @@ var API_WS_URL = {
 module.exports = (_, argv) => {
   console.log(`Websocket url: ${API_WS_URL[argv.mode]}`)
   const config = {
+    devtool: 'source-map',
     entry: "./src/index.ts",
     mode: "development",
     devServer: {
