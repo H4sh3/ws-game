@@ -8,7 +8,7 @@ export function createVector(x: number, y: number): Vector {
 }
 
 export interface BaseEvent {
-    eventType: string
+    eventType: number
 }
 
 export function isBaseEvent(value: any): value is BaseEvent {

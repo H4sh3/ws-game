@@ -2,6 +2,7 @@ package root
 
 import (
 	"fmt"
+	"sync"
 	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
@@ -10,10 +11,8 @@ import (
 // Hub maintains the set of active clients and broadcasts messages to them
 type Hub struct {
 	// Registered clients.
-	clients map[int]*Client
-
-	// Inbound messages from the clients.
-	broadcast chan []byte
+	clients     map[int]*Client
+	ClientMutex sync.Mutex
 
 	// Register requests from the clients.
 	register chan *Client
@@ -22,7 +21,10 @@ type Hub struct {
 	unregister chan *Client
 
 	GridManager     *GridManager
-	ResourceManager *resource.ResourceManager
+	ResourceManager *ResourceManager
+
+	idCnt      int
+	idCntMutex sync.Mutex
 }
 
 const MAX_LOOT_RANGE = 150
@@ -30,28 +32,30 @@ const MAX_LOOT_RANGE = 150
 func NewHub() *Hub {
 
 	hub := &Hub{
-		broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		clients:    make(map[int]*Client),
+		register:    make(chan *Client),
+		unregister:  make(chan *Client),
+		clients:     make(map[int]*Client),
+		ClientMutex: sync.Mutex{},
+		idCnt:       0,
+		idCntMutex:  sync.Mutex{},
 	}
 
-	c := make(chan *GridCell)
+	cellInitChannel := make(chan *GridCell)
 
-	go hub.initializeCellResources(c)
-	hub.GridManager = NewGridManager(&c)
-	hub.ResourceManager = resource.NewResourceManager()
+	go hub.initializeCellResources(cellInitChannel)
+	gm := NewGridManager(&cellInitChannel)
+	hub.GridManager = gm
+	hub.ResourceManager = NewResourceManager(gm)
 
 	return hub
 }
-
-func (h *Hub) spawnResource(cell *GridCell, r *resource.Resource) {
-	// Store the variable in resource manager
-	h.ResourceManager.SetResource(r)
-	// Store adress to this resource in grid manager
-	cell.mutex.Lock()
-	cell.Resources[r.Id] = r
-	cell.mutex.Unlock()
+func (h *Hub) getClientId() int {
+	h.idCntMutex.Lock()
+	id := h.idCnt
+	h.idCnt++
+	fmt.Println(h.idCnt)
+	h.idCntMutex.Unlock()
+	return id
 }
 
 func (h *Hub) initializeCellResources(channel chan *GridCell) {
@@ -66,7 +70,7 @@ func (h *Hub) initializeCellResources(channel chan *GridCell) {
 			pos := shared.Vector{X: x, Y: y}
 			id := h.ResourceManager.GetResourceId()
 			r := resource.NewResource(resource.Stone, pos, id, 100, true, 100, false, cell.GridCellKey)
-			h.spawnResource(cell, r)
+			h.ResourceManager.AddResource <- r
 		}
 
 		// spawn trees
@@ -76,39 +80,46 @@ func (h *Hub) initializeCellResources(channel chan *GridCell) {
 			pos := shared.Vector{X: x, Y: y}
 			id := h.ResourceManager.GetResourceId()
 			r := resource.NewResource(resource.Tree, pos, id, 100, true, 100, false, cell.GridCellKey)
-			h.spawnResource(cell, r)
+			h.ResourceManager.AddResource <- r
 		}
 	}
+}
+
+func (h *Hub) SetClient(c *Client) {
+	h.ClientMutex.Lock()
+	h.clients[c.Id] = c
+	h.ClientMutex.Unlock()
+}
+
+func (h *Hub) GetClient(id int) *Client {
+	h.ClientMutex.Lock()
+	c := h.clients[id]
+	h.ClientMutex.Unlock()
+	return c
 }
 
 func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
-			h.clients[client.Id] = client
-			client.send <- events.NewLoadInventoryEvent(client.Inventory)
+			h.SetClient(client)
+			// client.send <- events.NewLoadInventoryEvent(client.Inventory)
 		case client := <-h.unregister:
+			h.ClientMutex.Lock()
 			if _, ok := h.clients[client.Id]; ok {
-
-				for _, sub := range client.GridCell.PlayerSubscriptions {
-					if sub.Player.Id == client.Id {
-						continue
-					}
-
-					if sub.Player.Connected {
-						sub.Player.send <- events.NewRemovePlayerEvent(client.Id)
-					}
-				}
+				fmt.Printf("Unregister: %d\n", client.Id)
+				client.Connected = false
 
 				// remove from its cell
-				delete(client.GridCell.Players, client.Id)
+				client.GridCell.RemovePlayer(client)
 
 				// remove from hub
 				delete(h.clients, client.Id)
-				client.Connected = false
 				close(client.send)
+				client.conn.Close()
 			}
-		case message := <-h.broadcast:
+			h.ClientMutex.Unlock()
+			/* 		case message := <-h.broadcast:
 			for clientId := range h.clients {
 				select {
 				case h.clients[clientId].send <- message:
@@ -116,18 +127,12 @@ func (h *Hub) Run() {
 					close(h.clients[clientId].send)
 					delete(h.clients, clientId)
 				}
-			}
+			}*/
 		}
 	}
 }
 
-func (h *Hub) new_client(client *Client) {
-	new_client_message := []byte(events.GetNewPlayerEvent(client.Id, client.Pos))
-	h.broadcast <- new_client_message
-}
-
 func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
-
 	stepSize := 10
 	newPos := &shared.Vector{X: c.Pos.X, Y: c.Pos.Y}
 
@@ -148,10 +153,10 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 	}
 
 	collision := false
-	for _, resource := range c.GridCell.Resources {
+	for _, resource := range c.getGridCell().Resources {
 
 		if resource.Remove {
-			delete(c.GridCell.Resources, resource.Id)
+			c.GridCell.RemoveResource(resource)
 			continue
 		}
 		if !resource.IsSolid {
@@ -164,28 +169,34 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 	}
 
 	if !collision {
-		c.Pos = *newPos
+		c.setPos(*newPos)
 
-		// check if cell changed
-		newX := c.Pos.X / GridCellSize
-		newY := c.Pos.Y / GridCellSize
+		cArr := []*Client{}
+		h.ClientMutex.Lock()
+		for _, other := range h.clients {
+			if other.Connected {
+				cArr = append(cArr, other)
+			}
+		}
+		h.ClientMutex.Unlock()
 
-		gridCell := h.GridManager.GetCellFromPos(c.Pos)
-		gridCell.Broadcast(events.NewPlayerTargetPositionEvent(c.Pos, c.Id))
-
-		if newX != c.GridCell.Pos.X || newY != c.GridCell.Pos.Y {
-			h.GridManager.clientMovedCell(*c.GridCell, *gridCell, c)
+		for i := range cArr {
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Println("Recovered in f", r)
+				}
+			}()
+			cArr[i].send <- events.NewPlayerTargetPositionEvent(c.getPos(), c.Id)
 		}
 
+		//h.GridManager.UpdateClientPosition <- c
 	}
 }
 
 func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 	r, err := h.ResourceManager.GetResource(event.Id)
-	fmt.Printf("cell key %s\n", r.GridCellKey)
-	fmt.Printf("resource id %d\n", r.Id)
+
 	if err != nil {
-		fmt.Printf("Error: %s\n", err)
 		return
 	}
 
@@ -199,11 +210,11 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 
 		remove := r.Hitpoints.Current <= 0
 		cellToBroadCast := h.GridManager.GetCellFromPos(r.Pos)
-		cellToBroadCast.Broadcast(events.NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove, r.GridCellKey))
+		cellToBroadCast.Broadcast <- events.NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove, r.GridCellKey)
 
 		if r.Hitpoints.Current <= 0 {
 			h.SpawnLoot(*r, c)
-			h.RemoveResource(r)
+			h.ResourceManager.DeleteResource(r.Id)
 		}
 
 		// update the changed resource
@@ -229,23 +240,13 @@ func (h *Hub) SpawnLoot(destroyedResource resource.Resource, c *Client) {
 	} else if destroyedResource.ResourceType == resource.Tree {
 		quantity = shared.RandIntInRange(3, 5)
 		subType = resource.Log
-		fmt.Println("spawned log")
 	}
 
 	// create resource of type and quantity
 	pos := destroyedResource.Pos.Copy()
 	r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true, destroyedResource.GridCellKey)
 
-	cellToBroadCast := h.GridManager.GetCellFromPos(r.Pos)
-	// set on cell
-	cellToBroadCast.Resources[r.Id] = r
-	// set to resource manager
-	h.ResourceManager.SetResource(r) //resources[r.Id] = &r
-
-	// add function that broadcasts single resource
-	newResources := make(map[int]resource.Resource)
-	newResources[r.Id] = *r
-	cellToBroadCast.Broadcast(events.NewResourcePositionsEvent(newResources))
+	h.ResourceManager.AddResource <- r
 }
 
 func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
@@ -267,15 +268,14 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 		}
 
 		// broadcast update event that removes the resource
-		h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey)
+		//h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey)
+
+		// Todo broadcast UpdateResourceEvent to clients subbed to cell
+
 		c.send <- events.NewUpdateInventoryEvent(*r, false)
 
-		h.RemoveResource(r)
+		h.ResourceManager.DeleteResource(r.Id)
 	}
-}
-
-func (h *Hub) RemoveResource(r *resource.Resource) {
-	h.ResourceManager.DeleteResource(r.Id)
 }
 
 func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent, c *Client) {
@@ -298,16 +298,9 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 					IsSolid:    true,
 					IsLootable: false,
 				}
-				rMap := make(map[int]resource.Resource)
-				rMap[r.Id] = *r
 
-				cell := h.GridManager.GetCellFromPos(event.Pos)
-				fmt.Printf("placed resource in %d %d\n", cell.Pos.X, cell.Pos.Y)
-				h.spawnResource(cell, r)
-
+				h.ResourceManager.AddResource <- r
 				c.send <- events.NewUpdateInventoryEvent(*r, true)
-				cell.Broadcast(events.NewResourcePositionsEvent(rMap))
-
 			}
 		}
 

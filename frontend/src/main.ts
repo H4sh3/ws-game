@@ -103,30 +103,30 @@ export class Game extends Container {
             if (typeof (m.data) != "string") {
                 return
             }
+            let parsed: any = JSON.parse(m.data)
+            if (isPlayerTargetPositionEvent(parsed)) {
+                this.handlePlayerTargetPositionEvent(parsed)
+            } else if (isLoadInventoryEvent(parsed)) {
+                this.inventory.initLoad(parsed.items, this.player, this.app.loader, this.ws)
+            } else if (isUpdateInventoryEvent(parsed)) {
+                this.inventory.update(parsed, this.player, this.app.loader, this.ws)
+                this.inventory.log()
+            } else if (isUpdateResourceEvent(parsed)) {
+                this.updateResourceEvent(parsed)
+            } else if (isResourcePositionsEvent(parsed)) {
+                this.addResourceEvent(parsed)
+            } else if (isRemovePlayerEvent(parsed)) {
+                this.handlePlayerDisconnect(parsed)
+            } else if (isNewPlayerEvent(parsed)) {
+                this.handleNewPlayerEvent(parsed)
+            } else if (isAssignUserIdEvent(parsed)) {
+                this.handleAssignIdEvent(parsed)
+            } else if (isRemoveGridCellEvent(parsed)) {
+                this.handleRemoveGridCellEvent(parsed)
+            }
 
-            m.data.split("\n").forEach(message => {
-                let parsed: any = JSON.parse(message)
-                if (isPlayerTargetPositionEvent(parsed)) {
-                    this.handlePlayerTargetPositionEvent(parsed)
-                } else if (isLoadInventoryEvent(parsed)) {
-                    this.inventory.initLoad(parsed.items, this.player, this.app.loader, this.ws)
-                } else if (isUpdateInventoryEvent(parsed)) {
-                    this.inventory.update(parsed, this.player, this.app.loader, this.ws)
-                    this.inventory.log()
-                } else if (isUpdateResourceEvent(parsed)) {
-                    this.updateResourceEvent(parsed)
-                } else if (isResourcePositionsEvent(parsed)) {
-                    this.addResourceEvent(parsed)
-                } else if (isRemovePlayerEvent(parsed)) {
-                    this.handlePlayerDisconnect(parsed)
-                } else if (isNewPlayerEvent(parsed)) {
-                    this.handleNewPlayerEvent(parsed)
-                } else if (isAssignUserIdEvent(parsed)) {
-                    this.handleAssignIdEvent(parsed)
-                } else if (isRemoveGridCellEvent(parsed)) {
-                    this.handleRemoveGridCellEvent(parsed)
-                }
-            })
+            /* m.data.split("\n").forEach(message => {
+            }) */
         }
 
         app.ticker.add(this.update);
@@ -228,6 +228,12 @@ export class Game extends Container {
             const player = this.players.get(parsed.id)
             if (player) {
                 player.targetPos = createVector(parsed.pos.x, parsed.pos.y)
+            } else {
+                const sprite = new Sprite(this.app.loader.resources['assets/player0.png'].texture)
+                sprite.anchor.set(0.5)
+                const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), sprite)
+                this.worldContainer.addChild(sprite)
+                this.players.set(newP.id, newP)
             }
         }
     }

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/url"
@@ -15,9 +15,9 @@ const prod = "game.gymcadia.com"
 
 const local = "localhost:7777"
 
-var addr = flag.String("addr", prod, "http service address")
+var addr = flag.String("addr", local, "http service address")
 
-type EventType string
+type EventType int
 type BaseEvent struct {
 	EventType EventType     `json:"eventType"`
 	Payload   KeyBoardEvent `json:"payload"`
@@ -29,43 +29,64 @@ type KeyBoardEvent struct {
 	Id    int    `json:"id"`
 }
 
+func ReaderCoro(c *websocket.Conn) {
+	defer c.Close()
+	for {
+		messageType, _, err := c.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
+			return
+		}
+		fmt.Println(messageType)
+	}
+}
+
 func runClient() {
-	u := url.URL{Scheme: "wss", Host: *addr, Path: "/websocket"}
+	u := url.URL{Scheme: "ws", Host: *addr, Path: "/websocket"}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
-	defer c.Close()
 
-	done := make(chan struct{})
+	go ReaderCoro(c)
+
 	Keys := []string{"w", "a", "s", "d"}
-
-	for i := 0; i < 10000; i++ {
+	time.Sleep(time.Millisecond * 100)
+	for i := 0; i > -1; i++ {
 		randomIndex := rand.Intn(len(Keys))
 		pick := Keys[randomIndex]
 		p := &KeyBoardEvent{
 			Key:   pick,
 			Value: 1,
 		}
+
 		e := &BaseEvent{
-			EventType: "KEYBOARD_EVENT",
+			EventType: 3,
 			Payload:   *p,
 		}
 
-		j, err := json.Marshal(e)
+		err := c.WriteJSON(*e)
 
-		if err == nil {
-			c.WriteMessage(websocket.TextMessage, j)
-			time.Sleep(time.Millisecond * 1000)
+		//j, err := json.Marshal(e)
+		//c.WriteMessage(websocket.TextMessage, j)
+		if err != nil {
+			fmt.Println(err)
+			break
 		}
+		time.Sleep(time.Millisecond * 200)
 	}
-
-	defer close(done)
+	fmt.Println("kill")
+	c.Close()
 }
 
 func main() {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 200; i++ {
 		go runClient()
+		time.Sleep(time.Millisecond * 50)
+		//time.Sleep(time.Second / 10)
 	}
 	time.Sleep(time.Second * 1000)
+	fmt.Println("DONE!")
 }

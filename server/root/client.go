@@ -25,12 +25,11 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 
 	// Maximum message size allowed from peer.
-	maxMessageSize = 512
+	maxMessageSize = 1024
 )
 
 var (
 	newline = []byte{'\n'}
-	id_cnt  = 0
 )
 
 func x(r *http.Request) bool {
@@ -53,34 +52,88 @@ type Client struct {
 	conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send chan []byte
-	Id   int
-	Pos  shared.Vector
+	send     chan interface{} //[]byte
+	Id       int
+	Pos      shared.Vector
+	PosMutex sync.Mutex
 	// Inventory []resource.Resource
-	Inventory      map[resource.ResourceType]resource.Resource
-	ZoneChangeTick int
-	GridCell       *GridCell
-	Connected      bool
+	Inventory           map[resource.ResourceType]resource.Resource
+	ZoneChangeTick      int
+	ZoneChangeTickMutex sync.Mutex
+	GridCell            *GridCell
+	GridCellMutex       sync.Mutex
+	Connected           bool
 }
 
-func NewClient(hub *Hub, conn *websocket.Conn) *Client {
-	clientPostion := shared.Vector{X: shared.RandIntInRange(-50, 50), Y: shared.RandIntInRange(-50, 50)}
+func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
+	spawnRange := 50
+	x := shared.RandIntInRange(-spawnRange, spawnRange)
+	y := shared.RandIntInRange(-spawnRange, spawnRange)
+	clientPostion := shared.Vector{X: x, Y: y}
 	inventory := make(map[resource.ResourceType]resource.Resource)
 
 	inventory[resource.Brick] = *resource.NewResource(resource.Brick, shared.Vector{}, hub.ResourceManager.GetResourceId(), 50, false, 100, false, "")
 
-	sendChan := make(chan []byte, 256)
+	sendChan := make(chan interface{})
 
 	gridCell := hub.GridManager.GetCellFromPos(clientPostion)
-	client := &Client{hub: hub, conn: conn, send: sendChan, Id: id_cnt, Pos: clientPostion, Inventory: inventory, GridCell: gridCell, Connected: true}
-	gridCell.Players[client.Id] = client
-
-	// subscribe to current and all surrounding cells
-	for _, cell := range hub.GridManager.getCells(gridCell.Pos.X, gridCell.Pos.Y) {
-		cell.Subscribe(client)
+	client := &Client{
+		hub:                 hub,
+		conn:                conn,
+		send:                sendChan,
+		Id:                  id,
+		Pos:                 clientPostion,
+		Inventory:           inventory,
+		GridCell:            gridCell,
+		Connected:           true,
+		PosMutex:            sync.Mutex{},
+		ZoneChangeTickMutex: sync.Mutex{},
+		GridCellMutex:       sync.Mutex{},
 	}
 
+	gridCell.AddPlayer(client)
+	gridCell.Subscribe <- client
+
 	return client
+}
+
+func (c *Client) getPos() shared.Vector {
+	c.PosMutex.Lock()
+	pos := c.Pos
+	c.PosMutex.Unlock()
+	return pos
+}
+
+func (c *Client) setPos(newPos shared.Vector) {
+	c.PosMutex.Lock()
+	c.Pos = newPos
+	c.PosMutex.Unlock()
+}
+
+func (c *Client) getZoneTick() int {
+	c.ZoneChangeTickMutex.Lock()
+	tick := c.ZoneChangeTick
+	c.ZoneChangeTickMutex.Unlock()
+	return tick
+}
+
+func (c *Client) IncrementZoneTick() {
+	c.ZoneChangeTickMutex.Lock()
+	c.ZoneChangeTick += 1
+	c.ZoneChangeTickMutex.Unlock()
+}
+
+func (c *Client) getGridCell() *GridCell {
+	c.PosMutex.Lock()
+	gC := c.GridCell
+	c.PosMutex.Unlock()
+	return gC
+}
+
+func (c *Client) setGridCell(cell *GridCell) {
+	c.ZoneChangeTickMutex.Lock()
+	c.GridCell = cell
+	c.ZoneChangeTickMutex.Unlock()
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -89,32 +142,53 @@ func NewClient(hub *Hub, conn *websocket.Conn) *Client {
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
 func (c *Client) readPump() {
+
+	// defer func gets called after for loop breaks -> closes connection
 	defer func() {
+		fmt.Println("unregsiter from read")
 		c.hub.unregister <- c
-		c.conn.Close()
 	}()
+
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, message, err := c.conn.ReadMessage()
-
-		// empty message
-		if len(message) == 0 {
-			return
-		}
-
-		// all message recieved from client get unmarshalled to structs
-		UnmarshalClientEvents(message, c.hub, c)
-
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+		event := &events.BaseEvent{}
+		if c.Connected {
+			err := c.conn.ReadJSON(event)
+			if err != nil {
+				fmt.Println(err)
+				return
 			}
-			break
+			UnmarshalClientEvents(*event, c.hub, c)
+
+			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					log.Printf("error: %v", err)
+				}
+				break
+			}
 		}
+
+		// _, event, err := c.conn.ReadMessage()
+
+		//empty message
+		/* 		if len(event) == 0 {
+		   			return
+		   		}
+
+		   		// fmt.Println(event)
+
+		   		UnmarshalClientEvents(event, c.hub, c)
+
+		   		//all message recieved from client get unmarshalled to structs
+		   		if err != nil {
+		   			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+		   				log.Printf("error: %v", err)
+		   			}
+		   			break
+		   		} */
 		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		//c.hub.broadcast <- message
 	}
 }
 
@@ -126,42 +200,50 @@ func (c *Client) readPump() {
 func (client *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
+		fmt.Println("unregsiter from write")
 		ticker.Stop()
-		client.conn.Close()
+		client.hub.unregister <- client
 	}()
+
 	for {
 		select {
 		case message, ok := <-client.send:
-			if !client.Connected {
-				fmt.Println("Don't send events to disconnected client!")
+			if !client.Connected || !ok {
 				return
 			}
+			// json
 			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				// The hub closed the channel.
-				client.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
+			client.conn.WriteJSON(message)
 
-			w, err := client.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
+			/*
+				client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+				if !ok {
+					// The hub closed the channel.
+					client.conn.WriteMessage(websocket.CloseMessage, []byte{})
+					return
+				}
 
-			// Add queued chat messages to the current websocket message.
-			n := len(client.send)
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-client.send)
-			}
+				w, err := client.conn.NextWriter(websocket.TextMessage)
+				if err != nil {
+					return
+				}
+				w.Write(message)
 
-			if err := w.Close(); err != nil {
-				return
-			}
+				// Add queued chat messages to the current websocket message.
+				n := len(client.send)
+				for i := 0; i < n; i++ {
+					w.Write(newline)
+					w.Write(<-client.send)
+				}
+
+				if err := w.Close(); err != nil {
+					return
+				}
+			*/
 		case <-ticker.C:
 			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := client.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				fmt.Println("write message deadline kill!!!")
 				return
 			}
 		}
@@ -178,39 +260,39 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	}
 
 	m.Lock()
-	client := NewClient(hub, conn) //&Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: clientPostion, Inventory: make(map[resource.ResourceType]resource.Resource)}
-	client.send <- events.GetAssignUserIdEvent(id_cnt)
+	client := NewClient(hub, conn, hub.getClientId()) //&Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: clientPostion, Inventory: make(map[resource.ResourceType]resource.Resource)}
 
 	// send message to all clients subscribed to the cell where the player spawned
-	for _, subscription := range client.GridCell.PlayerSubscriptions {
-		new_client_message := []byte(events.GetNewPlayerEvent(subscription.Player.Id, subscription.Player.Pos))
+	/*
+		for _, subscription := range client.GridCell.PlayerSubscriptions {
+			new_client_message := []byte(events.GetNewPlayerEvent(subscription.Player.Id, subscription.Player.Pos))
 
-		if subscription.Player.Connected {
-			subscription.Player.send <- new_client_message
-		}
-	}
+			if subscription.Player.Connected {
+					subscription.Player.send <- new_client_message
+				}
+			}
+	*/
 
 	// provide the new player with all resources
 	// client.send <- events.NewResourcePositionsEvent(hub.Resources)
 
 	client.hub.register <- client
-	hub.new_client(client)
-	id_cnt += 1
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
 	go client.writePump()
 	go client.readPump()
 	m.Unlock()
+	client.send <- events.GetAssignUserIdEvent(client.Id)
 }
 
-func UnmarshalClientEvents(jsonInput []byte, h *Hub, c *Client) {
-	event_data := &events.BaseEvent{}
-	if err := json.Unmarshal(jsonInput, &event_data); err != nil {
-		fmt.Println("Error unmarshalling Event:")
-		fmt.Println(jsonInput)
-		return
-	}
+func UnmarshalClientEvents(event_data events.BaseEvent, h *Hub, c *Client) {
+	//	event_data := &events.BaseEvent{}
+	//	if err := json.Unmarshal(jsonInput, &event_data); err != nil {
+	//		fmt.Println("Error unmarshalling Event:")
+	//		fmt.Println(jsonInput)
+	//		return
+	//	}
 
 	switch event_data.EventType {
 	case events.KEYBOARD_EVENT:
