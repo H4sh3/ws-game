@@ -68,8 +68,8 @@ type Client struct {
 
 func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 	spawnRange := 4
-	x := shared.RandIntInRange(-spawnRange, spawnRange) * 50
-	y := shared.RandIntInRange(-spawnRange, spawnRange) * 50
+	x := shared.RandIntInRange(-spawnRange, spawnRange) * 35
+	y := shared.RandIntInRange(-spawnRange, spawnRange) * 35
 	clientPostion := shared.Vector{X: x, Y: y}
 	inventory := make(map[resource.ResourceType]resource.Resource)
 
@@ -256,7 +256,6 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	go client.readPump()
 	m.Unlock()
 	client.send <- events.GetAssignUserIdEvent(client.Id, client.Pos)
-	time.Sleep(time.Millisecond * 100)
 	client.send <- events.NewPlayerTargetPositionEvent(client.Pos, client.Id)
 }
 
