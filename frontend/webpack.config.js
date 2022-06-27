@@ -6,7 +6,7 @@ const { DefinePlugin } = require("webpack");
 //export const wsUrl = import.meta.env.MODE === 'development' ? local : prod
 var API_WS_URL = {
   production: "'wss://game.gymcadia.com/websocket'",
-  development: "'ws://127.0.0.1:7777'"
+  development: "'ws://127.0.0.1:6060'"
 }
 
 

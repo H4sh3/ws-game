@@ -15,7 +15,7 @@ services:
       context: ./server
       dockerfile: ./Dockerfile
     ports:
-      - "127.0.0.1:8051:7777"
+      - "127.0.0.1:8051:6060"
     networks:
       - ws-game
 

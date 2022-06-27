@@ -8,7 +8,7 @@ import (
 	"ws-game/root"
 )
 
-var addr = flag.String("addr", ":7777", "http service address")
+var addr = flag.String("addr", ":6060", "http service address")
 
 func main() {
 	flag.Parse()
