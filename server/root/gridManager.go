@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	GridCellSize = 500
+	GridCellSize = 1000
 )
 
 type GridSubscription struct {
@@ -18,63 +18,55 @@ type GridSubscription struct {
 	SubTick int
 }
 
-func AddResourceCoroGm(gm *GridManager) {
-	for {
-		r := <-gm.AddResource
-		cell := gm.GetCellFromPos(r.Pos)
-		fmt.Println(cell)
-		cell.Resources[r.Id] = r
-
-		newResources := make(map[int]resource.Resource)
-		newResources[r.Id] = *r
-		cell.Broadcast <- events.NewResourcePositionsEvent(newResources)
-	}
-}
-
 type GridManager struct {
 	Grid                 map[int]map[int]*GridCell
-	CellHydrationChan    *chan *GridCell
+	newCellChannel       chan *GridCell
 	UpdateClientPosition chan *Client
 	AddResource          chan *resource.Resource
 	gridMutex            sync.RWMutex
 }
 
-func NewGridManager(channel *chan *GridCell) *GridManager {
-
+func NewGridManager(newCellChannel chan *GridCell) *GridManager {
 	gm := &GridManager{
 		Grid:                 make(map[int]map[int]*GridCell),
-		CellHydrationChan:    channel,
+		newCellChannel:       newCellChannel,
 		UpdateClientPosition: make(chan *Client),
 		AddResource:          make(chan *resource.Resource),
 		gridMutex:            sync.RWMutex{},
 	}
 
-	go UpdateClientPos(gm)
-	go AddResourceCoroGm(gm)
+	go GridManagerCoro(gm)
 
 	return gm
 }
 
-func UpdateClientPos(gm *GridManager) {
+func GridManagerCoro(gm *GridManager) {
 	for {
-		c := <-gm.UpdateClientPosition
+		select {
+		case r := <-gm.AddResource:
+			cell := gm.GetCellFromPos(r.Pos)
+			cell.Resources[r.Id] = r
 
-		// check if cell changed
+			newResources := make(map[int]resource.Resource)
+			newResources[r.Id] = *r
+			cell.Broadcast <- events.NewResourcePositionsEvent(newResources)
 
-		cPos := c.getPos()
-		newX := cPos.X / GridCellSize
-		newY := cPos.Y / GridCellSize
+		case c := <-gm.UpdateClientPosition:
+			// check if cell changed
+			cPos := c.getPos()
+			newX := cPos.X / GridCellSize
+			newY := cPos.Y / GridCellSize
 
-		gridCell := gm.GetCellFromPos(cPos)
-		gridCell.Broadcast <- events.NewPlayerTargetPositionEvent(cPos, c.Id)
+			gridCell := gm.GetCellFromPos(cPos)
+			gridCell.Broadcast <- events.NewPlayerTargetPositionEvent(cPos, c.Id)
 
-		clientCell := c.getGridCell()
-		if newX != clientCell.Pos.X || newY != clientCell.Pos.Y {
-			gm.clientMovedCell(clientCell, gridCell, c)
+			clientCell := c.getGridCell()
+			if newX != clientCell.Pos.X || newY != clientCell.Pos.Y {
+				gm.clientMovedCell(clientCell, gridCell, c)
+			}
 		}
 	}
 }
-
 func (gm *GridManager) GetCellFromPos(clientPos shared.Vector) *GridCell {
 	// get x and y from pos by concidering the grid cell size
 	x := clientPos.X / GridCellSize
@@ -130,7 +122,6 @@ func (gm *GridManager) clientMovedCell(oldCell *GridCell, newCell *GridCell, c *
 	for _, cell := range cells {
 		cell.Subscribe <- c
 	}
-	// fmt.Printf("Moved from %s to %s!\n", oldCell.GridCellKey, newCell.GridCellKey)
 
 	// Notify clients to remove player if he moved to a cell they are not subscribed to
 	for _, oldCellSub := range oldCell.GetSubscriptions() {
@@ -163,6 +154,8 @@ func (gm *GridManager) getCells(x int, y int) []*GridCell {
 func (gm *GridManager) add(x int, y int) *GridCell {
 	cell := NewCell(x, y)
 
+	gm.newCellChannel <- cell
+
 	col, ok := gm.Grid[x]
 
 	if ok {
@@ -174,6 +167,7 @@ func (gm *GridManager) add(x int, y int) *GridCell {
 		gm.Grid[x][y] = cell
 	}
 
+	// gm.InitCellChannel <- cell
 	return cell
 }
 

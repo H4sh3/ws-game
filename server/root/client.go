@@ -71,9 +71,6 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 	x := shared.RandIntInRange(-spawnRange, spawnRange) * 35
 	y := shared.RandIntInRange(-spawnRange, spawnRange) * 35
 	clientPostion := shared.Vector{X: x, Y: y}
-	inventory := make(map[resource.ResourceType]resource.Resource)
-
-	inventory[resource.Brick] = *resource.NewResource(resource.Brick, shared.Vector{}, hub.ResourceManager.GetResourceId(), 50, false, 100, false, "")
 
 	sendChan := make(chan interface{}, 1024)
 
@@ -84,7 +81,6 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 		send:                sendChan,
 		Id:                  id,
 		Pos:                 clientPostion,
-		Inventory:           inventory,
 		GridCell:            gridCell,
 		Connected:           true,
 		PosMutex:            sync.Mutex{},
@@ -257,6 +253,11 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	m.Unlock()
 	client.send <- events.GetAssignUserIdEvent(client.Id, client.Pos)
 	client.send <- events.NewPlayerTargetPositionEvent(client.Pos, client.Id)
+
+	inventory := make(map[resource.ResourceType]resource.Resource)
+	inventory[resource.Brick] = *resource.NewResource(resource.Brick, shared.Vector{}, hub.ResourceManager.GetResourceId(), 50, false, 100, false, "")
+	client.Inventory = inventory
+	client.send <- events.NewUpdateInventoryEvent(inventory[resource.Brick], false)
 }
 
 func UnmarshalClientEvents(event_data events.BaseEvent, h *Hub, c *Client) {

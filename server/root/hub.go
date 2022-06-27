@@ -40,12 +40,11 @@ func NewHub() *Hub {
 		idCntMutex:  sync.Mutex{},
 	}
 
-	cellInitChannel := make(chan *GridCell)
+	initCellChannel := make(chan *GridCell)
 
-	go hub.initializeCellResources(cellInitChannel)
-	gm := NewGridManager(&cellInitChannel)
+	gm := NewGridManager(initCellChannel)
 	hub.GridManager = gm
-	hub.ResourceManager = NewResourceManager(gm)
+	hub.ResourceManager = NewResourceManager(gm, initCellChannel)
 
 	return hub
 }
@@ -56,33 +55,6 @@ func (h *Hub) getClientId() int {
 	fmt.Println(h.idCnt)
 	h.idCntMutex.Unlock()
 	return id
-}
-
-func (h *Hub) initializeCellResources(channel chan *GridCell) {
-	for {
-		cell := <-channel
-		// spawn Stones
-		oX := shared.RandIntInRange(-25, 25)
-		oY := shared.RandIntInRange(-25, 25)
-		for i := 0; i < shared.RandIntInRange(1, 50); i++ {
-			x := (cell.Pos.X * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-250, 250) + oX
-			y := (cell.Pos.Y * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-250, 250) + oY
-			pos := shared.Vector{X: x, Y: y}
-			id := h.ResourceManager.GetResourceId()
-			r := resource.NewResource(resource.Stone, pos, id, 100, true, 100, false, cell.GridCellKey)
-			h.ResourceManager.AddResource <- r
-		}
-
-		// spawn trees
-		for n := 0; n < shared.RandIntInRange(2, 50); n++ {
-			x := (cell.Pos.X * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
-			y := (cell.Pos.Y * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
-			pos := shared.Vector{X: x, Y: y}
-			id := h.ResourceManager.GetResourceId()
-			r := resource.NewResource(resource.Tree, pos, id, 100, true, 100, false, cell.GridCellKey)
-			h.ResourceManager.AddResource <- r
-		}
-	}
 }
 
 func (h *Hub) SetClient(c *Client) {
@@ -249,7 +221,8 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 		}
 
 		// broadcast update event that removes the resource
-		//h.broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey)
+		cell := h.GridManager.GetCellFromPos(r.Pos)
+		cell.Broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey)
 
 		// Todo broadcast UpdateResourceEvent to clients subbed to cell
 

@@ -30,20 +30,23 @@ export class Inventory {
         const rT = event.item.resourceType
         if (event.remove) {
             // Todo: Map build resource to costs
-            const prices = [
+            const recipes = [
                 {
                     "t": "blockade",
                     "r": "brick",
                     "price": 5
                 }
             ]
-            const costs = prices.find(i => i.t === rT)
-            if (this.items.has(costs.r)) {
-                const i = this.items.get(costs.r)
-                i.quantity -= costs.price
-                this.items.set(costs.r, i)
+            const recipe = recipes.find(i => i.t === rT)
+            const item = this.items.get(recipe.r)
+            if (!item) {
+                console.error(`Need ${recipe.price}x${recipe.r} to build ${recipe.t}`)
+            } else if (item.quantity < recipe.price) {
+                console.error(`Need ${recipe.price}x${recipe.r} got ${item.quantity}`)
             } else {
-                console.error("insufficient resources in inventory", rT, event.item.quantity)
+                console.log("build ok")
+                item.quantity -= recipe.price
+                this.items.set(recipe.r, item)
             }
         } else {
             // add

@@ -33,4 +33,4 @@ export enum EVENT_TYPES {
     MULTIPLE_EVENTS = 14,
 }
 
-export const SCREEN_SIZE = 1000
+export const SCREEN_SIZE = 750

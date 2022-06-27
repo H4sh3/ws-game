@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
@@ -128,9 +128,9 @@ export class Game extends Container {
             this.inventory.update(parsed, this.player, this.app.loader, this.ws)
             this.inventory.log()
         } else if (isUpdateResourceEvent(parsed)) {
-            this.updateResourceEvent(parsed)
+            this.handleUpdateResourceEvent(parsed)
         } else if (isResourcePositionsEvent(parsed)) {
-            this.addResourceEvent(parsed)
+            this.handleAddResourceEvent(parsed)
         } else if (isRemovePlayerEvent(parsed)) {
             this.handlePlayerDisconnect(parsed)
         } else if (isNewPlayerEvent(parsed)) {
@@ -197,7 +197,8 @@ export class Game extends Container {
         this.player.updateCooldown(delta)
     }
 
-    addResourceEvent(parsed: ResourcePositionsEvent) {
+    handleAddResourceEvent(parsed: ResourcePositionsEvent) {
+        console.log(`adding ${parsed.resources.length} resources`)
         parsed.resources.forEach(r => {
             const resource: Resource = new Resource(r.id, this.player, r.quantity, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
             this.worldContainer.addChild(resource.container);
@@ -278,9 +279,7 @@ export class Game extends Container {
         this.player.currentPos.y = parsed.pos.y
     }
 
-    updateResourceEvent(parsed: UpdateResourceEvent) {
-
-
+    handleUpdateResourceEvent(parsed: UpdateResourceEvent) {
         let resources = this.resources.get(parsed.gridCellKey)
 
         const r = resources.find(r => r.id == parsed.id)

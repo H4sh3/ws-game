@@ -21,12 +21,13 @@ type GridCell struct {
 	wantsToSubMutex        sync.Mutex
 	wantsToUnSub           []*Client
 	wantsToUnSubMutex      sync.Mutex
-	playersToRemove        []int
+	playersToRemove        []*Client
 	playersToRemoveMutex   sync.Mutex
 	playersToAdd           []*Client
 	playersToAddMutex      sync.Mutex
 	Players                map[int]*Client            // players inside this cell atm
 	Resources              map[int]*resource.Resource // resources located in this cell
+	ResourcesMutex         sync.Mutex
 	Broadcast              chan interface{}
 	Subscribe              chan *Client
 	Unsubscribe            chan int
@@ -46,12 +47,13 @@ func NewCell(x int, y int) *GridCell {
 		wantsToSubMutex:        sync.Mutex{},
 		wantsToUnSub:           []*Client{},
 		wantsToUnSubMutex:      sync.Mutex{},
-		playersToRemove:        []int{},
+		playersToRemove:        []*Client{},
 		playersToRemoveMutex:   sync.Mutex{},
 		playersToAdd:           []*Client{},
 		playersToAddMutex:      sync.Mutex{},
 		Players:                make(map[int]*Client),
 		Resources:              make(map[int]*resource.Resource),
+		ResourcesMutex:         sync.Mutex{},
 		Broadcast:              make(chan interface{}),
 		Subscribe:              make(chan *Client),
 		Unsubscribe:            make(chan int),
@@ -64,9 +66,6 @@ func NewCell(x int, y int) *GridCell {
 	cell.ticker = *t
 
 	go cell.CellCoro()
-	//go cell.SubscribeCoro()
-	//go cell.UnsubscribeCoro()
-	//go cell.UpdateSubscriptionsCoro()
 	return cell
 }
 
@@ -94,50 +93,8 @@ func (cell *GridCell) CellCoro() {
 			Update Subs
 		*/
 		case <-cell.ticker.C:
+			// Measure time for cell updates
 			start := time.Now()
-			// fmt.Println("update subs start")
-			playersToRecieve := []*Client{}
-			eventsToSend := []interface{}{}
-
-			unsubscribePlayerIds := []int{}
-			cellToUnsubFrom := []*GridCell{}
-
-			cell.CellMutex.Lock()
-			//			fmt.Printf("sub mutex lock %s\n", cell.GridCellKey)
-			for _, sub := range cell.playerSubscriptions {
-
-				isConnected := sub.Player.getConnected()
-
-				if !isConnected {
-					// Not connected? remove client from cells subs
-					unsubscribePlayerIds = append(unsubscribePlayerIds, sub.Player.Id)
-					cellToUnsubFrom = append(cellToUnsubFrom, cell)
-					continue
-				}
-
-				diff := sub.Player.getZoneTick() - sub.SubTick
-				if diff > 5 {
-					// Unsubscribe connected players that moved a certain distance from the cell
-					unsubscribePlayerIds = append(unsubscribePlayerIds, sub.Player.Id)
-					cellToUnsubFrom = append(cellToUnsubFrom, cell)
-
-					if isConnected {
-						// Send remove grid event only to connected clients
-						// this removes resources from frontend client to stay performant
-						playersToRecieve = append(playersToRecieve, sub.Player)
-						eventsToSend = append(eventsToSend, events.NewRemoveGridCellEvent(cell.GridCellKey))
-					}
-				}
-			}
-			cell.CellMutex.Unlock()
-			//			fmt.Printf("sub mutex unlock %s\n", cell.GridCellKey)
-
-			for i := range unsubscribePlayerIds {
-				cellToUnsubFrom[i].UnsubscribeClient(unsubscribePlayerIds[i])
-			}
-			for i := range playersToRecieve {
-				playersToRecieve[i].send <- eventsToSend[i]
-			}
 
 			// handle new subscriptions
 			// if a client subs to a new cell provide him with players inside this cell
@@ -156,31 +113,10 @@ func (cell *GridCell) CellCoro() {
 						cell.AddEventToBroadcast(events.GetNewPlayerEvent(client.Id, client.getPos()))
 					}
 				}
-				if subscription, ok := cell.playerSubscriptions[client.Id]; ok {
-					// player has already subbed to this cell -> renew by updating the tick value
-					subscription.SubTick = client.getZoneTick()
-					cell.playerSubscriptions[client.Id] = subscription
-				} else {
-					cell.playerSubscriptions[client.Id] = GridSubscription{
-						Player:  client,
-						SubTick: client.getZoneTick(),
-					}
 
-					// provide player with resources of this cell
-					if len(cell.Resources) > 0 {
-						resources := make(map[int]resource.Resource)
-						for idx, r := range cell.Resources {
-							if r.Remove {
-								delete(cell.Resources, idx)
-							} else {
-								resources[r.Id] = *r
-							}
-
-						}
-
-						if client.Connected {
-							client.send <- events.NewResourcePositionsEvent(resources)
-						}
+				if !cell.CheckSubscription(client) {
+					if client.Connected {
+						client.send <- events.NewResourcePositionsEvent(cell.GetResources())
 					}
 				}
 			}
@@ -188,10 +124,51 @@ func (cell *GridCell) CellCoro() {
 			cell.wantsToSub = []*Client{}
 			cell.wantsToSubMutex.Unlock()
 
+			// Remove subscriptions from players that moved away or are no longer connected
+			movedPlayers := []*Client{}
+			eventsToSend := []interface{}{}
+
+			unsubscribePlayerIds := []int{}
+
+			cell.CellMutex.Lock()
+			for _, sub := range cell.playerSubscriptions {
+
+				isConnected := sub.Player.getConnected()
+
+				if !isConnected {
+					// Not connected? remove client from cells subs
+					unsubscribePlayerIds = append(unsubscribePlayerIds, sub.Player.Id)
+					continue
+				}
+
+				diff := sub.Player.getZoneTick() - sub.SubTick
+				if diff > 5 {
+					// Unsubscribe connected players that moved a certain distance from the cell
+					unsubscribePlayerIds = append(unsubscribePlayerIds, sub.Player.Id)
+
+					if isConnected {
+						// Send remove grid event only to connected clients
+						// this removes resources from frontend client to stay performant
+						movedPlayers = append(movedPlayers, sub.Player)
+						eventsToSend = append(eventsToSend, events.NewRemoveGridCellEvent(cell.GridCellKey))
+					}
+				}
+			}
+			cell.CellMutex.Unlock()
+
+			for i := range unsubscribePlayerIds {
+				cell.UnsubscribeClient(unsubscribePlayerIds[i])
+			}
+
+			for i := range movedPlayers {
+				movedPlayers[i].send <- eventsToSend[i]
+			}
+
 			// Remove players that are no longer in this cell
 			cell.playersToRemoveMutex.Lock()
-			for _, pId := range cell.playersToRemove {
-				delete(cell.Players, pId)
+			for _, c := range cell.playersToRemove {
+				delete(cell.Players, c.Id)
+				cell.eventsToBroadcast = append(cell.eventsToBroadcast, events.NewRemovePlayerEvent(c.Id))
 			}
 			cell.playersToRemoveMutex.Unlock()
 
@@ -255,7 +232,7 @@ func (cell *GridCell) AddPlayer(c *Client) {
 
 func (cell *GridCell) RemovePlayer(c *Client) {
 	cell.playersToRemoveMutex.Lock()
-	cell.playersToRemove = append(cell.playersToRemove, c.Id)
+	cell.playersToRemove = append(cell.playersToRemove, c)
 	cell.playersToRemoveMutex.Unlock()
 }
 
@@ -293,4 +270,37 @@ func (cell *GridCell) GetEventsToBroadcast() []interface{} {
 	events := cell.eventsToBroadcast
 	cell.eventsToBroadcastMutex.Unlock()
 	return events
+}
+
+func (cell *GridCell) CheckSubscription(c *Client) bool {
+	subscription, hasSupped := cell.playerSubscriptions[c.Id]
+	if hasSupped {
+		// player has already subbed to this cell -> renew by updating the tick value
+		subscription.SubTick = c.getZoneTick()
+		cell.playerSubscriptions[c.Id] = subscription
+	} else {
+		cell.playerSubscriptions[c.Id] = GridSubscription{
+			Player:  c,
+			SubTick: c.getZoneTick(),
+		}
+	}
+	return hasSupped
+}
+
+func (cell *GridCell) GetResources() map[int]resource.Resource {
+	resourceMap := make(map[int]resource.Resource)
+
+	cell.ResourcesMutex.Lock()
+
+	for _, r := range cell.Resources {
+		if r.Remove {
+			delete(cell.Resources, r.Id)
+			continue
+		}
+		resourceMap[r.Id] = *r
+	}
+
+	cell.ResourcesMutex.Unlock()
+
+	return resourceMap
 }
