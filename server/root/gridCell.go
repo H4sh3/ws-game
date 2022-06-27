@@ -149,11 +149,11 @@ func (cell *GridCell) CellCoro() {
 					}
 
 					if client.Connected {
-						client.send <- events.GetNewPlayerEvent(player.Id, player.getPos())
+						cell.AddEventToBroadcast(events.GetNewPlayerEvent(player.Id, player.getPos()))
 					}
 
 					if player.Connected {
-						player.send <- events.GetNewPlayerEvent(client.Id, client.getPos())
+						cell.AddEventToBroadcast(events.GetNewPlayerEvent(client.Id, client.getPos()))
 					}
 				}
 				if subscription, ok := cell.playerSubscriptions[client.Id]; ok {
