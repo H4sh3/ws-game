@@ -82,7 +82,7 @@ func runClient() {
 }
 
 func main() {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 50; i++ {
 		go runClient()
 		time.Sleep(time.Millisecond * 50)
 		//time.Sleep(time.Second / 10)
