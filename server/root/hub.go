@@ -108,7 +108,7 @@ func (h *Hub) Run() {
 			h.ClientMutex.Lock()
 			if _, ok := h.clients[client.Id]; ok {
 				fmt.Printf("Unregister: %d\n", client.Id)
-				client.Connected = false
+				client.setConnected(false)
 
 				// remove from its cell
 				client.GridCell.RemovePlayer(client)
@@ -133,7 +133,7 @@ func (h *Hub) Run() {
 }
 
 func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
-	stepSize := 10
+	stepSize := 25
 	newPos := &shared.Vector{X: c.Pos.X, Y: c.Pos.Y}
 
 	if event.Key == "w" {
@@ -170,26 +170,7 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 
 	if !collision {
 		c.setPos(*newPos)
-
-		cArr := []*Client{}
-		h.ClientMutex.Lock()
-		for _, other := range h.clients {
-			if other.Connected {
-				cArr = append(cArr, other)
-			}
-		}
-		h.ClientMutex.Unlock()
-
-		for i := range cArr {
-			defer func() {
-				if r := recover(); r != nil {
-					fmt.Println("Recovered in f", r)
-				}
-			}()
-			cArr[i].send <- events.NewPlayerTargetPositionEvent(c.getPos(), c.Id)
-		}
-
-		//h.GridManager.UpdateClientPosition <- c
+		h.GridManager.UpdateClientPosition <- c
 	}
 }
 

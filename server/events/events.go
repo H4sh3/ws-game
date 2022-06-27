@@ -23,6 +23,7 @@ const (
 	LOAD_INVENTORY_EVENT         EventType = 11
 	UPDATE_INVENTORY_EVENT       EventType = 12
 	REMOVE_GRID_CELL             EventType = 13
+	MULTIPLE_EVENTS              EventType = 14
 )
 
 type NewPlayerEvent struct {
@@ -45,12 +46,13 @@ func GetNewPlayerEvent(id int, pos shared.Vector) interface{} {
 }
 
 type AssignUserIdEvent struct {
-	EventType EventType `json:"eventType"`
-	Id        int       `json:"id"`
+	EventType EventType     `json:"eventType"`
+	Id        int           `json:"id"`
+	Pos       shared.Vector `json:"pos"`
 }
 
-func GetAssignUserIdEvent(id int) interface{} {
-	return &AssignUserIdEvent{EventType: ASSIGN_USER_ID_EVENT, Id: id}
+func GetAssignUserIdEvent(id int, pos shared.Vector) interface{} {
+	return &AssignUserIdEvent{EventType: ASSIGN_USER_ID_EVENT, Id: id, Pos: pos}
 
 	/* 	value, err := json.Marshal(u)
 
@@ -197,15 +199,15 @@ type RemoveGridCellEvent struct {
 
 func NewRemoveGridCellEvent(gridCellKey string) interface{} {
 	return &RemoveGridCellEvent{EventType: REMOVE_GRID_CELL, GridCellKey: gridCellKey}
+}
 
-	/* 	value, err := json.Marshal(u)
+type MultipleEvents struct {
+	EventType EventType     `json:"eventType"`
+	Events    []interface{} `json:"events"`
+}
 
-	   	if err != nil {
-	   		fmt.Printf("Error: %s", err)
-	   		return []byte{}
-	   	} else {
-	   		return value
-	   	} */
+func NewMultipleEvents(events []interface{}) interface{} {
+	return &MultipleEvents{EventType: MULTIPLE_EVENTS, Events: events}
 }
 
 // Events send from client

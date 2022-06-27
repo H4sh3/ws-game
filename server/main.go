@@ -4,6 +4,8 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
+	"runtime"
 	"sync"
 	"ws-game/root"
 )
@@ -11,6 +13,8 @@ import (
 var addr = flag.String("addr", ":6060", "http service address")
 
 func main() {
+	runtime.SetMutexProfileFraction(-1)
+	runtime.SetBlockProfileRate(1)
 	flag.Parse()
 	hub := root.NewHub()
 	go hub.Run()

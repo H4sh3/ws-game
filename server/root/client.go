@@ -63,18 +63,19 @@ type Client struct {
 	GridCell            *GridCell
 	GridCellMutex       sync.Mutex
 	Connected           bool
+	ConnectedMutex      sync.Mutex
 }
 
 func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
-	spawnRange := 50
-	x := shared.RandIntInRange(-spawnRange, spawnRange)
-	y := shared.RandIntInRange(-spawnRange, spawnRange)
+	spawnRange := 4
+	x := shared.RandIntInRange(-spawnRange, spawnRange) * 50
+	y := shared.RandIntInRange(-spawnRange, spawnRange) * 50
 	clientPostion := shared.Vector{X: x, Y: y}
 	inventory := make(map[resource.ResourceType]resource.Resource)
 
 	inventory[resource.Brick] = *resource.NewResource(resource.Brick, shared.Vector{}, hub.ResourceManager.GetResourceId(), 50, false, 100, false, "")
 
-	sendChan := make(chan interface{})
+	sendChan := make(chan interface{}, 1024)
 
 	gridCell := hub.GridManager.GetCellFromPos(clientPostion)
 	client := &Client{
@@ -92,9 +93,25 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 	}
 
 	gridCell.AddPlayer(client)
-	gridCell.Subscribe <- client
+
+	for _, cell := range hub.GridManager.getCells(x/GridCellSize, y/GridCellSize) {
+		cell.Subscribe <- client
+	}
 
 	return client
+}
+
+func (c *Client) getConnected() bool {
+	c.ConnectedMutex.Lock()
+	isConn := c.Connected
+	c.ConnectedMutex.Unlock()
+	return isConn
+}
+
+func (c *Client) setConnected(v bool) {
+	c.ConnectedMutex.Lock()
+	c.Connected = v
+	c.ConnectedMutex.Unlock()
 }
 
 func (c *Client) getPos() shared.Vector {
@@ -124,16 +141,16 @@ func (c *Client) IncrementZoneTick() {
 }
 
 func (c *Client) getGridCell() *GridCell {
-	c.PosMutex.Lock()
+	c.GridCellMutex.Lock()
 	gC := c.GridCell
-	c.PosMutex.Unlock()
+	c.GridCellMutex.Unlock()
 	return gC
 }
 
 func (c *Client) setGridCell(cell *GridCell) {
-	c.ZoneChangeTickMutex.Lock()
+	c.GridCellMutex.Lock()
 	c.GridCell = cell
-	c.ZoneChangeTickMutex.Unlock()
+	c.GridCellMutex.Unlock()
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -154,12 +171,13 @@ func (c *Client) readPump() {
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
 		event := &events.BaseEvent{}
-		if c.Connected {
+		if c.getConnected() {
 			err := c.conn.ReadJSON(event)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
+
 			UnmarshalClientEvents(*event, c.hub, c)
 
 			if err != nil {
@@ -169,26 +187,6 @@ func (c *Client) readPump() {
 				break
 			}
 		}
-
-		// _, event, err := c.conn.ReadMessage()
-
-		//empty message
-		/* 		if len(event) == 0 {
-		   			return
-		   		}
-
-		   		// fmt.Println(event)
-
-		   		UnmarshalClientEvents(event, c.hub, c)
-
-		   		//all message recieved from client get unmarshalled to structs
-		   		if err != nil {
-		   			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-		   				log.Printf("error: %v", err)
-		   			}
-		   			break
-		   		} */
-		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 	}
 }
 
@@ -208,38 +206,12 @@ func (client *Client) writePump() {
 	for {
 		select {
 		case message, ok := <-client.send:
-			if !client.Connected || !ok {
+			if !client.getConnected() || !ok {
 				return
 			}
 			// json
 			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			client.conn.WriteJSON(message)
-
-			/*
-				client.conn.SetWriteDeadline(time.Now().Add(writeWait))
-				if !ok {
-					// The hub closed the channel.
-					client.conn.WriteMessage(websocket.CloseMessage, []byte{})
-					return
-				}
-
-				w, err := client.conn.NextWriter(websocket.TextMessage)
-				if err != nil {
-					return
-				}
-				w.Write(message)
-
-				// Add queued chat messages to the current websocket message.
-				n := len(client.send)
-				for i := 0; i < n; i++ {
-					w.Write(newline)
-					w.Write(<-client.send)
-				}
-
-				if err := w.Close(); err != nil {
-					return
-				}
-			*/
 		case <-ticker.C:
 			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := client.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
@@ -283,7 +255,9 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	go client.writePump()
 	go client.readPump()
 	m.Unlock()
-	client.send <- events.GetAssignUserIdEvent(client.Id)
+	client.send <- events.GetAssignUserIdEvent(client.Id, client.Pos)
+	time.Sleep(time.Millisecond * 100)
+	client.send <- events.NewPlayerTargetPositionEvent(client.Pos, client.Id)
 }
 
 func UnmarshalClientEvents(event_data events.BaseEvent, h *Hub, c *Client) {

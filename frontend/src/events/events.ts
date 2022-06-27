@@ -154,6 +154,31 @@ export function isRemoveGridCellEvent(value: any): value is RemoveGridCellEvent 
     )
 }
 
+type EventTypes =
+    NewPlayerEvent |
+    AssignIdEvent |
+    PlayerTargetPositionEvent |
+    RemovePlayerEvent |
+    Hitpoints |
+    IResource |
+    ResourcePositionsEvent |
+    UpdateResourceEvent |
+    LoadInventoryEvent |
+    UpdateInventoryEvent |
+    RemoveGridCellEvent |
+    MultipleEvents
+
+export interface MultipleEvents extends BaseEvent {
+    events: EventTypes[]
+}
+
+export function isMultipleEvents(value: any): value is MultipleEvents {
+    return (
+        isBaseEvent(value) &&
+        value.eventType === EVENT_TYPES.MULTIPLE_EVENTS
+    )
+}
+
 
 /*
  Events bellow are send from client to server 

@@ -27,7 +27,6 @@ func AddResourceCoroGm(gm *GridManager) {
 
 		newResources := make(map[int]resource.Resource)
 		newResources[r.Id] = *r
-		fmt.Println("add resource coro")
 		cell.Broadcast <- events.NewResourcePositionsEvent(newResources)
 	}
 }
@@ -131,40 +130,17 @@ func (gm *GridManager) clientMovedCell(oldCell *GridCell, newCell *GridCell, c *
 	for _, cell := range cells {
 		cell.Subscribe <- c
 	}
-	fmt.Println("moved cell!")
-	//gm.drawGrid()
+	// fmt.Printf("Moved from %s to %s!\n", oldCell.GridCellKey, newCell.GridCellKey)
 
-	// Todo: do this only every n-th ticks or somethign
-	// Unsibscribe players from cells they haven't been to in a while
-
-	/* 	gm.gridMutex.Lock()
-	   	fmt.Println("lock1")
-	   	for _, col := range gm.Grid {
-	   		for _, cell := range col {
-	   			cell.UpdateSubscriptions <- true
-	   		}
-	   	}
-	   	gm.gridMutex.Unlock()
-	   	fmt.Println("unlock1")
-	*/
 	// Notify clients to remove player if he moved to a cell they are not subscribed to
-	/* 	for _, oldCellSub := range oldCell.PlayerSubscriptions {
-		subbedToNewCell := false
-		for _, newCellSub := range newCell.PlayerSubscriptions {
-			if oldCellSub.Player.Id == newCellSub.Player.Id {
-				subbedToNewCell = true
-				break
+	for _, oldCellSub := range oldCell.GetSubscriptions() {
+		if !newCell.isClientSubscribed(oldCellSub.Player.Id) {
+			// notify to delete player clientside
+			if oldCellSub.Player.Connected {
+				oldCellSub.Player.send <- events.NewRemovePlayerEvent(c.Id)
 			}
 		}
-
-		if !subbedToNewCell {
-			// notify to delete player clientside
-			oldCellSub.Player.send <- events.NewRemovePlayerEvent(c.Id)
-		}
-	} */
-
-	// Todo: Add debug flag for this?
-
+	}
 }
 
 // cells provided to a client entering a new cell
@@ -203,13 +179,12 @@ func (gm *GridManager) add(x int, y int) *GridCell {
 
 func (gm *GridManager) drawGrid() {
 	gm.gridMutex.Lock()
-	fmt.Println("print lock!")
+	fmt.Println("draw grid lock")
 	minY := 0 //int(math.Inf(1))
 	maxY := int(math.Inf(-1))
 	minX := 0 //int(math.Inf(1))
 	maxX := int(math.Inf(-1))
 	for x, col := range gm.Grid {
-		fmt.Printf("%d", x)
 		if x < minX {
 			minX = x
 		}
@@ -238,21 +213,19 @@ func (gm *GridManager) drawGrid() {
 				if !ok {
 					s += " "
 				} else {
-					cell := col[y]
-					cell.Mutex.Lock()
-					if len(cell.playerSubscriptions) > 0 {
-						s += "+"
-					} else {
-						s += "-"
-					}
-					cell.Mutex.Unlock()
+					//cell := col[y]
+					s += "+"
+					//					if len(cell.GetSubscriptions()) > 0 {
+					//					} else {
+					//						s += "-"
+					//					}
 				}
 			}
 
 		}
 		s += "\n"
 	}
-	fmt.Println(s)
 	gm.gridMutex.Unlock()
-	fmt.Println("print unlock!")
+	fmt.Println("draw grid unlock")
+	fmt.Println(s)
 }

@@ -30,6 +30,7 @@ export enum EVENT_TYPES {
     LOAD_INVENTORY_EVENT = 11,
     UPDATE_INVENTORY_EVENT = 12,
     REMOVE_GRID_CELL = 13,
+    MULTIPLE_EVENTS = 14,
 }
 
-export const SCREEN_SIZE = 750
+export const SCREEN_SIZE = 1000

@@ -13,7 +13,7 @@ import (
 
 const prod = "game.gymcadia.com"
 
-const local = "localhost:7777"
+const local = "localhost:6060"
 
 var addr = flag.String("addr", local, "http service address")
 
@@ -82,7 +82,7 @@ func runClient() {
 }
 
 func main() {
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 100; i++ {
 		go runClient()
 		time.Sleep(time.Millisecond * 50)
 		//time.Sleep(time.Second / 10)

@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getLootResourceEvent, getHitResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
@@ -33,10 +33,14 @@ export class Game extends Container {
 
     oldResourceLen: number
 
+    sendCooldown: number
+
 
     constructor(app: Application) {
         super();
         this.app = app;
+
+        this.sendCooldown = 0
 
         this.ws = new WebSocket(process.env.WS_API)
         this.isEditing = false
@@ -104,32 +108,38 @@ export class Game extends Container {
                 return
             }
             let parsed: any = JSON.parse(m.data)
-            if (isPlayerTargetPositionEvent(parsed)) {
-                this.handlePlayerTargetPositionEvent(parsed)
-            } else if (isLoadInventoryEvent(parsed)) {
-                this.inventory.initLoad(parsed.items, this.player, this.app.loader, this.ws)
-            } else if (isUpdateInventoryEvent(parsed)) {
-                this.inventory.update(parsed, this.player, this.app.loader, this.ws)
-                this.inventory.log()
-            } else if (isUpdateResourceEvent(parsed)) {
-                this.updateResourceEvent(parsed)
-            } else if (isResourcePositionsEvent(parsed)) {
-                this.addResourceEvent(parsed)
-            } else if (isRemovePlayerEvent(parsed)) {
-                this.handlePlayerDisconnect(parsed)
-            } else if (isNewPlayerEvent(parsed)) {
-                this.handleNewPlayerEvent(parsed)
-            } else if (isAssignUserIdEvent(parsed)) {
-                this.handleAssignIdEvent(parsed)
-            } else if (isRemoveGridCellEvent(parsed)) {
-                this.handleRemoveGridCellEvent(parsed)
-            }
 
-            /* m.data.split("\n").forEach(message => {
-            }) */
+            if (isMultipleEvents(parsed)) {
+                parsed.events.forEach(e => this.processEvent(e))
+            } else {
+                this.processEvent(parsed)
+            }
         }
 
         app.ticker.add(this.update);
+    }
+
+    processEvent(parsed: any) {
+        if (isPlayerTargetPositionEvent(parsed)) {
+            this.handlePlayerTargetPositionEvent(parsed)
+        } else if (isLoadInventoryEvent(parsed)) {
+            this.inventory.initLoad(parsed.items, this.player, this.app.loader, this.ws)
+        } else if (isUpdateInventoryEvent(parsed)) {
+            this.inventory.update(parsed, this.player, this.app.loader, this.ws)
+            this.inventory.log()
+        } else if (isUpdateResourceEvent(parsed)) {
+            this.updateResourceEvent(parsed)
+        } else if (isResourcePositionsEvent(parsed)) {
+            this.addResourceEvent(parsed)
+        } else if (isRemovePlayerEvent(parsed)) {
+            this.handlePlayerDisconnect(parsed)
+        } else if (isNewPlayerEvent(parsed)) {
+            this.handleNewPlayerEvent(parsed)
+        } else if (isAssignUserIdEvent(parsed)) {
+            this.handleAssignIdEvent(parsed)
+        } else if (isRemoveGridCellEvent(parsed)) {
+            this.handleRemoveGridCellEvent(parsed)
+        }
     }
 
 
@@ -150,7 +160,11 @@ export class Game extends Container {
             console.log("children on world container", this.worldContainer.children.length)
         }
 
-        handleKeyBoard(this.keyHandler, this.player, this.ws, allResources)
+        this.sendCooldown -= delta
+        if (this.sendCooldown <= 0) {
+            handleKeyBoard(this.keyHandler, this.player, this.ws, allResources)
+            this.sendCooldown = 5
+        }
 
         // update world container based on players position
         this.player.updatePosition()
@@ -221,6 +235,7 @@ export class Game extends Container {
         if (parsed.id === this.player.id) {
             const newPos = createVector(parsed.pos.x, parsed.pos.y)
             if (newPos.dist(this.player.targetPos) > 1000) {
+                console.log("hard update")
                 // only update players target pos with server side pos if a threshold is exceeded
                 this.player.targetPos = newPos
             }
@@ -259,6 +274,8 @@ export class Game extends Container {
 
     handleAssignIdEvent(parsed: AssignIdEvent) {
         this.player.id = parsed.id
+        this.player.currentPos.x = parsed.pos.x
+        this.player.currentPos.y = parsed.pos.y
     }
 
     updateResourceEvent(parsed: UpdateResourceEvent) {
@@ -296,7 +313,7 @@ function handleKeyBoard(keyHandler: KeyboardHandler, player: Player, ws: WebSock
 
             const newPos = player.targetPos.copy()
 
-            const stepSize = 10
+            const stepSize = 25
 
             switch (key) {
                 case "w":
