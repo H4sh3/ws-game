@@ -114,6 +114,7 @@ func (cell *GridCell) CellCoro() {
 					}
 				}
 
+				// this subscribes a client to the cell or updates an existing subscription
 				if !cell.CheckSubscription(client) {
 					if client.Connected {
 						client.send <- events.NewResourcePositionsEvent(cell.GetResources())
