@@ -170,6 +170,7 @@ func (cell *GridCell) CellCoro() {
 				delete(cell.Players, c.Id)
 				cell.eventsToBroadcast = append(cell.eventsToBroadcast, events.NewRemovePlayerEvent(c.Id))
 			}
+			cell.playersToRemove = []*Client{}
 			cell.playersToRemoveMutex.Unlock()
 
 			// Add players
