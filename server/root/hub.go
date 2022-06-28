@@ -125,10 +125,10 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 	}
 
 	collision := false
-	for _, resource := range c.getGridCell().Resources {
+	for _, resource := range c.getGridCell().GetResources() {
 
 		if resource.Remove {
-			c.GridCell.RemoveResource(resource)
+			c.GridCell.RemoveResource(&resource)
 			continue
 		}
 		if !resource.IsSolid {
