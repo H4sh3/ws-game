@@ -105,7 +105,7 @@ func (h *Hub) Run() {
 }
 
 func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
-	stepSize := 35
+	stepSize := 25
 	newPos := &shared.Vector{X: c.Pos.X, Y: c.Pos.Y}
 
 	if event.Key == "w" {

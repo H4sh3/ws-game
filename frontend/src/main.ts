@@ -312,7 +312,7 @@ function handleKeyBoard(keyHandler: KeyboardHandler, player: Player, ws: WebSock
 
             const newPos = player.targetPos.copy()
 
-            const stepSize = 35
+            const stepSize = 25
 
             switch (key) {
                 case "w":
