@@ -6,6 +6,7 @@ export class Player {
     id: number
     currentPos: Vector
     targetPos: Vector
+    posChanged: boolean
     vel: Vector
     frame: number
     sprite: Sprite
@@ -16,6 +17,7 @@ export class Player {
         this.vel = createVector(0, 0)
         this.currentPos = pos
         this.targetPos = pos
+        this.posChanged = false
         this.id = id
         this.frame = 0
         this.sprite = sprite
@@ -38,6 +40,7 @@ export class Player {
     updatePosition() {
         const step = this.targetPos.copy().sub(this.currentPos).mult(0.2)
         if (step.mag() == 0) {
+            this.posChanged = false
             return
         }
         if (step.mag() > 0.1) {
@@ -45,5 +48,6 @@ export class Player {
         } else {
             this.currentPos = this.targetPos.copy()
         }
+        this.posChanged = true
     }
 }
