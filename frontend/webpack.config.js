@@ -14,7 +14,7 @@ module.exports = (_, argv) => {
   console.log(`Websocket url: ${API_WS_URL[argv.mode]}`)
   const config = {
     devtool: 'source-map',
-    entry: "./src/index.ts",
+    entry: "./src/index.tsx",
     mode: "development",
     devServer: {
       watchFiles: ["src/**/*"],

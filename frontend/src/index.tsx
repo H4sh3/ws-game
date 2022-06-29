@@ -4,6 +4,12 @@ import * as PIXI from 'pixi.js';
 import { Game } from './main';
 import { SCREEN_SIZE } from './etc/const';
 
+import InventoryComponent from './reactInventory';
+
+import React from 'react';
+import * as ReactDOM from 'react-dom';
+import { InventoryStore } from './inventoryStore';
+
 const load = (app: PIXI.Application, asset: string) => {
     return new Promise<void>((resolve) => {
         app.loader.add(asset).load(() => {
@@ -14,6 +20,9 @@ const load = (app: PIXI.Application, asset: string) => {
 
 const main = async () => {
     // Main app
+
+    const inventoryStore = new InventoryStore()
+
     const app = new PIXI.Application({ width: SCREEN_SIZE, height: SCREEN_SIZE });
 
     // Load assets
@@ -24,6 +33,7 @@ const main = async () => {
     await load(app, 'assets/blockade.png');
     await load(app, 'assets/tree.png');
     await load(app, 'assets/log.png');
+    await load(app, 'assets/ironOre.png');
 
 
     const x = document.getElementById("mainView")
@@ -31,9 +41,15 @@ const main = async () => {
         x.appendChild(app.view);
     }
 
+
+
     // Set scene
-    var scene = new Game(app);
+    var scene = new Game(app, inventoryStore);
     app.stage.addChild(scene);
+
+    ReactDOM.render(<InventoryComponent inventoryStore={inventoryStore} />, document.getElementById("inventoryDiv"));
 };
 
+
 main();
+

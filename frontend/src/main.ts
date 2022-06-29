@@ -9,6 +9,7 @@ import { getOwnPlayerSprite } from './sprites/player';
 import { getBlockadeSprite, getCursorSprite } from './sprites/etc';
 import { SCREEN_SIZE } from './etc/const';
 import { Inventory } from './types/inventory';
+import { InventoryStore, Item } from './inventoryStore'
 
 export class Game extends Container {
     app: Application;
@@ -35,10 +36,14 @@ export class Game extends Container {
 
     sendCooldown: number
 
+    inventoryStore: InventoryStore
 
-    constructor(app: Application) {
+
+    constructor(app: Application, inventoryStore: InventoryStore) {
         super();
         this.app = app;
+
+        this.inventoryStore = inventoryStore
 
         this.sendCooldown = 0
 
@@ -94,7 +99,6 @@ export class Game extends Container {
         this.addChild(this.blockadeSprite)
         this.addChild(this.player.sprite)
 
-
         this.ws.onerror = (error) => {
             console.log(error)
         }
@@ -127,6 +131,15 @@ export class Game extends Container {
         } else if (isUpdateInventoryEvent(parsed)) {
             this.inventory.update(parsed, this.player, this.app.loader, this.ws)
             this.inventory.log()
+            const item: Item = {
+                resourceType: parsed.item.resourceType,
+                quantity: parsed.item.quantity
+            }
+            if (parsed.remove) {
+                this.inventoryStore.removeItem(item)
+            } else {
+                this.inventoryStore.addItem(item)
+            }
         } else if (isUpdateResourceEvent(parsed)) {
             this.handleUpdateResourceEvent(parsed)
         } else if (isResourcePositionsEvent(parsed)) {
@@ -255,6 +268,7 @@ export class Game extends Container {
     }
 
     handleNewPlayerEvent(parsed: NewPlayerEvent) {
+        console.log("new player event")
         if (this.player.id === parsed.id) {
             this.player.currentPos.x = parsed.pos.x
             this.player.currentPos.y = parsed.pos.y

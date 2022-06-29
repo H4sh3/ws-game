@@ -184,22 +184,44 @@ func (h *Hub) SpawnLoot(destroyedResource resource.Resource, c *Client) {
 	//Todo: Add this as function in resource handler -> Get getloot from resource
 	quantity := 0
 	subType := resource.Brick
+
+	newResources := []*resource.Resource{}
+
 	if destroyedResource.ResourceType == resource.Stone {
-		quantity = shared.RandIntInRange(1, 3)
+		quantity = shared.RandIntInRange(2, 5)
 		subType = resource.Brick
+		pos := destroyedResource.Pos.Copy()
+		r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true, destroyedResource.GridCellKey)
+		newResources = append(newResources, r)
+
+		shouldSpawnIronOre := shared.RandIntInRange(0, 10)
+		fmt.Printf("shouldSpawnIronOre %d\n", shouldSpawnIronOre)
+		if shouldSpawnIronOre >= 7 {
+			quantity = shared.RandIntInRange(1, 3)
+			subType = resource.IronOre
+			pos := destroyedResource.Pos.Copy()
+			pos.X += shared.RandIntInRange(-20, 20)
+			pos.Y += shared.RandIntInRange(-20, 20)
+			r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true, destroyedResource.GridCellKey)
+			newResources = append(newResources, r)
+		}
 	} else if destroyedResource.ResourceType == resource.Blockade {
 		quantity = 5
 		subType = resource.Brick
+		pos := destroyedResource.Pos.Copy()
+		r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true, destroyedResource.GridCellKey)
+		newResources = append(newResources, r)
 	} else if destroyedResource.ResourceType == resource.Tree {
 		quantity = shared.RandIntInRange(3, 5)
 		subType = resource.Log
+		pos := destroyedResource.Pos.Copy()
+		r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true, destroyedResource.GridCellKey)
+		newResources = append(newResources, r)
 	}
 
-	// create resource of type and quantity
-	pos := destroyedResource.Pos.Copy()
-	r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true, destroyedResource.GridCellKey)
-
-	h.ResourceManager.AddResource <- r
+	for _, r := range newResources {
+		h.ResourceManager.AddResource <- r
+	}
 }
 
 func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {

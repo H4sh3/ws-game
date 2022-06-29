@@ -12,6 +12,8 @@
   "author": "Muhammad Ahsan Ayaz<ahsan.ubitian@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@types/react": "^18.0.14",
+    "@types/react-dom": "^18.0.5",
     "copy-webpack-plugin": "^10.1.0",
     "css-loader": "^6.5.1",
     "html-webpack-plugin": "^5.5.0",
@@ -28,6 +30,11 @@
   },
   "dependencies": {
     "@types/pixi.js": "^5.0.0",
-    "pixi.js": "6.3.0"
+    "jstates": "^0.5.2",
+    "mobx": "^6.6.1",
+    "mobx-react-lite": "^3.4.0",
+    "pixi.js": "6.3.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }
