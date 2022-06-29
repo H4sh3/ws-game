@@ -275,6 +275,7 @@ func (cell *GridCell) GetEventsToBroadcast() []interface{} {
 }
 
 func (cell *GridCell) CheckSubscription(c *Client) bool {
+	cell.CellMutex.Lock()
 	subscription, hasSupped := cell.playerSubscriptions[c.Id]
 	if hasSupped {
 		// player has already subbed to this cell -> renew by updating the tick value
@@ -286,6 +287,7 @@ func (cell *GridCell) CheckSubscription(c *Client) bool {
 			SubTick: c.getZoneTick(),
 		}
 	}
+	cell.CellMutex.Unlock()
 	return hasSupped
 }
 

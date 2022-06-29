@@ -28,6 +28,11 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		root.ServeWs(hub, w, r, &m)
 	})
+
+	http.HandleFunc("/map", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(hub.GridManager.GridMap()))
+	})
+
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

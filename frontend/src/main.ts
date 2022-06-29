@@ -8,7 +8,6 @@ import getBackgroundGraphics, { getInventoryBackground } from './sprites/backgro
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
 import { getBlockadeSprite, getCursorSprite } from './sprites/etc';
 import { SCREEN_SIZE } from './etc/const';
-import { Inventory } from './types/inventory';
 import { InventoryStore, Item } from './inventoryStore'
 
 import * as PIXI from 'pixi.js'
@@ -23,7 +22,6 @@ export class Game extends Container {
     player: Player
 
     players: Map<number, Player>
-    inventory: Inventory
 
     cursorSprite: Sprite
     blockadeSprite: Sprite
@@ -54,7 +52,6 @@ export class Game extends Container {
         this.resources = new Map()
         this.players = new Map()
 
-        this.inventory = new Inventory()
         this.keyHandler = new KeyboardHandler()
         this.worldContainer = new Container();
 
@@ -83,6 +80,7 @@ export class Game extends Container {
             const cY = this.cursorPos.y
             if (!this.isEditing || cY > SCREEN_SIZE - 100) return
 
+            // Players cursor position relativ to players position and locked to world grid
             const pX = this.player.currentPos.x % 50
             const pY = this.player.currentPos.y % 50
             const x1 = Math.floor((cX + 25 + pX) / 50) * 50
@@ -98,8 +96,6 @@ export class Game extends Container {
         this.addChild(getInventoryBackground())
 
         this.blockadeSprite = getBlockadeSprite(this)
-
-
         this.addChild(this.blockadeSprite)
         this.addChild(this.player.spriteContainer)
 
@@ -131,10 +127,16 @@ export class Game extends Container {
         if (isPlayerTargetPositionEvent(parsed)) {
             this.handlePlayerTargetPositionEvent(parsed)
         } else if (isLoadInventoryEvent(parsed)) {
-            this.inventory.initLoad(parsed.items, this.player, this.app.loader, this.ws)
+            Object.keys(parsed.items).forEach(k => {
+                const { resourceType, quantity } = parsed.items[k]
+                const item: Item = {
+                    resourceType: resourceType,
+                    quantity: quantity
+                }
+                this.inventoryStore.addItem(item)
+            })
+            //this.inventory.initLoad(parsed.items, this.player, this.app.loader, this.ws)
         } else if (isUpdateInventoryEvent(parsed)) {
-            this.inventory.update(parsed, this.player, this.app.loader, this.ws)
-            this.inventory.log()
             const item: Item = {
                 resourceType: parsed.item.resourceType,
                 quantity: parsed.item.quantity
@@ -217,7 +219,8 @@ export class Game extends Container {
     handleAddResourceEvent(parsed: ResourcePositionsEvent) {
         console.log(`adding ${parsed.resources.length} resources`)
         parsed.resources.forEach(r => {
-            const resource: Resource = new Resource(r.id, this.player, r.quantity, r.resourceType, createVector(r.pos.x, r.pos.y), r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
+            const pos = createVector(r.pos.x, r.pos.y)
+            const resource: Resource = new Resource(r.id, this.player, r.quantity, r.resourceType, pos, r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
             this.worldContainer.addChild(resource.container);
 
             const { gridCellKey } = r;

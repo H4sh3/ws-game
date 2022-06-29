@@ -48,6 +48,7 @@ func NewHub() *Hub {
 
 	return hub
 }
+
 func (h *Hub) getClientId() int {
 	h.idCntMutex.Lock()
 	id := h.idCnt
@@ -75,7 +76,6 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.SetClient(client)
-			// client.send <- events.NewLoadInventoryEvent(client.Inventory)
 		case client := <-h.unregister:
 			h.ClientMutex.Lock()
 			if _, ok := h.clients[client.Id]; ok {

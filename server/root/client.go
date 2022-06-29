@@ -257,7 +257,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	inventory := make(map[resource.ResourceType]resource.Resource)
 	inventory[resource.Brick] = *resource.NewResource(resource.Brick, shared.Vector{}, hub.ResourceManager.GetResourceId(), 50, false, 100, false, "")
 	client.Inventory = inventory
-	client.send <- events.NewUpdateInventoryEvent(inventory[resource.Brick], false)
+	client.send <- events.NewLoadInventoryEvent(client.Inventory)
 }
 
 func UnmarshalClientEvents(event_data events.BaseEvent, h *Hub, c *Client) {

@@ -1,4 +1,5 @@
 import { Sprite, Graphics, Loader, Point, Container } from "pixi.js"
+import { randInt } from "../etc/math"
 import { Hitpoints, getHitResourceEvent, getLootResourceEvent } from "../events/events"
 import { Player } from "./player"
 import Vector from "./vector"
@@ -31,25 +32,26 @@ export class Resource {
         this.player = player
         this.quantity = quantity
         this.pos = pos
+        this.isSolid = isSolid
+        this.isLootable = isLootable
+        this.resourceType = resourceType
+
         this.hitPoints = {
             current: hp.current,
             max: hp.max
         }
-        this.isSolid = isSolid
-        this.isLootable = isLootable
-        this.resourceType = resourceType
+        this.updateHealthbar()
 
         this.container = new Container()
         this.container.x = this.pos.x
         this.container.y = this.pos.y
         this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}.png`].texture)
+        this.sprite.interactive = true
+        this.sprite.anchor.set(0.5)
         this.container.addChild(this.sprite)
 
-        this.updateHealthbar()
 
-        this.sprite.interactive = true
 
-        this.sprite.anchor.set(0.5)
         this.sprite.on('click', () => {
             if (!this.isLootable && !this.player.canDoAction()) {
                 return

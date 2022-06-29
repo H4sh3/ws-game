@@ -171,7 +171,7 @@ func (gm *GridManager) add(x int, y int) *GridCell {
 	return cell
 }
 
-func (gm *GridManager) drawGrid() {
+func (gm *GridManager) GridMap() string {
 	gm.gridMutex.Lock()
 	fmt.Println("draw grid lock")
 	minY := 0 //int(math.Inf(1))
@@ -220,6 +220,5 @@ func (gm *GridManager) drawGrid() {
 		s += "\n"
 	}
 	gm.gridMutex.Unlock()
-	fmt.Println("draw grid unlock")
-	fmt.Println(s)
+	return s
 }

@@ -1,6 +1,7 @@
 import Vector from "./vector"
 import { createVector } from "../events/events"
 import { AnimatedSprite, Container } from "pixi.js"
+import { PLAYER_SPRITE_SCALE } from "../sprites/player"
 
 export class Player {
     id: number
@@ -60,6 +61,6 @@ export class Player {
 
         this.sprite.play()
         // if players moves left, mirror the sprite
-        this.sprite.scale.x = step.x > 0 ? 1 : -1
+        this.sprite.scale.x = step.x > 0 ? PLAYER_SPRITE_SCALE : -PLAYER_SPRITE_SCALE
     }
 }
