@@ -1,15 +1,17 @@
-import { Application, Container, Sprite } from 'pixi.js';
+import { AnimatedSprite, Application, Container, Sprite } from 'pixi.js';
 import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
 import Vector from './types/vector';
 import getBackgroundGraphics, { getInventoryBackground } from './sprites/background';
-import { getOwnPlayerSprite } from './sprites/player';
+import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
 import { getBlockadeSprite, getCursorSprite } from './sprites/etc';
 import { SCREEN_SIZE } from './etc/const';
 import { Inventory } from './types/inventory';
 import { InventoryStore, Item } from './inventoryStore'
+
+import * as PIXI from 'pixi.js'
 
 export class Game extends Container {
     app: Application;
@@ -51,17 +53,19 @@ export class Game extends Container {
         this.isEditing = false
         this.resources = new Map()
         this.players = new Map()
-        this.inventory = new Inventory()
 
-        this.worldContainer = new Container();
+        this.inventory = new Inventory()
         this.keyHandler = new KeyboardHandler()
+        this.worldContainer = new Container();
+
         this.update = this.update.bind(this);
 
         this.addChild(getBackgroundGraphics())
 
-        this.player = new Player(-1, createVector(0, 0), getOwnPlayerSprite(app.loader))
+        this.player = new Player(-1, createVector(0, 0), getOwnPlayerSprite())
+
         this.cursorSprite = getCursorSprite(app.loader)
-        this.player.sprite.addChild(this.cursorSprite)
+        this.player.spriteContainer.addChild(this.cursorSprite)
 
         this.cursorPos = createVector(0, 0)
 
@@ -97,7 +101,7 @@ export class Game extends Container {
 
 
         this.addChild(this.blockadeSprite)
-        this.addChild(this.player.sprite)
+        this.addChild(this.player.spriteContainer)
 
         this.ws.onerror = (error) => {
             console.log(error)
@@ -192,11 +196,11 @@ export class Game extends Container {
         const y1 = Math.floor((cY + 25 + pY) / 50) * 50
 
         if (this.isEditing) {
-            this.cursorSprite.x = -(SCREEN_SIZE / 2) + x1 - pX
-            this.cursorSprite.y = -(SCREEN_SIZE / 2) + y1 - pY
+            this.cursorSprite.x = x1 - pX
+            this.cursorSprite.y = y1 - pY
         } else {
-            this.cursorSprite.x = 0
-            this.cursorSprite.y = SCREEN_SIZE - 50
+            this.cursorSprite.x = 30
+            this.cursorSprite.y = SCREEN_SIZE - 30
         }
 
         // update other players positions
@@ -258,10 +262,8 @@ export class Game extends Container {
             if (player) {
                 player.targetPos = createVector(parsed.pos.x, parsed.pos.y)
             } else {
-                const sprite = new Sprite(this.app.loader.resources['assets/player0.png'].texture)
-                sprite.anchor.set(0.5)
-                const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), sprite)
-                this.worldContainer.addChild(sprite)
+                const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), getOtherPlayerSprite())
+                this.worldContainer.addChild(newP.sprite)
                 this.players.set(newP.id, newP)
             }
         }
@@ -278,10 +280,8 @@ export class Game extends Container {
                 existing.targetPos = createVector(parsed.pos.x, parsed.pos.y)
                 this.players.set(parsed.id, existing)
             } else {
-                const sprite = new Sprite(this.app.loader.resources['assets/player0.png'].texture)
-                sprite.anchor.set(0.5)
-                const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), sprite)
-                this.worldContainer.addChild(sprite)
+                const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), getOtherPlayerSprite())
+                this.worldContainer.addChild(newP.sprite)
                 this.players.set(newP.id, newP)
             }
         }

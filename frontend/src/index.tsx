@@ -35,6 +35,10 @@ const main = async () => {
     await load(app, 'assets/log.png');
     await load(app, 'assets/ironOre.png');
 
+    for (let i = 0; i <= 6; i++) {
+        await load(app, `assets/human/tile00${i}.png`);
+    }
+
 
     const x = document.getElementById("mainView")
     if (x) {
