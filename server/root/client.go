@@ -28,10 +28,6 @@ const (
 	maxMessageSize = 1024
 )
 
-var (
-	newline = []byte{'\n'}
-)
-
 func x(r *http.Request) bool {
 	// accept all connections for now
 	// in prod only allow connections from proxy
@@ -68,8 +64,8 @@ type Client struct {
 
 func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 	spawnRange := 4
-	x := shared.RandIntInRange(-spawnRange, spawnRange) * 35
-	y := shared.RandIntInRange(-spawnRange, spawnRange) * 35
+	x := shared.RandIntInRange(-spawnRange, spawnRange) * stepSize
+	y := shared.RandIntInRange(-spawnRange, spawnRange) * stepSize
 	clientPostion := shared.Vector{X: x, Y: y}
 
 	sendChan := make(chan interface{}, 1024)
@@ -228,21 +224,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	}
 
 	m.Lock()
-	client := NewClient(hub, conn, hub.getClientId()) //&Client{hub: hub, conn: conn, send: make(chan []byte, 256), Id: id_cnt, Pos: clientPostion, Inventory: make(map[resource.ResourceType]resource.Resource)}
-
-	// send message to all clients subscribed to the cell where the player spawned
-	/*
-		for _, subscription := range client.GridCell.PlayerSubscriptions {
-			new_client_message := []byte(events.GetNewPlayerEvent(subscription.Player.Id, subscription.Player.Pos))
-
-			if subscription.Player.Connected {
-					subscription.Player.send <- new_client_message
-				}
-			}
-	*/
-
-	// provide the new player with all resources
-	// client.send <- events.NewResourcePositionsEvent(hub.Resources)
+	client := NewClient(hub, conn, hub.getClientId())
 
 	client.hub.register <- client
 

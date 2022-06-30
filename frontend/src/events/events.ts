@@ -1,7 +1,23 @@
-import { Container, Graphics, Sprite } from "pixi.js"
-import { EVENT_TYPES } from "../etc/const"
 import { Resource } from "../types/resource"
 import Vector from "../types/vector"
+
+export enum EVENT_TYPES {
+    NEW_USER_EVENT = 0,
+    ASSIGN_USER_ID_EVENT = 1,
+    USER_MOVE_EVENT = 2,
+    KEYBOARD_EVENT = 3,
+    PLAYER_TARGET_POSITION_EVENT = 4,
+    RESOURCE_POSITIONS_EVENT = 5,
+    REMOVE_PLAYER_EVENT = 6,
+    HIT_RESOURCE_EVENT = 7,
+    UPDATE_RESOURCE_EVENT = 8,
+    LOOT_RESOURCE_EVENT = 9,
+    PLAYER_PLACED_RESOURCE_EVENT = 10,
+    LOAD_INVENTORY_EVENT = 11,
+    UPDATE_INVENTORY_EVENT = 12,
+    REMOVE_GRID_CELL = 13,
+    MULTIPLE_EVENTS = 14,
+}
 
 export function createVector(x: number, y: number): Vector {
     return new Vector(x, y)

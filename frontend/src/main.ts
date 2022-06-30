@@ -275,8 +275,8 @@ export class Game extends Container {
     handleNewPlayerEvent(parsed: NewPlayerEvent) {
         console.log("new player event")
         if (this.player.id === parsed.id) {
-            this.player.currentPos.x = parsed.pos.x
-            this.player.currentPos.y = parsed.pos.y
+            // this.player.currentPos.x = parsed.pos.x
+            // this.player.currentPos.y = parsed.pos.y
         } else {
             const existing = this.players.get(parsed.id)
             if (existing) {

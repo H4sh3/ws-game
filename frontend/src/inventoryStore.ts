@@ -25,6 +25,7 @@ const getRecipeBook = (): Map<string, Recipe> => {
 export class InventoryStore {
     items: Map<string, Item>
     recipes: Map<string, Recipe>
+    selectedItem: string
 
     constructor() {
         makeObservable(this, {
@@ -32,10 +33,12 @@ export class InventoryStore {
             addItem: action,
             removeItem: action,
             getItems: computed,
+            selectedItem: observable,
+            setSelectedItem: action,
         })
         this.items = new Map()
-
         this.recipes = getRecipeBook()
+        this.selectedItem = ""
     }
 
     addItem(i: Item) {
@@ -75,5 +78,9 @@ export class InventoryStore {
         })
 
         return items
+    }
+
+    setSelectedItem(resourceType: string) {
+        this.selectedItem = resourceType
     }
 }
