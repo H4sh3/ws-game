@@ -40,7 +40,8 @@ module.exports = (_, argv) => {
       new CopyPlugin({
         patterns: [
           { from: 'assets', to: 'assets' },
-          { from: "src/index.html", to: "index.html" }
+          { from: "src/index.html", to: "index.html" },
+          { from: "src/credits.html", to: "credits.html" }
         ],
       }),
       new DefinePlugin({
