@@ -11,6 +11,7 @@ import (
 	"ws-game/resource"
 	"ws-game/shared"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -50,6 +51,7 @@ type Client struct {
 	// Buffered channel of outbound messages.
 	send     chan interface{} //[]byte
 	Id       int
+	UUID     string
 	Pos      shared.Vector
 	PosMutex sync.Mutex
 	// Inventory []resource.Resource
@@ -76,6 +78,7 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 		conn:                conn,
 		send:                sendChan,
 		Id:                  id,
+		UUID:                uuid.New().String(),
 		Pos:                 clientPostion,
 		GridCell:            gridCell,
 		Connected:           true,
@@ -84,6 +87,7 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 		GridCellMutex:       sync.Mutex{},
 	}
 
+	// Todo: move to after login
 	gridCell.AddPlayer(client)
 
 	for _, cell := range hub.GridManager.getCells(x/GridCellSize, y/GridCellSize) {
@@ -233,24 +237,17 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	go client.writePump()
 	go client.readPump()
 	m.Unlock()
-	client.send <- events.GetAssignUserIdEvent(client.Id, client.Pos)
-	client.send <- events.NewPlayerTargetPositionEvent(client.Pos, client.Id)
-
-	inventory := make(map[resource.ResourceType]resource.Resource)
-	inventory[resource.Brick] = *resource.NewResource(resource.Brick, shared.Vector{}, hub.ResourceManager.GetResourceId(), 50, false, 100, false, "")
-	client.Inventory = inventory
-	client.send <- events.NewLoadInventoryEvent(client.Inventory)
 }
 
 func UnmarshalClientEvents(event_data events.BaseEvent, h *Hub, c *Client) {
-	//	event_data := &events.BaseEvent{}
-	//	if err := json.Unmarshal(jsonInput, &event_data); err != nil {
-	//		fmt.Println("Error unmarshalling Event:")
-	//		fmt.Println(jsonInput)
-	//		return
-	//	}
-
 	switch event_data.EventType {
+	case events.PLAYER_LOGIN_EVENT:
+		// first event the client sends after establishing a websocket connection
+		loginPlayerEvent := &events.LoginPlayerEvent{}
+		if err := json.Unmarshal(event_data.Payload, &loginPlayerEvent); err != nil {
+			panic(err)
+		}
+		h.LoginPlayer(loginPlayerEvent.UUID, c)
 	case events.KEYBOARD_EVENT:
 		keyboardEvent := &events.KeyBoardEvent{}
 		if err := json.Unmarshal(event_data.Payload, &keyboardEvent); err != nil {

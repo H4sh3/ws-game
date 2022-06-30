@@ -26,6 +26,10 @@ const (
 	MULTIPLE_EVENTS              EventType = 14
 )
 
+const (
+	PLAYER_LOGIN_EVENT EventType = 15
+)
+
 type NewPlayerEvent struct {
 	EventType EventType     `json:"eventType"`
 	Id        int           `json:"id"`
@@ -49,10 +53,11 @@ type AssignUserIdEvent struct {
 	EventType EventType     `json:"eventType"`
 	Id        int           `json:"id"`
 	Pos       shared.Vector `json:"pos"`
+	UUID      string        `json:"uuid"`
 }
 
-func GetAssignUserIdEvent(id int, pos shared.Vector) interface{} {
-	return &AssignUserIdEvent{EventType: ASSIGN_USER_ID_EVENT, Id: id, Pos: pos}
+func GetAssignUserIdEvent(id int, pos shared.Vector, uuid string) interface{} {
+	return &AssignUserIdEvent{EventType: ASSIGN_USER_ID_EVENT, Id: id, Pos: pos, UUID: uuid}
 
 	/* 	value, err := json.Marshal(u)
 
@@ -233,4 +238,9 @@ type LootResourceEvent struct {
 type PlayerPlacedResourceEvent struct {
 	ResourceType string        `json:"resourceType"`
 	Pos          shared.Vector `json:"pos"`
+}
+
+type LoginPlayerEvent struct {
+	ResourceType string `json:"resourceType"`
+	UUID         string `json:"uuid"`
 }

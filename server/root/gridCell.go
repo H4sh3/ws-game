@@ -94,7 +94,7 @@ func (cell *GridCell) CellCoro() {
 		*/
 		case <-cell.ticker.C:
 			// Measure time for cell updates
-			start := time.Now()
+			// start := time.Now()
 
 			// handle new subscriptions
 			// if a client subs to a new cell provide him with players inside this cell
@@ -198,7 +198,7 @@ func (cell *GridCell) CellCoro() {
 				}
 				// remove if all done
 				cell.eventsToBroadcast = []interface{}{}
-				fmt.Printf("%s loop took %dms\n", cell.GridCellKey, time.Since(start).Milliseconds())
+				// fmt.Printf("%s loop took %dms\n", cell.GridCellKey, time.Since(start).Milliseconds())
 			}
 		/*
 			Broadcast
@@ -213,7 +213,6 @@ func (cell *GridCell) CellCoro() {
 			cell.wantsToSub = append(cell.wantsToSub, client)
 			if len(cell.GetSubscriptions()) == 0 {
 				cell.ticker.Reset(CellUpdateRate)
-				fmt.Printf("started cell at %s\n", cell.GridCellKey)
 			}
 			cell.wantsToSubMutex.Unlock()
 		}

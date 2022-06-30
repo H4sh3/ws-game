@@ -1,5 +1,5 @@
-import { AnimatedSprite, Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents } from './events/events';
+import { Application, Container, Sprite } from 'pixi.js';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
@@ -10,7 +10,8 @@ import { getBlockadeSprite, getCursorSprite } from './sprites/etc';
 import { SCREEN_SIZE } from './etc/const';
 import { InventoryStore, Item } from './inventoryStore'
 
-import * as PIXI from 'pixi.js'
+import { UserStore } from './userStore';
+import { LocalStorageWrapper } from './localStorageWrapper';
 
 export class Game extends Container {
     app: Application;
@@ -37,13 +38,19 @@ export class Game extends Container {
     sendCooldown: number
 
     inventoryStore: InventoryStore
+    userStore: UserStore
+    localStorageWrapper: LocalStorageWrapper
 
-
-    constructor(app: Application, inventoryStore: InventoryStore) {
+    constructor(app: Application, inventoryStore: InventoryStore, userStore: UserStore) {
         super();
         this.app = app;
 
+        this.localStorageWrapper = new LocalStorageWrapper()
+        this.keyHandler = new KeyboardHandler()
+        this.worldContainer = new Container();
+
         this.inventoryStore = inventoryStore
+        this.userStore = userStore
 
         this.sendCooldown = 0
 
@@ -52,8 +59,6 @@ export class Game extends Container {
         this.resources = new Map()
         this.players = new Map()
 
-        this.keyHandler = new KeyboardHandler()
-        this.worldContainer = new Container();
 
         this.update = this.update.bind(this);
 
@@ -105,6 +110,8 @@ export class Game extends Container {
 
         this.ws.onopen = () => {
             console.log("connected!")
+            // Imediatly after websocket connection is opened
+            this.ws.send(getLoginPlayerEvent(this.localStorageWrapper.uuid))
         }
 
         this.ws.onmessage = (m) => {
@@ -155,6 +162,7 @@ export class Game extends Container {
         } else if (isNewPlayerEvent(parsed)) {
             this.handleNewPlayerEvent(parsed)
         } else if (isAssignUserIdEvent(parsed)) {
+            this.userStore.setLoading(false)
             this.handleAssignIdEvent(parsed)
         } else if (isRemoveGridCellEvent(parsed)) {
             this.handleRemoveGridCellEvent(parsed)
@@ -291,6 +299,7 @@ export class Game extends Container {
     }
 
     handleAssignIdEvent(parsed: AssignIdEvent) {
+        this.localStorageWrapper.setUUID(parsed.uuid)
         this.player.id = parsed.id
         this.player.currentPos.x = parsed.pos.x
         this.player.currentPos.y = parsed.pos.y

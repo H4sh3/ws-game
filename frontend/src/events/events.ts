@@ -17,6 +17,7 @@ export enum EVENT_TYPES {
     UPDATE_INVENTORY_EVENT = 12,
     REMOVE_GRID_CELL = 13,
     MULTIPLE_EVENTS = 14,
+    LOGIN_PLAYER_EVENT = 15,
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -50,7 +51,8 @@ export function isNewPlayerEvent(value: any): value is NewPlayerEvent {
 }
 
 export interface AssignIdEvent extends BaseEvent {
-    id: number
+    id: number,
+    uuid: string,
     pos: {
         x: number,
         y: number
@@ -266,6 +268,22 @@ export function getPlayerPlacedResourceEvent(resourceType: string, pos: Vector):
         "payload": {
             "resourceType": resourceType,
             "pos": pos
+        }
+    }
+    return JSON.stringify(e)
+}
+
+interface LoginPlayerEvent extends BaseEvent {
+    payload: {
+        uuid: string,
+    }
+}
+
+export function getLoginPlayerEvent(uuid: string): string {
+    const e: LoginPlayerEvent = {
+        "eventType": EVENT_TYPES.LOGIN_PLAYER_EVENT,
+        "payload": {
+            "uuid": uuid
         }
     }
     return JSON.stringify(e)

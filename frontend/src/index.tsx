@@ -9,6 +9,7 @@ import InventoryComponent from './reactInventory';
 import React from 'react';
 import * as ReactDOM from 'react-dom';
 import { InventoryStore } from './inventoryStore';
+import { UserStore } from './userStore';
 
 const load = (app: PIXI.Application, asset: string) => {
     return new Promise<void>((resolve) => {
@@ -21,7 +22,6 @@ const load = (app: PIXI.Application, asset: string) => {
 const main = async () => {
     // Main app
 
-    const inventoryStore = new InventoryStore()
 
     const app = new PIXI.Application({ width: SCREEN_SIZE, height: SCREEN_SIZE });
 
@@ -46,9 +46,12 @@ const main = async () => {
     }
 
 
+    // Init Stores
+    const inventoryStore = new InventoryStore()
+    const userStore = new UserStore()
 
     // Set scene
-    var scene = new Game(app, inventoryStore);
+    var scene = new Game(app, inventoryStore, userStore);
     app.stage.addChild(scene);
 
     ReactDOM.render(<InventoryComponent inventoryStore={inventoryStore} />, document.getElementById("inventoryDiv"));
