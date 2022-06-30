@@ -17,8 +17,6 @@ export class LocalStorageWrapper {
 
     setUUID(uuid: string) {
         if (uuid.length == 0) return
-        if (this.uuid.length != 0) return
-
         this.uuid = uuid
         localStorage.setItem(UUID_KEY, uuid)
     }

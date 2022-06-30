@@ -294,7 +294,6 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 
 	h.ClientMutex.Lock()
 	pos, ok := h.existingClients[uuid]
-	fmt.Println(h.existingClients)
 	h.ClientMutex.Unlock()
 
 	if ok {
@@ -313,4 +312,9 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 	client.Inventory = inventory
 	client.send <- events.NewLoadInventoryEvent(client.Inventory)
 
+	gridCell := h.GridManager.GetCellFromPos(client.Pos)
+	gridCell.AddPlayer(client)
+	for _, cell := range h.GridManager.getCells(gridCell.Pos.X/GridCellSize, gridCell.Pos.Y/GridCellSize) {
+		cell.Subscribe <- client
+	}
 }

@@ -87,13 +87,6 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 		GridCellMutex:       sync.Mutex{},
 	}
 
-	// Todo: move to after login
-	gridCell.AddPlayer(client)
-
-	for _, cell := range hub.GridManager.getCells(x/GridCellSize, y/GridCellSize) {
-		cell.Subscribe <- client
-	}
-
 	return client
 }
 
