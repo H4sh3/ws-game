@@ -10,13 +10,21 @@ import (
 	gUUID "github.com/google/uuid"
 )
 
+// includes informations that are stored between connect / disconnect
+// - inventory
+// - position
+type ClientPersistance struct {
+	Pos       shared.Vector
+	Inventory map[resource.ResourceType]resource.Resource
+}
+
 // Hub maintains the set of active clients and broadcasts messages to them
 type Hub struct {
 	// Registered clients.
 	clients     map[int]*Client
 	ClientMutex sync.Mutex
 
-	existingClients map[string]shared.Vector
+	persistedClientData map[string]ClientPersistance
 
 	// Register requests from the clients.
 	register chan *Client
@@ -36,13 +44,13 @@ const MAX_LOOT_RANGE = 150
 func NewHub() *Hub {
 
 	hub := &Hub{
-		register:        make(chan *Client),
-		unregister:      make(chan *Client),
-		clients:         make(map[int]*Client),
-		existingClients: make(map[string]shared.Vector),
-		ClientMutex:     sync.Mutex{},
-		idCnt:           0,
-		idCntMutex:      sync.Mutex{},
+		register:            make(chan *Client),
+		unregister:          make(chan *Client),
+		clients:             make(map[int]*Client),
+		persistedClientData: make(map[string]ClientPersistance),
+		ClientMutex:         sync.Mutex{},
+		idCnt:               0,
+		idCntMutex:          sync.Mutex{},
 	}
 
 	initCellChannel := make(chan *GridCell)
@@ -95,8 +103,13 @@ func (h *Hub) Run() {
 				close(client.send)
 				client.conn.Close()
 			}
+
 			// store client progress in storage
-			h.existingClients[client.UUID] = client.Pos
+			persistanceEntry := ClientPersistance{
+				Pos:       client.Pos,
+				Inventory: client.Inventory,
+			}
+			h.persistedClientData[client.UUID] = persistanceEntry
 
 			h.ClientMutex.Unlock()
 			/* 		case message := <-h.broadcast:
@@ -293,23 +306,25 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 func (h *Hub) LoginPlayer(uuid string, client *Client) {
 
 	h.ClientMutex.Lock()
-	pos, ok := h.existingClients[uuid]
+	persistanceEntry, ok := h.persistedClientData[uuid]
 	h.ClientMutex.Unlock()
 
 	if ok {
 		fmt.Printf("existing client with uuid %s", uuid)
 		// already logged in
 		client.UUID = uuid
-		client.Pos = pos
+		client.Pos = persistanceEntry.Pos
+		client.Inventory = persistanceEntry.Inventory
 	} else {
+		// Initialize new client
 		uuid := gUUID.New().String()
 		client.UUID = uuid
+		inventory := make(map[resource.ResourceType]resource.Resource)
+		inventory[resource.Brick] = *resource.NewResource(resource.Brick, shared.Vector{}, h.ResourceManager.GetResourceId(), 50, false, 100, false, "")
+		client.Inventory = inventory
 	}
 
 	client.send <- events.GetAssignUserIdEvent(client.Id, client.Pos, client.UUID)
-	inventory := make(map[resource.ResourceType]resource.Resource)
-	inventory[resource.Brick] = *resource.NewResource(resource.Brick, shared.Vector{}, h.ResourceManager.GetResourceId(), 50, false, 100, false, "")
-	client.Inventory = inventory
 	client.send <- events.NewLoadInventoryEvent(client.Inventory)
 
 	gridCell := h.GridManager.GetCellFromPos(client.Pos)
