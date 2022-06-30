@@ -1,4 +1,4 @@
-import { makeObservable, observable, computed, action, flow } from "mobx"
+import { makeObservable, observable, computed, action } from "mobx"
 
 
 export interface Item {
@@ -6,39 +6,59 @@ export interface Item {
     quantity: number
 }
 
+interface Ingredient {
+    resourceType: string
+    amount: number
+}
+
 interface Recipe {
-    spendResourceType: string, // Todo: add interface for resourceType
+    ingredients: Ingredient[],
     buildResourceType: string,
-    costs: number
+}
+
+const UnselectedRecipe: Recipe = {
+    ingredients: [],
+    buildResourceType: ""
 }
 
 const getRecipeBook = (): Map<string, Recipe> => {
     const recipes = new Map<string, Recipe>()
-    recipes.set("blockade", {
-        buildResourceType: "blockade",
-        spendResourceType: "brick",
-        costs: 5
-    })
+    const blockadeRecipe: Recipe = {
+        ingredients: [
+            {
+                resourceType: "brick",
+                amount: 5
+            }
+        ],
+        buildResourceType: "blockade"
+    }
+    recipes.set(blockadeRecipe.buildResourceType, blockadeRecipe)
     return recipes
 }
-
 export class InventoryStore {
     items: Map<string, Item>
     recipes: Map<string, Recipe>
-    selectedItem: string
+    selectedItems: string[]
+    selectedRecipe: Recipe
 
     constructor() {
         makeObservable(this, {
             items: observable,
-            addItem: action,
-            removeItem: action,
             getItems: computed,
-            selectedItem: observable,
-            setSelectedItem: action,
+            addItem: action,
+            itemBuild: action,
+            selectedItems: observable,
+            itemClicked: action,
+            selectedRecipe: observable,
+            recipeClicked: action,
+            recipes: observable,
+            getRecipes: computed,
+            unselectRecipe: action
         })
+        this.selectedRecipe = UnselectedRecipe
         this.items = new Map()
         this.recipes = getRecipeBook()
-        this.selectedItem = ""
+        this.selectedItems = []
     }
 
     addItem(i: Item) {
@@ -52,22 +72,15 @@ export class InventoryStore {
         }
     }
 
-    removeItem(i: Item) {
+    itemBuild(i: Item) {
         const { resourceType } = i;
 
-        if (this.recipes.has(resourceType)) { // recipe exists
-            const { spendResourceType, costs } = this.recipes.get(resourceType)
-            // do we have resource that should be spend
-            if (this.items.has(spendResourceType)) {
-                const entry = this.items.get(spendResourceType)
-                entry.quantity -= costs
-                if (entry.quantity == 0) {
-                    this.items.delete(spendResourceType)
-                } else {
-                    this.items.set(spendResourceType, entry)
-                }
-            }
+        const recipe = this.recipes.get(resourceType)
+
+        if (this.canBuildResource(recipe)) {
+            this.removeResourcesFor(recipe)
         }
+
     }
 
     get getItems(): Item[] {
@@ -80,7 +93,50 @@ export class InventoryStore {
         return items
     }
 
-    setSelectedItem(resourceType: string) {
-        this.selectedItem = resourceType
+    itemClicked(resourceType: string) {
+        if (this.selectedItems.includes(resourceType)) {
+            this.selectedItems = this.selectedItems.filter(i => i !== resourceType)
+        } else {
+            this.selectedItems.push(resourceType)
+        }
+    }
+
+    recipeClicked(resourceType: string) {
+        if (this.selectedRecipe.buildResourceType == resourceType) {
+            this.selectedRecipe = UnselectedRecipe
+        } else {
+            this.selectedRecipe = this.recipes.get(resourceType)
+            console.log(this.selectedRecipe)
+        }
+    }
+
+    canBuildResource(recipe: Recipe): boolean {
+        return recipe.ingredients.every(ingredient => {
+            const { amount, resourceType } = ingredient
+            return this.items.get(resourceType).quantity >= amount
+        })
+    }
+
+    removeResourcesFor(recipe: Recipe) {
+        recipe.ingredients.forEach(ingredient => {
+            const { amount, resourceType } = ingredient
+            const inventoryItem = this.items.get(resourceType)
+            inventoryItem.quantity -= amount
+            this.items.set(resourceType, inventoryItem)
+        })
+    }
+
+    get getRecipes(): Recipe[] {
+        const recipes: Recipe[] = []
+
+        this.recipes.forEach(i => {
+            recipes.push(i)
+        })
+
+        return recipes
+    }
+
+    unselectRecipe() {
+        this.selectedRecipe = UnselectedRecipe
     }
 }

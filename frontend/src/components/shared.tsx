@@ -1,0 +1,1 @@
+export const ItemBase = "bg-gray-200 pb-1 hover:bg-gray-300 cursor-pointer flex flex-col justify-center text-center border-2"

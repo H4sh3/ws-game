@@ -6,7 +6,7 @@ import { Resource } from './types/resource';
 import Vector from './types/vector';
 import getBackgroundGraphics, { getInventoryBackground } from './sprites/background';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
-import { getBlockadeSprite, getCursorSprite } from './sprites/etc';
+import { getCursorSprite } from './sprites/etc';
 import { SCREEN_SIZE } from './etc/const';
 import { InventoryStore, Item } from './inventoryStore'
 
@@ -24,9 +24,8 @@ export class Game extends Container {
 
     players: Map<number, Player>
 
-    cursorSprite: Sprite
-    blockadeSprite: Sprite
 
+    cursorSprite: Sprite
     cursorPos: Vector
 
     isEditing: boolean
@@ -59,7 +58,6 @@ export class Game extends Container {
         this.resources = new Map()
         this.players = new Map()
 
-
         this.update = this.update.bind(this);
 
         this.addChild(getBackgroundGraphics())
@@ -76,14 +74,26 @@ export class Game extends Container {
         this.app.stage.interactive = true
         this.app.stage.on("pointermove", (e) => {
             const { x, y } = e.data.global
+
             this.cursorPos.x = x
             this.cursorPos.y = y
+
+
+            const selectedResource = this.inventoryStore.selectedRecipe.buildResourceType
+            if (selectedResource.length > 0) {
+                this.cursorSprite.visible = true
+                this.cursorSprite.texture = this.app.loader.resources[`assets/${selectedResource}.png`].texture
+            } else {
+                this.cursorSprite.visible = false
+            }
         })
 
         this.app.stage.on("click", (e) => {
             const cX = this.cursorPos.x
             const cY = this.cursorPos.y
-            if (!this.isEditing || cY > SCREEN_SIZE - 100) return
+            // nothing selected -> return
+            if (this.inventoryStore.selectedRecipe.buildResourceType.length === 0) return
+            if (!this.inventoryStore.canBuildResource(this.inventoryStore.selectedRecipe)) return
 
             // Players cursor position relativ to players position and locked to world grid
             const pX = this.player.currentPos.x % 50
@@ -100,8 +110,6 @@ export class Game extends Container {
         this.addChild(this.worldContainer)
         this.addChild(getInventoryBackground())
 
-        this.blockadeSprite = getBlockadeSprite(this)
-        this.addChild(this.blockadeSprite)
         this.addChild(this.player.spriteContainer)
 
         this.ws.onerror = (error) => {
@@ -149,7 +157,7 @@ export class Game extends Container {
                 quantity: parsed.item.quantity
             }
             if (parsed.remove) {
-                this.inventoryStore.removeItem(item)
+                this.inventoryStore.itemBuild(item)
             } else {
                 this.inventoryStore.addItem(item)
             }
@@ -198,6 +206,7 @@ export class Game extends Container {
         this.worldContainer.x = -this.player.currentPos.x + (SCREEN_SIZE / 2)
         this.worldContainer.y = -this.player.currentPos.y + (SCREEN_SIZE / 2)
 
+
         const pX = this.player.currentPos.x % 50
         const pY = this.player.currentPos.y % 50
         const cX = this.cursorPos.x
@@ -205,13 +214,8 @@ export class Game extends Container {
         const x1 = Math.floor((cX + 25 + pX) / 50) * 50
         const y1 = Math.floor((cY + 25 + pY) / 50) * 50
 
-        if (this.isEditing) {
-            this.cursorSprite.x = x1 - pX
-            this.cursorSprite.y = y1 - pY
-        } else {
-            this.cursorSprite.x = 30
-            this.cursorSprite.y = SCREEN_SIZE - 30
-        }
+        this.cursorSprite.position.x = x1 - pX
+        this.cursorSprite.position.y = y1 - pY
 
         // update other players positions
         Array.from(this.players.values()).map(p => {

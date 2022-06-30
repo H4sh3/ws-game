@@ -1,24 +1,18 @@
 import React from 'react';
-import { InventoryStore } from './inventoryStore'
+import { InventoryStore } from '../inventoryStore'
 import { observer } from "mobx-react-lite"
+import { ItemBase } from './shared';
 
 interface InventoryComponentProps {
     inventoryStore: InventoryStore
 }
 
-const InvetoryItemBase = "bg-gray-200 pb-1 hover:bg-gray-300 cursor-pointer flex flex-col justify-center text-center border-2 "
-
 const InventoryComponent: React.FC<InventoryComponentProps> = ({ inventoryStore }) => {
     const ItemList = observer((props: InventoryComponentProps) => <div className="grid grid-cols-3  gap-2 w-128">
         {props.inventoryStore.getItems.map((i, ix) => {
-            return <div key={ix} className={`${InvetoryItemBase} ${props.inventoryStore.selectedItem === i.resourceType ? 'border-green-500' : ''}`}
+            return <div key={ix} className={`${ItemBase} ${props.inventoryStore.selectedItems.includes(i.resourceType) ? 'border-green-500' : ''}`}
                 onClick={() => {
-                    if (props.inventoryStore.selectedItem === i.resourceType) {
-                        // if its selected -> unselect
-                        props.inventoryStore.setSelectedItem("")
-                    } else {
-                        props.inventoryStore.setSelectedItem(i.resourceType)
-                    }
+                    props.inventoryStore.itemClicked(i.resourceType)
                 }}
             >
                 <div className="mx-1 capitalize font-bold">
