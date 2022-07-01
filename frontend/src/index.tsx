@@ -63,6 +63,9 @@ const main = async () => {
 
     ReactDOM.render(<InventoryComponent inventoryStore={inventoryStore} />, document.getElementById("inventoryDiv"));
     ReactDOM.render(<BuilderComponent inventoryStore={inventoryStore} />, document.getElementById("builderDiv"));
+
+    const licenseDive = document.getElementById("licenseDiv")
+    licenseDive.style.display = "flex"
 };
 
 
