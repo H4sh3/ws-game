@@ -1,9 +1,18 @@
-import { Sprite, Graphics, Loader, Point, Container } from "pixi.js"
-import { randInt } from "../etc/math"
+import { Sprite, Graphics, Loader, Container } from "pixi.js"
 import { Hitpoints, getHitResourceEvent, getLootResourceEvent } from "../events/events"
 import { Player } from "./player"
 import Vector from "./vector"
 
+
+// Todo: Sync these with backend
+export enum ResourceTypes {
+    Stone = "stone",
+    Brick = "brick",
+    Tree = "tree",
+    Log = "log",
+    Blockade = "blockade",
+    IronOre = "ironOre",
+}
 
 export class Resource {
     id: number
@@ -40,7 +49,6 @@ export class Resource {
             current: hp.current,
             max: hp.max
         }
-        this.updateHealthbar()
 
         this.container = new Container()
         this.container.x = this.pos.x
@@ -50,6 +58,7 @@ export class Resource {
         this.sprite.anchor.set(0.5)
         this.container.addChild(this.sprite)
 
+        this.updateHealthbar()
 
 
         this.sprite.on('click', () => {
@@ -101,6 +110,7 @@ export class Resource {
         this.healthBar.drawRect(-25, -20, width, 10);
         this.healthBar.endFill();
 
+        console.log(this.container)
         this.container.addChild(this.healthBar)
     }
 }

@@ -12,6 +12,7 @@ import { InventoryStore, Item } from './inventoryStore'
 
 import { UserStore } from './userStore';
 import { LocalStorageWrapper } from './localStorageWrapper';
+import { SoundHandler } from './types/soundHandler';
 
 export class Game extends Container {
     app: Application;
@@ -21,6 +22,7 @@ export class Game extends Container {
     worldContainer: Container
 
     player: Player
+    soundHandler: SoundHandler
 
     players: Map<number, Player>
 
@@ -47,6 +49,7 @@ export class Game extends Container {
         this.localStorageWrapper = new LocalStorageWrapper()
         this.keyHandler = new KeyboardHandler()
         this.worldContainer = new Container();
+        this.soundHandler = new SoundHandler()
 
         this.inventoryStore = inventoryStore
         this.userStore = userStore
@@ -316,6 +319,10 @@ export class Game extends Container {
         if (r) {
             if (parsed.remove) {
                 resources = resources.filter(rO => rO.id !== parsed.id)
+            }
+
+            if (r.hitPoints.current !== parsed.hitpoints.current) {
+                this.soundHandler.hitResource(r.resourceType)
             }
 
             r.hitPoints.current = parsed.hitpoints.current

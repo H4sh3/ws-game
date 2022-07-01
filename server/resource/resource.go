@@ -10,13 +10,13 @@ type ResourceType string
 const (
 	Stone     ResourceType = "stone"
 	Brick     ResourceType = "brick"
-	Cooper    ResourceType = "cooper"
+	Tree      ResourceType = "tree"
+	Log       ResourceType = "log"
+	Blockade  ResourceType = "blockade"
 	IronOre   ResourceType = "ironOre"
 	IronIngot ResourceType = "ironIngot"
 	Gold      ResourceType = "gold"
-	Blockade  ResourceType = "blockade"
-	Tree      ResourceType = "tree"
-	Log       ResourceType = "log"
+	Cooper    ResourceType = "cooper"
 )
 
 type Hitpoints struct {
