@@ -11,7 +11,7 @@ const BuilderComponent: React.FC<BuilderComponentProps> = ({ inventoryStore }) =
 
     const ItemList = observer((props: BuilderComponentProps) =>
         <>
-            <div className="grid grid-cols-3  gap-2 w-128">
+            <div className="grid grid-cols-1 lg:grid-cols-3  gap-2 w-128">
                 {props.inventoryStore.getRecipes.map((recipe, ix) => {
                     return <div className={`${ItemBase} px-1 ${recipe.buildResourceType === props.inventoryStore.selectedRecipe.buildResourceType ? 'border-2 border-green-500' : ''}`}
                         key={ix}
