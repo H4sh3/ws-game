@@ -11,6 +11,7 @@ import * as ReactDOM from 'react-dom';
 import { InventoryStore } from './inventoryStore';
 import { UserStore } from './userStore';
 import BuilderComponent from './components/builderComponent';
+import { getHumanTiles } from './sprites/player';
 
 const load = (app: PIXI.Application, asset: string) => {
     return new Promise<void>((resolve) => {
@@ -45,7 +46,6 @@ const main = async () => {
         "shallowWater.png",
         "water.png"
     ]
-
     for (let i = 0; i < tileTextures.length; i++) {
         const t = tileTextures[i]
         await load(app, `assets/${t}`)
@@ -54,8 +54,9 @@ const main = async () => {
     const loadingDiv = document.getElementById("loadingSpinner")
     loadingDiv.style.display = "none"
 
-    for (let i = 0; i <= 6; i++) {
-        await load(app, `assets/human/tile00${i}.png`);
+    const humanTiles = getHumanTiles()
+    for (let i = 0; i < humanTiles.length; i++) {
+        await load(app, humanTiles[i]);
     }
 
     const x = document.getElementById("mainView")
