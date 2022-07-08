@@ -40,15 +40,6 @@ type NewPlayerEvent struct {
 
 func GetNewPlayerEvent(id int, pos shared.Vector) interface{} {
 	return &NewPlayerEvent{EventType: NEW_USER_EVENT, Id: id, Pos: pos}
-
-	/* 	value, err := json.Marshal(u)
-
-	   	if err != nil {
-	   		fmt.Printf("Error: %s", err)
-	   		return []byte{}
-	   	} else {
-	   		return value
-	   	} */
 }
 
 type AssignUserIdEvent struct {
@@ -60,15 +51,6 @@ type AssignUserIdEvent struct {
 
 func GetAssignUserIdEvent(id int, pos shared.Vector, uuid string) interface{} {
 	return &AssignUserIdEvent{EventType: ASSIGN_USER_ID_EVENT, Id: id, Pos: pos, UUID: uuid}
-
-	/* 	value, err := json.Marshal(u)
-
-	   	if err != nil {
-	   		fmt.Printf("Error: %s", err)
-	   		return []byte{}
-	   	} else {
-	   		return value
-	   	} */
 }
 
 type PlayerTargetPositionEvent struct {
@@ -79,15 +61,6 @@ type PlayerTargetPositionEvent struct {
 
 func NewPlayerTargetPositionEvent(v shared.Vector, id int) interface{} {
 	return &PlayerTargetPositionEvent{EventType: PLAYER_TARGET_POSITION_EVENT, Pos: v, Id: id}
-	/*
-		value, err := json.Marshal(u)
-
-		if err != nil {
-			fmt.Printf("Error: %s", err)
-			return []byte{}
-		} else {
-			return value
-		} */
 }
 
 type ResourcePositionsEvent struct {
@@ -104,15 +77,6 @@ func NewResourcePositionsEvent(resources map[int]resource.Resource) interface{} 
 	}
 
 	return &ResourcePositionsEvent{EventType: RESOURCE_POSITIONS_EVENT, Resources: v}
-	/*
-		value, err := json.Marshal(u)
-
-		if err != nil {
-			fmt.Printf("Error: %s", err)
-			return []byte{}
-		} else {
-			return value
-		} */
 }
 
 type RemovePlayerEvent struct {
@@ -122,15 +86,6 @@ type RemovePlayerEvent struct {
 
 func NewRemovePlayerEvent(id int) interface{} {
 	return &RemovePlayerEvent{EventType: REMOVE_PLAYER_EVENT, Id: id}
-	/*
-		value, err := json.Marshal(u)
-
-		if err != nil {
-			fmt.Printf("Error: %s", err)
-			return []byte{}
-		} else {
-			return value
-		} */
 }
 
 type LoadInventoryEvent struct {
@@ -143,15 +98,6 @@ func NewLoadInventoryEvent(inventory map[resource.ResourceType]resource.Resource
 		EventType: LOAD_INVENTORY_EVENT,
 		Items:     inventory,
 	}
-	/*
-		value, err := json.Marshal(event)
-
-		if err != nil {
-			fmt.Printf("Error: %s", err)
-			return []byte{}
-		} else {
-			return value
-		} */
 }
 
 type UpdateInventoryEvent struct {
@@ -166,15 +112,6 @@ func NewUpdateInventoryEvent(r resource.Resource, remove bool) interface{} {
 		Item:      r,
 		Remove:    remove,
 	}
-	/*
-		value, err := json.Marshal(event)
-
-		if err != nil {
-			fmt.Printf("Error: %s", err)
-			return []byte{}
-		} else {
-			return value
-		} */
 }
 
 type UpdateResourceEvent struct {
@@ -189,15 +126,6 @@ type UpdateResourceEvent struct {
 func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool, gridCellKey string, damage int) interface{} {
 	hitpoints := resource.Hitpoints{Current: currentHp, Max: maxHp}
 	return &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey, Damage: damage}
-
-	/* 	value, err := json.Marshal(u)
-
-	   	if err != nil {
-	   		fmt.Printf("Error: %s", err)
-	   		return []byte{}
-	   	} else {
-	   		return value
-	   	} */
 }
 
 type RemoveGridCellEvent struct {
