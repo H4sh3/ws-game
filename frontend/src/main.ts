@@ -1,23 +1,22 @@
-import { Application, Container, Graphics, Sprite, Text } from 'pixi.js';
+import { Application, Container, Sprite } from 'pixi.js';
 import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent } from './events/events';
-import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
 import Vector from './types/vector';
 import { getInventoryBackground } from './sprites/background';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
 import { getCursorSprite } from './sprites/etc';
-import { GRID_CELL_SIZE, PLAYER_STEP_SIZE, SCREEN_SIZE, SUB_CELLS, SUB_CELL_SIZE } from './etc/const';
+import { PLAYER_STEP_SIZE, SCREEN_SIZE } from './etc/const';
 import { InventoryStore, Item } from './inventoryStore'
 
-import { CompositeTilemap, Tilemap } from '@pixi/tilemap';
+import { Tilemap } from '@pixi/tilemap';
 
 import { UserStore } from './userStore';
 import { LocalStorageWrapper } from './localStorageWrapper';
-import { SoundHandler } from './types/soundHandler';
-import { randInt } from './etc/math';
-import TilemapHandler from './etc/TilemapHandler';
-import TextHandler from './etc/TextHandler';
+import TilemapHandler from './modules/TilemapHandler';
+import { KeyboardHandler, VALID_KEYS } from './modules/KeyboardHandler';
+import { SoundHandler } from './modules/SoundHandler';
+import TextHandler from './modules/TextHandler';
 
 export class Game extends Container {
     app: Application;

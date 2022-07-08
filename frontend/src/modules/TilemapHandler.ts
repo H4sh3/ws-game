@@ -1,8 +1,8 @@
 import { CompositeTilemap } from "@pixi/tilemap";
 import { Container } from "pixi.js";
 import { CellDataEvent } from "../events/events";
-import { GRID_CELL_SIZE, SUB_CELL_SIZE } from "./const";
-import { isBetween, randInt } from "./math";
+import { GRID_CELL_SIZE, SUB_CELL_SIZE } from "../etc/const";
+import { isBetween, randInt } from "../etc/math";
 
 class TilemapHandler {
     terrainTileMap: Map<string, CompositeTilemap>

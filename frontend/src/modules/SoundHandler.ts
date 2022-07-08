@@ -1,6 +1,5 @@
 import { Sound, sound } from '@pixi/sound'
-import { ResourceTypes } from './resource';
-
+import { ResourceTypes } from '../types/resource';
 
 export class SoundHandler {
 
