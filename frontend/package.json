@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@pixi/sound": "^4.2.0",
+    "@pixi/tilemap": "^3.2.2",
     "@types/pixi.js": "^5.0.0",
     "jstates": "^0.5.2",
     "mobx": "^6.6.1",
