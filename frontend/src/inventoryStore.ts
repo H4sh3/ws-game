@@ -40,6 +40,7 @@ export class InventoryStore {
     recipes: Map<string, Recipe>
     selectedItems: string[]
     selectedRecipe: Recipe
+    frameRate: number
 
     constructor() {
         makeObservable(this, {
@@ -53,12 +54,15 @@ export class InventoryStore {
             recipeClicked: action,
             recipes: observable,
             getRecipes: computed,
-            unselectRecipe: action
+            unselectRecipe: action,
+            frameRate: observable,
+            setFrameRate: action,
         })
         this.selectedRecipe = UnselectedRecipe
         this.items = new Map()
         this.recipes = getRecipeBook()
         this.selectedItems = []
+        this.frameRate = 0
     }
 
     addItem(i: Item) {
@@ -138,5 +142,9 @@ export class InventoryStore {
 
     unselectRecipe() {
         this.selectedRecipe = UnselectedRecipe
+    }
+
+    setFrameRate(value: number) {
+        this.frameRate = value
     }
 }

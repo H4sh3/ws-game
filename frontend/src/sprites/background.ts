@@ -1,7 +1,7 @@
 import { Graphics } from "pixi.js";
 import { SCREEN_SIZE } from "../etc/const";
 
-function getBackgroundGraphics(): Graphics {
+export function getBackgroundGraphics(): Graphics {
     const background = new Graphics();
     background.beginFill(0x2BB130);
     background.drawRect(0, 0, SCREEN_SIZE, SCREEN_SIZE);
@@ -18,6 +18,3 @@ export function getInventoryBackground(): Graphics {
     inventoryBackground.endFill();
     return inventoryBackground
 }
-
-
-export default getBackgroundGraphics

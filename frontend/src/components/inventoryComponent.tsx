@@ -26,8 +26,11 @@ const InventoryComponent: React.FC<InventoryComponentProps> = ({ inventoryStore 
                 </div>
             </div>
         })}
-        <div></div>
-        <div></div>
+        <div className="col-span-1"></div>
+        <div className="col-span-1"></div>
+        <div className="col-span-3 text-center">
+            {`Fps: ${inventoryStore.frameRate.toFixed(2)}`}
+        </div>
     </div>)
 
     return <div className="bg-gray-400 flex flex-col gap-4 select-none p-2">

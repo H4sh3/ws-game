@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"sync"
 	"time"
-	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
 
@@ -159,7 +158,7 @@ func (c *Client) readPump() {
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		event := &events.BaseEvent{}
+		event := &BaseEvent{}
 		if c.getConnected() {
 			err := c.conn.ReadJSON(event)
 			if err != nil {
@@ -232,39 +231,39 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, m *sync.Mutex) {
 	m.Unlock()
 }
 
-func UnmarshalClientEvents(event_data events.BaseEvent, h *Hub, c *Client) {
+func UnmarshalClientEvents(event_data BaseEvent, h *Hub, c *Client) {
 	switch event_data.EventType {
-	case events.PLAYER_LOGIN_EVENT:
+	case PLAYER_LOGIN_EVENT:
 		// first event the client sends after establishing a websocket connection
-		loginPlayerEvent := &events.LoginPlayerEvent{}
+		loginPlayerEvent := &LoginPlayerEvent{}
 		if err := json.Unmarshal(event_data.Payload, &loginPlayerEvent); err != nil {
 			panic(err)
 		}
 		h.LoginPlayer(loginPlayerEvent.UUID, c)
-	case events.KEYBOARD_EVENT:
-		keyboardEvent := &events.KeyBoardEvent{}
+	case KEYBOARD_EVENT:
+		keyboardEvent := &KeyBoardEvent{}
 		if err := json.Unmarshal(event_data.Payload, &keyboardEvent); err != nil {
 			panic(err)
 		}
 
 		h.handleMovementEvent(*keyboardEvent, c)
 
-	case events.HIT_RESOURCE_EVENT:
-		event := &events.HitResourceEvent{}
+	case HIT_RESOURCE_EVENT:
+		event := &HitResourceEvent{}
 		if err := json.Unmarshal(event_data.Payload, &event); err != nil {
 			panic(err)
 		}
 		h.HandleResourceHit(*event, c)
 
-	case events.LOOT_RESOURCE_EVENT:
-		event := &events.LootResourceEvent{}
+	case LOOT_RESOURCE_EVENT:
+		event := &LootResourceEvent{}
 		if err := json.Unmarshal(event_data.Payload, &event); err != nil {
 			panic(err)
 		}
 		h.HandleLootResource(*event, c)
 
-	case events.PLAYER_PLACED_RESOURCE_EVENT:
-		event := &events.PlayerPlacedResourceEvent{}
+	case PLAYER_PLACED_RESOURCE_EVENT:
+		event := &PlayerPlacedResourceEvent{}
 
 		if err := json.Unmarshal(event_data.Payload, &event); err != nil {
 			panic(err)

@@ -4,13 +4,8 @@ import (
 	"fmt"
 	"math"
 	"sync"
-	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
-)
-
-const (
-	GridCellSize = 1000
 )
 
 type GridSubscription struct {
@@ -49,7 +44,7 @@ func GridManagerCoro(gm *GridManager) {
 
 			newResources := make(map[int]resource.Resource)
 			newResources[r.Id] = *r
-			cell.Broadcast <- events.NewResourcePositionsEvent(newResources)
+			cell.Broadcast <- NewResourcePositionsEvent(newResources)
 
 		case c := <-gm.UpdateClientPosition:
 			// check if cell changed
@@ -58,7 +53,7 @@ func GridManagerCoro(gm *GridManager) {
 			newY := cPos.Y / GridCellSize
 
 			gridCell := gm.GetCellFromPos(cPos)
-			gridCell.Broadcast <- events.NewPlayerTargetPositionEvent(cPos, c.Id)
+			gridCell.Broadcast <- NewPlayerTargetPositionEvent(cPos, c.Id)
 
 			clientCell := c.getGridCell()
 			if newX != clientCell.Pos.X || newY != clientCell.Pos.Y {
@@ -128,7 +123,7 @@ func (gm *GridManager) clientMovedCell(oldCell *GridCell, newCell *GridCell, c *
 		if !newCell.isClientSubscribed(oldCellSub.Player.Id) {
 			// notify to delete player clientside
 			if oldCellSub.Player.Connected {
-				oldCellSub.Player.send <- events.NewRemovePlayerEvent(c.Id)
+				oldCellSub.Player.send <- NewRemovePlayerEvent(c.Id)
 			}
 		}
 	}
@@ -142,6 +137,8 @@ func (gm *GridManager) getCells(x int, y int) []*GridCell {
 		for yOffset := -area; yOffset <= area; yOffset++ {
 			xIdx := x + xOffset
 			yIdx := y + yOffset
+
+			fmt.Printf("getting cell %d %d\n", xIdx, yIdx)
 
 			cell := gm.GetCell(xIdx, yIdx)
 

@@ -3,7 +3,6 @@ package root
 import (
 	"fmt"
 	"sync"
-	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
 
@@ -125,7 +124,7 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
+func (h *Hub) handleMovementEvent(event KeyBoardEvent, c *Client) {
 	newPos := &shared.Vector{X: c.Pos.X, Y: c.Pos.Y}
 
 	if event.Key == "w" {
@@ -166,7 +165,7 @@ func (h *Hub) handleMovementEvent(event events.KeyBoardEvent, c *Client) {
 	}
 }
 
-func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
+func (h *Hub) HandleResourceHit(event HitResourceEvent, c *Client) {
 	r, err := h.ResourceManager.GetResource(event.Id)
 
 	if err != nil {
@@ -183,7 +182,7 @@ func (h *Hub) HandleResourceHit(event events.HitResourceEvent, c *Client) {
 
 		remove := r.Hitpoints.Current <= 0
 		cellToBroadCast := h.GridManager.GetCellFromPos(r.Pos)
-		cellToBroadCast.Broadcast <- events.NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove, r.GridCellKey)
+		cellToBroadCast.Broadcast <- NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove, r.GridCellKey)
 
 		if r.Hitpoints.Current <= 0 {
 			h.SpawnLoot(*r, c)
@@ -244,7 +243,7 @@ func (h *Hub) SpawnLoot(destroyedResource resource.Resource, c *Client) {
 	}
 }
 
-func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
+func (h *Hub) HandleLootResource(event LootResourceEvent, c *Client) {
 
 	r, err := h.ResourceManager.GetResource(event.Id)
 	if err != nil {
@@ -264,17 +263,17 @@ func (h *Hub) HandleLootResource(event events.LootResourceEvent, c *Client) {
 
 		// broadcast update event that removes the resource
 		cell := h.GridManager.GetCellFromPos(r.Pos)
-		cell.Broadcast <- events.NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey)
+		cell.Broadcast <- NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey)
 
 		// Todo broadcast UpdateResourceEvent to clients subbed to cell
 
-		c.send <- events.NewUpdateInventoryEvent(*r, false)
+		c.send <- NewUpdateInventoryEvent(*r, false)
 
 		h.ResourceManager.DeleteResource(r.Id)
 	}
 }
 
-func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent, c *Client) {
+func (h *Hub) HandlePlayerPlacedResource(event PlayerPlacedResourceEvent, c *Client) {
 	// blockade is 5 bricks
 
 	if event.ResourceType == string(resource.Blockade) {
@@ -296,7 +295,7 @@ func (h *Hub) HandlePlayerPlacedResource(event events.PlayerPlacedResourceEvent,
 				}
 
 				h.ResourceManager.AddResource <- r
-				c.send <- events.NewUpdateInventoryEvent(*r, true)
+				c.send <- NewUpdateInventoryEvent(*r, true)
 			}
 		}
 
@@ -324,8 +323,8 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 		client.Inventory = inventory
 	}
 
-	client.send <- events.GetAssignUserIdEvent(client.Id, client.Pos, client.UUID)
-	client.send <- events.NewLoadInventoryEvent(client.Inventory)
+	client.send <- GetAssignUserIdEvent(client.Id, client.Pos, client.UUID)
+	client.send <- NewLoadInventoryEvent(client.Inventory)
 
 	gridCell := h.GridManager.GetCellFromPos(client.Pos)
 	gridCell.AddPlayer(client)

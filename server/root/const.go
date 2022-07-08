@@ -1,5 +1,8 @@
 package root
 
 const (
-	stepSize = 25
+	stepSize     = 50
+	GridCellSize = 1000
+	SubCells     = 20
+	SubCellSize  = GridCellSize / SubCells
 )

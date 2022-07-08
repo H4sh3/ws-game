@@ -15,3 +15,7 @@ export function map(v: number, s1: number, e1: number, s2: number, e2: number) {
 export function randInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1) + min)
 }
+
+export function isBetween(value: number, low: number, high: number) {
+    return value >= low && value <= high
+}

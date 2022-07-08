@@ -4,7 +4,6 @@ import (
 	"errors"
 	"sync"
 	"time"
-	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
 )
@@ -37,6 +36,25 @@ func NewResourceManager(gm *GridManager, initCellChannel chan *GridCell) *Resour
 	return rM
 }
 
+func intInSlice(a int, list []int) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func getRealResourcePos(gridCellPos shared.Vector, spawnPositions []shared.Vector, i int) shared.Vector {
+	x := (gridCellPos.X * GridCellSize) + spawnPositions[i].X*SubCellSize
+	y := (gridCellPos.Y * GridCellSize) + spawnPositions[i].Y*SubCellSize
+	x += SubCellSize / 2
+	y += SubCellSize / 2
+	x += shared.RandIntInRange(-10, 10)
+	y += shared.RandIntInRange(-10, 10)
+	return shared.Vector{X: x, Y: y}
+}
+
 func ResourcemanagerCoro(rM *ResourceManager) {
 	t := time.NewTicker(time.Second)
 	for {
@@ -54,13 +72,26 @@ func ResourcemanagerCoro(rM *ResourceManager) {
 			rM.cellsToInitMutex.Lock()
 			rM.resourcesMutex.Lock()
 			for _, cell := range rM.cellsToInit {
+
+				numTrees := shared.RandIntInRange(20, 50)
+				numStones := shared.RandIntInRange(5, 20)
+
+				spawnPositions := []shared.Vector{}
+				usedSpawnIndicies := []int{}
+
+				for len(spawnPositions) < numStones+numTrees {
+					subCellIndicie := shared.RandIntInRange(0, len(cell.SubCells)-1)
+					subCell := cell.SubCells[subCellIndicie]
+					if subCell.TerrainType != Water && subCell.TerrainType != ShallowWater && !intInSlice(subCellIndicie, usedSpawnIndicies) {
+						spawnPositions = append(spawnPositions, subCell.Pos)
+						usedSpawnIndicies = append(usedSpawnIndicies, subCellIndicie)
+					}
+				}
+
 				newResources := make(map[int]resource.Resource)
-				oX := shared.RandIntInRange(-25, 25)
-				oY := shared.RandIntInRange(-25, 25)
-				for i := 0; i < shared.RandIntInRange(1, 50); i++ {
-					x := (cell.Pos.X * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-250, 250) + oX
-					y := (cell.Pos.Y * GridCellSize) - GridCellSize/2 + shared.RandIntInRange(-250, 250) + oY
-					pos := shared.Vector{X: x, Y: y}
+				for i := 0; i < numStones; i++ {
+					pos := getRealResourcePos(cell.Pos, spawnPositions, i)
+
 					id := rM.GetResourceId()
 					r := resource.NewResource(resource.Stone, pos, id, 100, true, 100, false, cell.GridCellKey)
 					rM.resources[r.Id] = r
@@ -69,10 +100,9 @@ func ResourcemanagerCoro(rM *ResourceManager) {
 				}
 
 				// spawn trees
-				for n := 0; n < shared.RandIntInRange(2, 50); n++ {
-					x := (cell.Pos.X * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
-					y := (cell.Pos.Y * GridCellSize) + shared.RandIntInRange(0, GridCellSize)
-					pos := shared.Vector{X: x, Y: y}
+				for i := numStones; i < numTrees+numStones; i++ {
+					pos := getRealResourcePos(cell.Pos, spawnPositions, i)
+
 					id := rM.GetResourceId()
 					r := resource.NewResource(resource.Tree, pos, id, 100, true, 100, false, cell.GridCellKey)
 					rM.resources[r.Id] = r
@@ -80,7 +110,7 @@ func ResourcemanagerCoro(rM *ResourceManager) {
 					cell.Resources[r.Id] = r
 				}
 
-				cell.Broadcast <- events.NewResourcePositionsEvent(newResources)
+				cell.Broadcast <- NewResourcePositionsEvent(newResources)
 			}
 			// all new cells initialized
 			rM.cellsToInit = []*GridCell{}

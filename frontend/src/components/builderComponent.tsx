@@ -30,7 +30,7 @@ const BuilderComponent: React.FC<BuilderComponentProps> = ({ inventoryStore }) =
                         <div className="flex flex-col gap-1">
                             {
                                 recipe.ingredients.map((ing, i) => {
-                                    return <div className="capitalize">
+                                    return <div key={i} className="capitalize">
                                         {`${ing.resourceType}: ${ing.amount}`}
                                     </div>
                                 })

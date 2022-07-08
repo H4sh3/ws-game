@@ -1,4 +1,4 @@
-package events
+package root
 
 import (
 	"encoding/json"
@@ -24,6 +24,8 @@ const (
 	UPDATE_INVENTORY_EVENT       EventType = 12
 	REMOVE_GRID_CELL             EventType = 13
 	MULTIPLE_EVENTS              EventType = 14
+	LOGIN_PLAYER_EVENT           EventType = 15
+	CELL_DATA_EVENT              EventType = 16
 )
 
 const (
@@ -204,6 +206,22 @@ type RemoveGridCellEvent struct {
 
 func NewRemoveGridCellEvent(gridCellKey string) interface{} {
 	return &RemoveGridCellEvent{EventType: REMOVE_GRID_CELL, GridCellKey: gridCellKey}
+}
+
+type CellDataEvent struct {
+	EventType   EventType     `json:"eventType"`
+	GridCellKey string        `json:"gridCellKey"`
+	Pos         shared.Vector `json:"pos"`
+	SubCells    []SubCell     `json:"subCells"`
+}
+
+func NewCellDataEvent(gridCellKey string, subCells []SubCell, pos shared.Vector) interface{} {
+	return &CellDataEvent{
+		EventType:   CELL_DATA_EVENT,
+		GridCellKey: gridCellKey,
+		SubCells:    subCells,
+		Pos:         pos,
+	}
 }
 
 type MultipleEvents struct {

@@ -1,28 +1,35 @@
-import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent } from './events/events';
+import { Application, Container, Graphics, Sprite } from 'pixi.js';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
 import Vector from './types/vector';
-import getBackgroundGraphics, { getInventoryBackground } from './sprites/background';
+import { getInventoryBackground } from './sprites/background';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
 import { getCursorSprite } from './sprites/etc';
-import { SCREEN_SIZE } from './etc/const';
+import { GRID_CELL_SIZE, PLAYER_STEP_SIZE, SCREEN_SIZE, SUB_CELLS, SUB_CELL_SIZE } from './etc/const';
 import { InventoryStore, Item } from './inventoryStore'
+
+import { CompositeTilemap, Tilemap } from '@pixi/tilemap';
 
 import { UserStore } from './userStore';
 import { LocalStorageWrapper } from './localStorageWrapper';
 import { SoundHandler } from './types/soundHandler';
+import { randInt } from './etc/math';
+import TilemapHandler from './etc/TilemapHandler';
 
 export class Game extends Container {
     app: Application;
     keyHandler: KeyboardHandler
     ws: WebSocket
     resources: Map<string, Resource[]>
+
     worldContainer: Container
+    tilemap: Tilemap
 
     player: Player
     soundHandler: SoundHandler
+    tilemapHander: TilemapHandler
 
     players: Map<number, Player>
 
@@ -49,6 +56,12 @@ export class Game extends Container {
         this.localStorageWrapper = new LocalStorageWrapper()
         this.keyHandler = new KeyboardHandler()
         this.worldContainer = new Container();
+
+        const tilemapContainer = new Container()
+        this.worldContainer.addChild(tilemapContainer)
+
+        this.tilemapHander = new TilemapHandler(tilemapContainer)
+
         this.soundHandler = new SoundHandler()
 
         this.inventoryStore = inventoryStore
@@ -62,8 +75,6 @@ export class Game extends Container {
         this.players = new Map()
 
         this.update = this.update.bind(this);
-
-        this.addChild(getBackgroundGraphics())
 
         this.player = new Player(-1, createVector(0, 0), getOwnPlayerSprite())
 
@@ -177,12 +188,17 @@ export class Game extends Container {
             this.handleAssignIdEvent(parsed)
         } else if (isRemoveGridCellEvent(parsed)) {
             this.handleRemoveGridCellEvent(parsed)
+        } else if (isCellDataEvent(parsed)) {
+            this.tilemapHander.processCellDataEvent(parsed, this.worldContainer)
         }
     }
 
 
     // main update loop
     update(delta: number) {
+
+        const fps = 60 / delta
+        this.inventoryStore.setFrameRate(fps)
 
         // Todo: Make this more efficient by only generating the array if resources have changed
 
@@ -232,7 +248,6 @@ export class Game extends Container {
     }
 
     handleAddResourceEvent(parsed: ResourcePositionsEvent) {
-        console.log(`adding ${parsed.resources.length} resources`)
         parsed.resources.forEach(r => {
             const pos = createVector(r.pos.x, r.pos.y)
             const resource: Resource = new Resource(r.id, this.player, r.quantity, r.resourceType, pos, r.hitpoints, r.isSolid, this.app.loader, this.ws, r.isLootable)
@@ -260,10 +275,14 @@ export class Game extends Container {
 
     handleRemoveGridCellEvent(parsed: RemoveGridCellEvent) {
         const { gridCellKey } = parsed
-        if (this.resources.has(gridCellKey))
+        if (this.resources.has(gridCellKey)) {
             this.resources.get(gridCellKey).map(r => {
                 this.worldContainer.removeChild(r.container)
             })
+        }
+
+        this.tilemapHander.handleRemove(gridCellKey, this.worldContainer)
+
         this.resources.delete(gridCellKey)
     }
 
@@ -349,20 +368,18 @@ function handleKeyBoard(keyHandler: KeyboardHandler, player: Player, ws: WebSock
 
             const newPos = player.targetPos.copy()
 
-            const stepSize = 25
-
             switch (key) {
                 case "w":
-                    newPos.y -= stepSize
+                    newPos.y -= PLAYER_STEP_SIZE
                     break
                 case "a":
-                    newPos.x -= stepSize
+                    newPos.x -= PLAYER_STEP_SIZE
                     break
                 case "s":
-                    newPos.y += stepSize
+                    newPos.y += PLAYER_STEP_SIZE
                     break
                 case "d":
-                    newPos.x += stepSize
+                    newPos.x += PLAYER_STEP_SIZE
                     break
             }
 

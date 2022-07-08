@@ -18,6 +18,7 @@ export enum EVENT_TYPES {
     REMOVE_GRID_CELL = 13,
     MULTIPLE_EVENTS = 14,
     LOGIN_PLAYER_EVENT = 15,
+    CELL_DATA_EVENT = 16,
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -172,6 +173,27 @@ export function isRemoveGridCellEvent(value: any): value is RemoveGridCellEvent 
     )
 }
 
+export interface SubCell {
+    pos: Vector,
+    terrainType: string
+}
+
+export interface CellDataEvent extends BaseEvent {
+    pos: {
+        x: number,
+        y: number
+    },
+    subCells: SubCell[]
+    gridCellKey: string,
+}
+
+export function isCellDataEvent(value: any): value is CellDataEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType == EVENT_TYPES.CELL_DATA_EVENT
+    )
+}
+
 type EventTypes =
     NewPlayerEvent |
     AssignIdEvent |
@@ -184,7 +206,8 @@ type EventTypes =
     LoadInventoryEvent |
     UpdateInventoryEvent |
     RemoveGridCellEvent |
-    MultipleEvents
+    MultipleEvents |
+    CellDataEvent
 
 export interface MultipleEvents extends BaseEvent {
     events: EventTypes[]

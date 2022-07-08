@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	"ws-game/events"
 	"ws-game/resource"
 	"ws-game/shared"
 )
@@ -36,6 +35,7 @@ type GridCell struct {
 	eventsToBroadcast      []interface{}
 	eventsToBroadcastMutex sync.Mutex
 	ticker                 time.Ticker
+	SubCells               []SubCell
 }
 
 func NewCell(x int, y int) *GridCell {
@@ -61,7 +61,11 @@ func NewCell(x int, y int) *GridCell {
 		CellMutex:              sync.Mutex{},
 		eventsToBroadcast:      []interface{}{},
 		eventsToBroadcastMutex: sync.Mutex{},
+		SubCells:               []SubCell{},
 	}
+
+	cell.SubCells = getSubCells(x, y)
+
 	t := time.NewTicker(CellUpdateRate)
 	cell.ticker = *t
 
@@ -106,18 +110,19 @@ func (cell *GridCell) CellCoro() {
 					}
 
 					if client.Connected {
-						cell.AddEventToBroadcast(events.GetNewPlayerEvent(player.Id, player.getPos()))
+						cell.AddEventToBroadcast(GetNewPlayerEvent(player.Id, player.getPos()))
 					}
 
 					if player.Connected {
-						cell.AddEventToBroadcast(events.GetNewPlayerEvent(client.Id, client.getPos()))
+						cell.AddEventToBroadcast(GetNewPlayerEvent(client.Id, client.getPos()))
 					}
 				}
 
 				// this subscribes a client to the cell or updates an existing subscription
 				if !cell.CheckSubscription(client) {
 					if client.Connected {
-						client.send <- events.NewResourcePositionsEvent(cell.GetResources())
+						client.send <- NewResourcePositionsEvent(cell.GetResources())
+						client.send <- NewCellDataEvent(cell.GridCellKey, cell.SubCells, cell.Pos)
 					}
 				}
 			}
@@ -151,7 +156,7 @@ func (cell *GridCell) CellCoro() {
 						// Send remove grid event only to connected clients
 						// this removes resources from frontend client to stay performant
 						movedPlayers = append(movedPlayers, sub.Player)
-						eventsToSend = append(eventsToSend, events.NewRemoveGridCellEvent(cell.GridCellKey))
+						eventsToSend = append(eventsToSend, NewRemoveGridCellEvent(cell.GridCellKey))
 					}
 				}
 			}
@@ -169,7 +174,7 @@ func (cell *GridCell) CellCoro() {
 			cell.playersToRemoveMutex.Lock()
 			for _, c := range cell.playersToRemove {
 				delete(cell.Players, c.Id)
-				cell.eventsToBroadcast = append(cell.eventsToBroadcast, events.NewRemovePlayerEvent(c.Id))
+				cell.eventsToBroadcast = append(cell.eventsToBroadcast, NewRemovePlayerEvent(c.Id))
 			}
 			cell.playersToRemove = []*Client{}
 			cell.playersToRemoveMutex.Unlock()
@@ -180,7 +185,7 @@ func (cell *GridCell) CellCoro() {
 			for _, c := range cell.playersToAdd {
 				cell.Players[c.Id] = c
 				pos := c.getPos()
-				event := events.GetNewPlayerEvent(c.Id, pos)
+				event := GetNewPlayerEvent(c.Id, pos)
 				cell.AddEventToBroadcast(event)
 			}
 			cell.playersToAdd = []*Client{}
@@ -190,7 +195,7 @@ func (cell *GridCell) CellCoro() {
 			// broadcast all events at once
 			if len(cell.eventsToBroadcast) > 0 {
 				eventsToBroadcast := cell.GetEventsToBroadcast()
-				event := events.NewMultipleEvents(eventsToBroadcast)
+				event := NewMultipleEvents(eventsToBroadcast)
 				for _, sub := range cell.GetSubscriptions() {
 					if sub.Player.getConnected() {
 						sub.Player.send <- event

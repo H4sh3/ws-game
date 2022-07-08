@@ -54,6 +54,7 @@ export class Resource {
         this.container.x = this.pos.x
         this.container.y = this.pos.y
         this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}.png`].texture)
+        this.sprite.zIndex = 50
         this.sprite.interactive = true
         this.sprite.anchor.set(0.5)
         this.container.addChild(this.sprite)

@@ -46,7 +46,7 @@ func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity 
 			Current: hitpoints,
 			Max:     hitpoints,
 		},
-		IsSolid:     isSolid,
+		IsSolid:     false, //isSolid,
 		IsLootable:  isLootable,
 		GridCellKey: gridCellKey,
 		Remove:      false,
