@@ -8,13 +8,13 @@ export class SoundHandler {
     treeHit1: Sound
     constructor() {
         this.hit1 = sound.add('hit1', 'assets/sounds/hit1.wav');
-        this.hit1.volume = 0.5
+        this.hit1.volume = 0.1
 
         this.hit2 = sound.add('hit2', 'assets/sounds/hit2.wav');
-        this.hit2.volume = 0.5
+        this.hit2.volume = 0.1
 
         this.treeHit1 = sound.add('treeHit1', 'assets/sounds/treeHit1.wav');
-        this.treeHit1.volume = 0.5
+        this.treeHit1.volume = 0.1
     }
 
     randomHitSound() {
