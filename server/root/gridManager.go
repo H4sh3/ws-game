@@ -56,8 +56,9 @@ func GridManagerCoro(gm *GridManager) {
 			gridCell.Broadcast <- NewPlayerTargetPositionEvent(cPos, c.Id)
 
 			clientCell := c.getGridCell()
-			if newX != clientCell.Pos.X || newY != clientCell.Pos.Y {
+			if newX != clientCell.Pos.X || newY != clientCell.Pos.Y || c.NeedsInit {
 				gm.clientMovedCell(clientCell, gridCell, c)
+				c.NeedsInit = false
 			}
 		}
 	}

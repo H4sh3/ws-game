@@ -61,6 +61,7 @@ type Client struct {
 	GridCellMutex       sync.Mutex
 	Connected           bool
 	ConnectedMutex      sync.Mutex
+	NeedsInit           bool
 }
 
 func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
@@ -84,6 +85,8 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 		PosMutex:            sync.Mutex{},
 		ZoneChangeTickMutex: sync.Mutex{},
 		GridCellMutex:       sync.Mutex{},
+		NeedsInit:           true,
+		// NeedsInit gets set to false after first cell data is provided to the client
 	}
 
 	return client
