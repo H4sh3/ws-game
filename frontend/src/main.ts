@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent } from './events/events';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
 import Vector from './types/vector';
@@ -17,6 +17,7 @@ import TilemapHandler from './modules/TilemapHandler';
 import { KeyboardHandler, VALID_KEYS } from './modules/KeyboardHandler';
 import { SoundHandler } from './modules/SoundHandler';
 import TextHandler from './modules/TextHandler';
+import Npc from './types/npc';
 
 export class Game extends Container {
     app: Application;
@@ -33,6 +34,9 @@ export class Game extends Container {
     tilemapHandler: TilemapHandler
 
     players: Map<number, Player>
+
+    // includes all npcs related to the cell key
+    npcs: Map<string, Npc[]>
 
 
     cursorSprite: Sprite
@@ -86,6 +90,8 @@ export class Game extends Container {
         this.isEditing = false
         this.resources = new Map()
         this.players = new Map()
+        this.npcs = new Map()
+
 
         this.update = this.update.bind(this);
 
@@ -168,25 +174,37 @@ export class Game extends Container {
     processEvent(parsed: any) {
         if (isPlayerTargetPositionEvent(parsed)) {
             this.handlePlayerTargetPositionEvent(parsed)
+
         } else if (isLoadInventoryEvent(parsed)) {
             this.handleLoadInventoryEvent(parsed)
+
         } else if (isUpdateInventoryEvent(parsed)) {
             this.handleUpdateInventoryEvent(parsed)
+
         } else if (isUpdateResourceEvent(parsed)) {
             this.handleUpdateResourceEvent(parsed)
+
         } else if (isResourcePositionsEvent(parsed)) {
             this.handleAddResourceEvent(parsed)
+
         } else if (isRemovePlayerEvent(parsed)) {
-            this.handlePlayerDisconnect(parsed)
+            this.handleRemovePlayerEvent(parsed)
+
         } else if (isNewPlayerEvent(parsed)) {
             this.handleNewPlayerEvent(parsed)
+
         } else if (isAssignUserIdEvent(parsed)) {
             this.userStore.setLoading(false)
             this.handleAssignIdEvent(parsed)
+
         } else if (isRemoveGridCellEvent(parsed)) {
             this.handleRemoveGridCellEvent(parsed)
+
         } else if (isCellDataEvent(parsed)) {
             this.tilemapHandler.processCellDataEvent(parsed)
+
+        } else if (isNpcListEvent(parsed)) {
+            this.handleNpcListEvent(parsed)
         }
     }
 
@@ -264,7 +282,7 @@ export class Game extends Container {
         })
     }
 
-    handlePlayerDisconnect(parsed: RemovePlayerEvent) {
+    handleRemovePlayerEvent(parsed: RemovePlayerEvent) {
         const p = this.players.get(parsed.id)
         if (p) {
             this.worldContainer.removeChild(p.sprite)
@@ -283,6 +301,9 @@ export class Game extends Container {
         this.tilemapHandler.handleRemove(gridCellKey, this.worldContainer)
 
         this.resources.delete(gridCellKey)
+
+        // unsub from cell remove npcs form cell 
+        this.npcs.delete(gridCellKey)
     }
 
     handlePlayerTargetPositionEvent(parsed: PlayerTargetPositionEvent) {
@@ -389,6 +410,15 @@ export class Game extends Container {
             }
             this.inventoryStore.addItem(item)
         })
+    }
+
+    handleNpcListEvent(parsed: NpcListEvent) {
+        const newNpcs: Npc[] = parsed.npcList.map(npc => {
+            const n = new Npc(npc)
+            this.worldContainer.addChild(n.sprite)
+            return n
+        })
+        this.npcs.set(parsed.gridCellKey, newNpcs)
     }
 }
 

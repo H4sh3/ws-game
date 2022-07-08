@@ -26,6 +26,7 @@ const (
 	MULTIPLE_EVENTS              EventType = 14
 	LOGIN_PLAYER_EVENT           EventType = 15
 	CELL_DATA_EVENT              EventType = 16
+	NPC_LIST_EVENT               EventType = 17
 )
 
 const (
@@ -77,6 +78,20 @@ func NewResourcePositionsEvent(resources map[int]resource.Resource) interface{} 
 	}
 
 	return &ResourcePositionsEvent{EventType: RESOURCE_POSITIONS_EVENT, Resources: v}
+}
+
+type NpcListEvent struct {
+	EventType   EventType `json:"eventType"`
+	GridCellKey string    `json:"gridCellKey"`
+	NpcList     []Npc     `json:"npcList"`
+}
+
+func NewNpcListEvent(gridCellKey string, npcList []Npc) NpcListEvent {
+	return NpcListEvent{
+		EventType:   NPC_LIST_EVENT,
+		GridCellKey: gridCellKey,
+		NpcList:     npcList,
+	}
 }
 
 type RemovePlayerEvent struct {

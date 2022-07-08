@@ -36,6 +36,8 @@ type GridCell struct {
 	eventsToBroadcastMutex sync.Mutex
 	ticker                 time.Ticker
 	SubCells               []SubCell
+	NpcList                []Npc
+	NpcListMutex           sync.Mutex
 }
 
 func NewCell(x int, y int) *GridCell {
@@ -62,7 +64,15 @@ func NewCell(x int, y int) *GridCell {
 		eventsToBroadcast:      []interface{}{},
 		eventsToBroadcastMutex: sync.Mutex{},
 		SubCells:               []SubCell{},
+		NpcList:                []Npc{},
+		NpcListMutex:           sync.Mutex{},
 	}
+
+	// test npc -> only one per cell atm
+
+	npcPos := shared.Vector{X: x * GridCellSize, Y: y * GridCellSize}
+	npc := NewNpc(npcPos)
+	cell.NpcList = append(cell.NpcList, npc)
 
 	cell.SubCells = getSubCells(x, y)
 
@@ -118,11 +128,12 @@ func (cell *GridCell) CellCoro() {
 					}
 				}
 
-				// this subscribes a client to the cell or updates an existing subscription
 				if !cell.CheckSubscription(client) {
+					// this code is executed if a client subs first time to a cell
 					if client.Connected {
 						client.send <- NewResourcePositionsEvent(cell.GetResources())
 						client.send <- NewCellDataEvent(cell.GridCellKey, cell.SubCells, cell.Pos)
+						client.send <- NewNpcListEvent(cell.GridCellKey, cell.NpcList)
 					}
 				}
 			}

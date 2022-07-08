@@ -19,6 +19,7 @@ export enum EVENT_TYPES {
     MULTIPLE_EVENTS = 14,
     LOGIN_PLAYER_EVENT = 15,
     CELL_DATA_EVENT = 16,
+    NPC_LIST_EVENT = 17,
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -34,7 +35,6 @@ export function isBaseEvent(value: any): value is BaseEvent {
         "eventType" in value
     )
 }
-
 
 export interface NewPlayerEvent extends BaseEvent {
     id: number
@@ -195,6 +195,25 @@ export function isCellDataEvent(value: any): value is CellDataEvent {
     )
 }
 
+export interface NpcI {
+    UUID: string
+    pos: Vector
+    hp: number
+    npcType: string
+}
+
+export interface NpcListEvent extends BaseEvent {
+    gridCellKey: string
+    npcList: NpcI[]
+}
+
+export function isNpcListEvent(value: any): value is NpcListEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType == EVENT_TYPES.NPC_LIST_EVENT
+    )
+}
+
 type EventTypes =
     NewPlayerEvent |
     AssignIdEvent |
@@ -208,7 +227,8 @@ type EventTypes =
     UpdateInventoryEvent |
     RemoveGridCellEvent |
     MultipleEvents |
-    CellDataEvent
+    CellDataEvent |
+    NpcListEvent
 
 export interface MultipleEvents extends BaseEvent {
     events: EventTypes[]
