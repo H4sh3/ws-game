@@ -178,11 +178,12 @@ func (h *Hub) HandleResourceHit(event HitResourceEvent, c *Client) {
 
 	dist := r.Pos.Dist((&c.Pos))
 	if dist < MAX_LOOT_RANGE {
-		r.Hitpoints.Current -= 34
+		damage := shared.RandIntInRange(30, 45)
+		r.Hitpoints.Current -= damage
 
 		remove := r.Hitpoints.Current <= 0
 		cellToBroadCast := h.GridManager.GetCellFromPos(r.Pos)
-		cellToBroadCast.Broadcast <- NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove, r.GridCellKey)
+		cellToBroadCast.Broadcast <- NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove, r.GridCellKey, damage)
 
 		if r.Hitpoints.Current <= 0 {
 			h.SpawnLoot(*r, c)
@@ -213,8 +214,8 @@ func (h *Hub) SpawnLoot(destroyedResource resource.Resource, c *Client) {
 		r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true, destroyedResource.GridCellKey)
 		newResources = append(newResources, r)
 
-		shouldSpawnIronOre := shared.RandIntInRange(0, 10)
-		fmt.Printf("shouldSpawnIronOre %d\n", shouldSpawnIronOre)
+		shouldSpawnIronOre := shared.RandIntInRange(1, 10)
+
 		if shouldSpawnIronOre >= 7 {
 			quantity = shared.RandIntInRange(1, 3)
 			subType = resource.IronOre
@@ -263,7 +264,7 @@ func (h *Hub) HandleLootResource(event LootResourceEvent, c *Client) {
 
 		// broadcast update event that removes the resource
 		cell := h.GridManager.GetCellFromPos(r.Pos)
-		cell.Broadcast <- NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey)
+		cell.Broadcast <- NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey, 0)
 
 		// Todo broadcast UpdateResourceEvent to clients subbed to cell
 

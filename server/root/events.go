@@ -183,11 +183,12 @@ type UpdateResourceEvent struct {
 	Id          int                `json:"id"`
 	Hitpoints   resource.Hitpoints `json:"hitpoints"`
 	Remove      bool               `json:"remove"`
+	Damage      int                `json:"damage"`
 }
 
-func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool, gridCellKey string) interface{} {
+func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool, gridCellKey string, damage int) interface{} {
 	hitpoints := resource.Hitpoints{Current: currentHp, Max: maxHp}
-	return &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey}
+	return &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey, Damage: damage}
 
 	/* 	value, err := json.Marshal(u)
 

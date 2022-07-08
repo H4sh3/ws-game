@@ -124,10 +124,11 @@ export function isResourcePositionsEvent(value: any): value is ResourcePositions
 }
 
 export interface UpdateResourceEvent {
-    id: number,
-    gridCellKey: string,
-    hitpoints: Hitpoints,
+    id: number
+    gridCellKey: string
+    hitpoints: Hitpoints
     remove: boolean
+    damage: number
 }
 
 export function isUpdateResourceEvent(value: any): value is UpdateResourceEvent {

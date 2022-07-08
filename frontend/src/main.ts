@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Sprite } from 'pixi.js';
+import { Application, Container, Graphics, Sprite, Text } from 'pixi.js';
 import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
@@ -17,6 +17,7 @@ import { LocalStorageWrapper } from './localStorageWrapper';
 import { SoundHandler } from './types/soundHandler';
 import { randInt } from './etc/math';
 import TilemapHandler from './etc/TilemapHandler';
+import TextHandler from './etc/TextHandler';
 
 export class Game extends Container {
     app: Application;
@@ -25,6 +26,7 @@ export class Game extends Container {
     resources: Map<string, Resource[]>
 
     worldContainer: Container
+    textHandler: TextHandler
     tilemap: Tilemap
 
     player: Player
@@ -59,6 +61,8 @@ export class Game extends Container {
 
         const tilemapContainer = new Container()
         this.worldContainer.addChild(tilemapContainer)
+
+        this.textHandler = new TextHandler(this.worldContainer)
 
         this.tilemapHander = new TilemapHandler(tilemapContainer)
 
@@ -174,6 +178,7 @@ export class Game extends Container {
                 this.inventoryStore.itemBuild(item)
             } else {
                 this.inventoryStore.addItem(item)
+                this.textHandler.addItem(`${item.resourceType} +${item.quantity}`, this.player.targetPos.copy(), "0x1d8220")
             }
         } else if (isUpdateResourceEvent(parsed)) {
             this.handleUpdateResourceEvent(parsed)
@@ -199,6 +204,8 @@ export class Game extends Container {
 
         const fps = 60 / delta
         this.inventoryStore.setFrameRate(fps)
+
+        this.textHandler.update()
 
         // Todo: Make this more efficient by only generating the array if resources have changed
 
@@ -342,6 +349,11 @@ export class Game extends Container {
 
             if (r.hitPoints.current !== parsed.hitpoints.current) {
                 this.soundHandler.hitResource(r.resourceType)
+            }
+
+            if (parsed.damage > 0) {
+                // spawn damage text
+                this.textHandler.addItem(`${parsed.damage}`, r.pos, "0xff0000")
             }
 
             r.hitPoints.current = parsed.hitpoints.current
