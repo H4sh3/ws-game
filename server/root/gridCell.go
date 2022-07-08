@@ -174,6 +174,11 @@ func (cell *GridCell) CellCoro() {
 			cell.playersToRemoveMutex.Lock()
 			for _, c := range cell.playersToRemove {
 				delete(cell.Players, c.Id)
+
+				// plays that disconnected -> broadcast remove event
+				if !c.Connected {
+					cell.AddEventToBroadcast(NewRemovePlayerEvent(c.Id))
+				}
 			}
 			cell.playersToRemove = []*Client{}
 			cell.playersToRemoveMutex.Unlock()
