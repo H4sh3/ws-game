@@ -376,7 +376,7 @@ export class Game extends Container {
             const pos = this.player.targetPos.copy()
             pos.x -= 25
             pos.y -= 35
-            this.textHandler.addItem(`${item.resourceType} +${item.quantity}`, pos, "0x1d8220")
+            this.textHandler.addItem(`${item.resourceType} +${item.quantity}`, pos, "0x1dff20")
         }
     }
 
