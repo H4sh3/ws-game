@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Sprite, Text } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent } from './events/events';
 import { KeyboardHandler, VALID_KEYS } from './etc/KeyboardHandler';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
@@ -31,7 +31,7 @@ export class Game extends Container {
 
     player: Player
     soundHandler: SoundHandler
-    tilemapHander: TilemapHandler
+    tilemapHandler: TilemapHandler
 
     players: Map<number, Player>
 
@@ -57,14 +57,24 @@ export class Game extends Container {
 
         this.localStorageWrapper = new LocalStorageWrapper()
         this.keyHandler = new KeyboardHandler()
+
+        // container structurs
         this.worldContainer = new Container();
+        this.worldContainer.sortableChildren = true
 
-        const tilemapContainer = new Container()
-        this.worldContainer.addChild(tilemapContainer)
+        this.textHandler = new TextHandler()
+        this.textHandler.textItemContainer.sortableChildren = true
 
-        this.textHandler = new TextHandler(this.worldContainer)
+        this.tilemapHandler = new TilemapHandler()
+        this.tilemapHandler.tilemapContainer.sortableChildren = true
 
-        this.tilemapHander = new TilemapHandler(tilemapContainer)
+        this.tilemapHandler.tilemapContainer.zIndex = 0
+        this.worldContainer.zIndex = 1
+        this.textHandler.textItemContainer.zIndex = 2
+
+        this.worldContainer.addChild(this.tilemapHandler.tilemapContainer)
+        this.worldContainer.addChild(this.textHandler.textItemContainer)
+
 
         this.soundHandler = new SoundHandler()
 
@@ -160,26 +170,9 @@ export class Game extends Container {
         if (isPlayerTargetPositionEvent(parsed)) {
             this.handlePlayerTargetPositionEvent(parsed)
         } else if (isLoadInventoryEvent(parsed)) {
-            Object.keys(parsed.items).forEach(k => {
-                const { resourceType, quantity } = parsed.items[k]
-                const item: Item = {
-                    resourceType: resourceType,
-                    quantity: quantity
-                }
-                this.inventoryStore.addItem(item)
-            })
-            //this.inventory.initLoad(parsed.items, this.player, this.app.loader, this.ws)
+            this.handleLoadInventoryEvent(parsed)
         } else if (isUpdateInventoryEvent(parsed)) {
-            const item: Item = {
-                resourceType: parsed.item.resourceType,
-                quantity: parsed.item.quantity
-            }
-            if (parsed.remove) {
-                this.inventoryStore.itemBuild(item)
-            } else {
-                this.inventoryStore.addItem(item)
-                this.textHandler.addItem(`${item.resourceType} +${item.quantity}`, this.player.targetPos.copy(), "0x1d8220")
-            }
+            this.handleUpdateInventoryEvent(parsed)
         } else if (isUpdateResourceEvent(parsed)) {
             this.handleUpdateResourceEvent(parsed)
         } else if (isResourcePositionsEvent(parsed)) {
@@ -194,7 +187,7 @@ export class Game extends Container {
         } else if (isRemoveGridCellEvent(parsed)) {
             this.handleRemoveGridCellEvent(parsed)
         } else if (isCellDataEvent(parsed)) {
-            this.tilemapHander.processCellDataEvent(parsed, this.worldContainer)
+            this.tilemapHandler.processCellDataEvent(parsed)
         }
     }
 
@@ -288,7 +281,7 @@ export class Game extends Container {
             })
         }
 
-        this.tilemapHander.handleRemove(gridCellKey, this.worldContainer)
+        this.tilemapHandler.handleRemove(gridCellKey, this.worldContainer)
 
         this.resources.delete(gridCellKey)
     }
@@ -370,6 +363,33 @@ export class Game extends Container {
             console.log(this.resources)
             console.log(parsed.id)
         }
+    }
+
+    handleUpdateInventoryEvent(parsed: UpdateInventoryEvent) {
+        const item: Item = {
+            resourceType: parsed.item.resourceType,
+            quantity: parsed.item.quantity
+        }
+        if (parsed.remove) {
+            this.inventoryStore.itemBuild(item)
+        } else {
+            this.inventoryStore.addItem(item)
+            const pos = this.player.targetPos.copy()
+            pos.x -= 25
+            pos.y -= 35
+            this.textHandler.addItem(`${item.resourceType} +${item.quantity}`, pos, "0x1d8220")
+        }
+    }
+
+    handleLoadInventoryEvent(parsed: LoadInventoryEvent) {
+        Object.keys(parsed.items).forEach(k => {
+            const { resourceType, quantity } = parsed.items[k]
+            const item: Item = {
+                resourceType: resourceType,
+                quantity: quantity
+            }
+            this.inventoryStore.addItem(item)
+        })
     }
 }
 

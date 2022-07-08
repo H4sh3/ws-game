@@ -178,7 +178,7 @@ func (h *Hub) HandleResourceHit(event HitResourceEvent, c *Client) {
 
 	dist := r.Pos.Dist((&c.Pos))
 	if dist < MAX_LOOT_RANGE {
-		damage := shared.RandIntInRange(30, 45)
+		damage := shared.RandIntInRange(30, 450)
 		r.Hitpoints.Current -= damage
 
 		remove := r.Hitpoints.Current <= 0

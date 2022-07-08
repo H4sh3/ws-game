@@ -7,12 +7,12 @@ import { isBetween, randInt } from "./math";
 class TilemapHandler {
     terrainTileMap: Map<string, CompositeTilemap>
     tilemapContainer: Container
-    constructor(tilemapContainer: Container) {
+    constructor() {
         this.terrainTileMap = new Map()
-        this.tilemapContainer = tilemapContainer
+        this.tilemapContainer = new Container()
     }
 
-    processCellDataEvent(event: CellDataEvent, worldContainer: Container) {
+    processCellDataEvent(event: CellDataEvent) {
         const cellTilemap = new CompositeTilemap()
 
         event.subCells.forEach(sc => {

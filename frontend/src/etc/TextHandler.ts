@@ -15,7 +15,7 @@ class TextItem {
     }
 
     update() {
-        this.container.position.y -= 2
+        this.container.position.y -= 0.5
         this.tick++
     }
 
@@ -29,10 +29,9 @@ class TextHandler {
     items: TextItem[]
     textItemContainer: Container
 
-    constructor(worldContainer: Container) {
+    constructor() {
         this.items = []
         this.textItemContainer = new Container()
-        worldContainer.addChild(this.textItemContainer)
     }
 
 
