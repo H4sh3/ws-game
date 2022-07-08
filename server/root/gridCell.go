@@ -230,9 +230,9 @@ func (cell *GridCell) CellCoro() {
 }
 
 func (cell *GridCell) AddResource(r *resource.Resource) {
-	cell.CellMutex.Lock()
+	cell.ResourcesMutex.Lock()
 	cell.Resources[r.Id] = r
-	cell.CellMutex.Unlock()
+	cell.ResourcesMutex.Unlock()
 }
 func (cell *GridCell) AddPlayer(c *Client) {
 	cell.playersToAddMutex.Lock()
@@ -247,9 +247,9 @@ func (cell *GridCell) RemovePlayer(c *Client) {
 }
 
 func (cell *GridCell) RemoveResource(r *resource.Resource) {
-	cell.CellMutex.Lock()
+	cell.ResourcesMutex.Lock()
 	delete(cell.Resources, r.Id)
-	cell.CellMutex.Unlock()
+	cell.ResourcesMutex.Unlock()
 }
 
 func (cell *GridCell) isClientSubscribed(cId int) bool {
