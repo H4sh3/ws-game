@@ -67,7 +67,7 @@ class TilemapHandler {
         //worldContainer.addChild(cellTilemap)
     }
 
-    handleRemove(gridCellKey: string, worldContainer: Container) {
+    removeGridCellTiles(gridCellKey: string, worldContainer: Container) {
         if (this.terrainTileMap.has(gridCellKey)) {
             this.terrainTileMap.delete(gridCellKey)
 
