@@ -5,13 +5,13 @@ import { isBetween, randInt } from "../etc/math";
 
 class TilemapHandler {
     terrainTileMap: Map<string, CompositeTilemap>
-    tilemapContainer: Container
+    container: Container
     gameConfig: GameConfig
 
     constructor(gameConfig: GameConfig) {
         this.gameConfig = gameConfig
         this.terrainTileMap = new Map()
-        this.tilemapContainer = new Container()
+        this.container = new Container()
     }
 
     setGameConfig(gameConfig: GameConfig) {
@@ -63,7 +63,7 @@ class TilemapHandler {
 
         })
 
-        this.tilemapContainer.addChild(cellTilemap)
+        this.container.addChild(cellTilemap)
         //worldContainer.addChild(cellTilemap)
     }
 
@@ -72,7 +72,7 @@ class TilemapHandler {
             this.terrainTileMap.delete(gridCellKey)
 
             // worldContainer.removeChild(this.terrainTileMap.get(gridCellKey))
-            this.tilemapContainer.removeChild(this.terrainTileMap.get(gridCellKey))
+            this.container.removeChild(this.terrainTileMap.get(gridCellKey))
         }
     }
 }

@@ -18,6 +18,7 @@ import { KeyboardHandler, VALID_KEYS } from './modules/KeyboardHandler';
 import { SoundHandler } from './modules/SoundHandler';
 import TextHandler from './modules/TextHandler';
 import Npc from './types/npc';
+import NpcHandler from './modules/NpcHandler';
 
 export class Game extends Container {
     app: Application;
@@ -29,19 +30,15 @@ export class Game extends Container {
 
     worldContainer: Container
 
-    npcContainer: Container
     textHandler: TextHandler
-    tilemap: Tilemap
+    tilemapHandler: TilemapHandler
+    soundHandler: SoundHandler
+    npcHandler: NpcHandler
+
 
     player: Player
-    soundHandler: SoundHandler
-    tilemapHandler: TilemapHandler
 
     players: Map<number, Player>
-
-    // includes all npcs related to the cell key
-    npcs: Map<string, Npc[]>
-
 
     cursorSprite: Sprite
     cursorPos: Vector
@@ -70,7 +67,6 @@ export class Game extends Container {
         this.isEditing = false
         this.resources = new Map()
         this.players = new Map()
-        this.npcs = new Map()
 
         this.ws = new WebSocket(process.env.WS_API)
 
@@ -98,53 +94,6 @@ export class Game extends Container {
         }
     }
 
-    processEvent(parsed: any) {
-        if (isPlayerTargetPositionEvent(parsed)) {
-            this.handlePlayerTargetPositionEvent(parsed)
-
-        } else if (isLoadInventoryEvent(parsed)) {
-            console.log("isLoadInventoryEvent")
-            this.handleLoadInventoryEvent(parsed)
-
-        } else if (isUpdateInventoryEvent(parsed)) {
-            this.handleUpdateInventoryEvent(parsed)
-
-        } else if (isUpdateResourceEvent(parsed)) {
-            this.handleUpdateResourceEvent(parsed)
-
-        } else if (isResourcePositionsEvent(parsed)) {
-            this.handleAddResourceEvent(parsed)
-
-        } else if (isRemovePlayerEvent(parsed)) {
-            this.handleRemovePlayerEvent(parsed)
-
-        } else if (isNewPlayerEvent(parsed)) {
-            this.handleNewPlayerEvent(parsed)
-
-        } else if (isAssignUserIdAndConfigEvent(parsed)) {
-            console.log("isAssignUserIdAndConfigEvent")
-            this.gameConfig = parsed.gameConfig
-            this.initWorld()
-
-            this.userStore.setLoading(false)
-            this.handleAssignIdEvent(parsed)
-
-        } else if (isRemoveGridCellEvent(parsed)) {
-            this.handleRemoveGridCellEvent(parsed)
-
-        } else if (isCellDataEvent(parsed)) {
-            this.tilemapHandler.processCellDataEvent(parsed)
-
-        } else if (isNpcListEvent(parsed)) {
-            this.handleNpcListEvent(parsed)
-        } else if (isNpcTargetPositionEvent(parsed)) {
-
-            this.handleNpcTargetPositionEvent(parsed)
-        } else if (isUpdateNpcEvent(parsed)) {
-            this.handleUpdateNpcEvent(parsed)
-        }
-    }
-
     initWorld() {
         this.keyHandler = new KeyboardHandler()
 
@@ -154,20 +103,21 @@ export class Game extends Container {
         this.worldContainer.zIndex = 1
 
         this.textHandler = new TextHandler()
-        this.textHandler.textItemContainer.sortableChildren = true
-        this.textHandler.textItemContainer.zIndex = 2
+        this.textHandler.container.sortableChildren = true
+        this.textHandler.container.zIndex = 2
 
         this.tilemapHandler = new TilemapHandler(this.gameConfig)
-        this.tilemapHandler.tilemapContainer.sortableChildren = true
-        this.tilemapHandler.tilemapContainer.zIndex = 0
+        this.tilemapHandler.container.sortableChildren = true
+        this.tilemapHandler.container.zIndex = 0
 
-        this.npcContainer = new Container();
-        this.npcContainer.sortableChildren = true
-        this.npcContainer.zIndex = 4
+        this.npcHandler = new NpcHandler()
+        this.npcHandler.container.sortableChildren = true
+        this.npcHandler.container.zIndex = 4
 
-        this.worldContainer.addChild(this.tilemapHandler.tilemapContainer)
-        this.worldContainer.addChild(this.npcContainer)
-        this.worldContainer.addChild(this.textHandler.textItemContainer)
+        // add handler containers
+        this.worldContainer.addChild(this.tilemapHandler.container)
+        this.worldContainer.addChild(this.npcHandler.container)
+        this.worldContainer.addChild(this.textHandler.container)
 
         this.soundHandler = new SoundHandler()
 
@@ -229,6 +179,53 @@ export class Game extends Container {
     }
 
 
+    processEvent(parsed: any) {
+        if (isPlayerTargetPositionEvent(parsed)) {
+            this.handlePlayerTargetPositionEvent(parsed)
+
+        } else if (isLoadInventoryEvent(parsed)) {
+            console.log("isLoadInventoryEvent")
+            this.handleLoadInventoryEvent(parsed)
+
+        } else if (isUpdateInventoryEvent(parsed)) {
+            this.handleUpdateInventoryEvent(parsed)
+
+        } else if (isUpdateResourceEvent(parsed)) {
+            this.handleUpdateResourceEvent(parsed)
+
+        } else if (isResourcePositionsEvent(parsed)) {
+            this.handleAddResourceEvent(parsed)
+
+        } else if (isRemovePlayerEvent(parsed)) {
+            this.handleRemovePlayerEvent(parsed)
+
+        } else if (isNewPlayerEvent(parsed)) {
+            this.handleNewPlayerEvent(parsed)
+
+        } else if (isAssignUserIdAndConfigEvent(parsed)) {
+            console.log("isAssignUserIdAndConfigEvent")
+            this.gameConfig = parsed.gameConfig
+            this.initWorld()
+
+            this.userStore.setLoading(false)
+            this.handleAssignIdEvent(parsed)
+
+        } else if (isRemoveGridCellEvent(parsed)) {
+            this.handleRemoveGridCellEvent(parsed)
+
+        } else if (isCellDataEvent(parsed)) {
+            this.tilemapHandler.processCellDataEvent(parsed)
+
+        } else if (isNpcListEvent(parsed)) {
+            this.handleNpcListEvent(parsed)
+        } else if (isNpcTargetPositionEvent(parsed)) {
+
+            this.handleNpcTargetPositionEvent(parsed)
+        } else if (isUpdateNpcEvent(parsed)) {
+            this.handleUpdateNpcEvent(parsed)
+        }
+    }
+
     // main update loop
     update(delta: number) {
 
@@ -239,17 +236,9 @@ export class Game extends Container {
         this.textHandler.update()
 
         // Todo: Make this more efficient by only generating the array if resources have changed
-
         let allResources: Resource[] = []
         for (let k of this.resources.keys()) {
             allResources = [...allResources, ...this.resources.get(k)]
-        }
-
-        const currLength = allResources.length
-        if (this.oldResourceLen != currLength) {
-            this.oldResourceLen = currLength
-            console.log(this.oldResourceLen)
-            console.log("children on world container", this.worldContainer.children.length)
         }
 
         this.sendCooldown -= delta
@@ -282,7 +271,7 @@ export class Game extends Container {
         })
 
         // update npc positions
-        Array.from(this.npcs.values()).map(p => {
+        Array.from(this.npcHandler.npcMap.values()).map(p => {
             p.map(npc => {
                 npc.updatePosition()
                 npc.container.x = npc.currentPos.x
@@ -334,10 +323,10 @@ export class Game extends Container {
 
         // unsub from cell remove npcs form cell 
 
-        this.npcs.get(gridCellKey).forEach(npc => {
-            this.npcContainer.removeChild(npc.container)
+        this.npcHandler.npcMap.get(gridCellKey).forEach(npc => {
+            this.npcHandler.container.removeChild(npc.container)
         })
-        this.npcs.delete(gridCellKey)
+        this.npcHandler.npcMap.delete(gridCellKey)
     }
 
     handlePlayerTargetPositionEvent(parsed: PlayerTargetPositionEvent) {
@@ -450,14 +439,14 @@ export class Game extends Container {
     handleNpcListEvent(parsed: NpcListEvent) {
         const newNpcs: Npc[] = parsed.npcList.map(npc => {
             const n = new Npc(npc, this.ws, this.player)
-            this.npcContainer.addChild(n.container)
+            this.npcHandler.container.addChild(n.container)
             return n
         })
-        this.npcs.set(parsed.gridCellKey, newNpcs)
+        this.npcHandler.npcMap.set(parsed.gridCellKey, newNpcs)
     }
 
     handleNpcTargetPositionEvent(parsed: NpcTargetPositionEvent) {
-        let npcs = this.npcs.get(parsed.gridCellKey)
+        let npcs = this.npcHandler.npcMap.get(parsed.gridCellKey)
 
         if (!npcs) {
             return
@@ -471,12 +460,12 @@ export class Game extends Container {
         npc.targetPos = createVector(parsed.pos.x, parsed.pos.y)
         npcs = npcs.filter(n => n.UUID !== parsed.npcUUID)
         npcs.push(npc)
-        this.npcs.set(parsed.gridCellKey, npcs)
+        this.npcHandler.npcMap.set(parsed.gridCellKey, npcs)
     }
 
     handleUpdateNpcEvent(parsed: UpdateNpcEvent) {
         console.log("handleUpdateNpcEvent", parsed)
-        let npcs = this.npcs.get(parsed.gridCellKey)
+        let npcs = this.npcHandler.npcMap.get(parsed.gridCellKey)
 
         if (!npcs) {
             return
@@ -490,12 +479,12 @@ export class Game extends Container {
         npc.hitPoints.current = parsed.hitpoints.current
         npcs = npcs.filter(n => n.UUID !== parsed.npcUUID)
         if (parsed.remove) {
-            this.npcContainer.removeChild(npc.container)
+            this.npcHandler.container.removeChild(npc.container)
         } else {
             npcs.push(npc)
         }
 
-        this.npcs.set(parsed.gridCellKey, npcs)
+        this.npcHandler.npcMap.set(parsed.gridCellKey, npcs)
 
         npc.updateHealthbar(npc.container)
     }

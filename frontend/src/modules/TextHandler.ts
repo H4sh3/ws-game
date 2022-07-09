@@ -27,17 +27,17 @@ class TextItem {
 
 class TextHandler {
     items: TextItem[]
-    textItemContainer: Container
+    container: Container
 
     constructor() {
         this.items = []
-        this.textItemContainer = new Container()
+        this.container = new Container()
     }
 
 
     addItem(displayText: string, pos: Vector, color: string) {
         const item = new TextItem(displayText, pos, color)
-        this.textItemContainer.addChild(item.container)
+        this.container.addChild(item.container)
         this.items.push(item)
     }
 
@@ -47,7 +47,7 @@ class TextHandler {
 
             // if done remove from container
             if (i.done()) {
-                this.textItemContainer.removeChild(i.container)
+                this.container.removeChild(i.container)
             }
         })
 
