@@ -1,15 +1,21 @@
 import { CompositeTilemap } from "@pixi/tilemap";
 import { Container } from "pixi.js";
-import { CellDataEvent } from "../events/events";
-import { GRID_CELL_SIZE, SUB_CELL_SIZE } from "../etc/const";
+import { CellDataEvent, GameConfig } from "../events/events";
 import { isBetween, randInt } from "../etc/math";
 
 class TilemapHandler {
     terrainTileMap: Map<string, CompositeTilemap>
     tilemapContainer: Container
-    constructor() {
+    gameConfig: GameConfig
+
+    constructor(gameConfig: GameConfig) {
+        this.gameConfig = gameConfig
         this.terrainTileMap = new Map()
         this.tilemapContainer = new Container()
+    }
+
+    setGameConfig(gameConfig: GameConfig) {
+        this.gameConfig = gameConfig
     }
 
     processCellDataEvent(event: CellDataEvent) {
@@ -17,8 +23,8 @@ class TilemapHandler {
 
         event.subCells.forEach(sc => {
 
-            const scPosX = event.pos.x * GRID_CELL_SIZE + (sc.pos.x * SUB_CELL_SIZE)
-            const scPosY = event.pos.y * GRID_CELL_SIZE + (sc.pos.y * SUB_CELL_SIZE)
+            const scPosX = event.pos.x * this.gameConfig.gridCellSize + (sc.pos.x * this.gameConfig.subCellSize)
+            const scPosY = event.pos.y * this.gameConfig.gridCellSize + (sc.pos.y * this.gameConfig.subCellSize)
 
 
             if (sc.terrainType == "Grass") {

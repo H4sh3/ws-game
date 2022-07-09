@@ -36,6 +36,8 @@ type Hub struct {
 
 	idCnt      int
 	idCntMutex sync.Mutex
+
+	gameConfig GameConfig
 }
 
 const MAX_LOOT_RANGE = 150
@@ -50,6 +52,12 @@ func NewHub() *Hub {
 		ClientMutex:         sync.Mutex{},
 		idCnt:               0,
 		idCntMutex:          sync.Mutex{},
+		gameConfig: GameConfig{
+			GridCellSize:   GridCellSize,
+			SubCells:       SubCells,
+			PlayerStepSize: StepSize,
+			SubCellSize:    SubCellSize,
+		},
 	}
 
 	initCellChannel := make(chan *GridCell)
@@ -128,19 +136,19 @@ func (h *Hub) handleMovementEvent(event KeyBoardEvent, c *Client) {
 	newPos := &shared.Vector{X: c.Pos.X, Y: c.Pos.Y}
 
 	if event.Key == "w" {
-		newPos.Y -= stepSize
+		newPos.Y -= StepSize
 	}
 
 	if event.Key == "a" {
-		newPos.X -= stepSize
+		newPos.X -= StepSize
 	}
 
 	if event.Key == "s" {
-		newPos.Y += stepSize
+		newPos.Y += StepSize
 	}
 
 	if event.Key == "d" {
-		newPos.X += stepSize
+		newPos.X += StepSize
 	}
 
 	collision := false
@@ -324,7 +332,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 		client.Inventory = inventory
 	}
 
-	client.send <- GetAssignUserIdEvent(client.Id, client.Pos, client.UUID)
+	client.send <- GetAssignUserIdEvent(client.Id, client.Pos, client.UUID, h.gameConfig)
 	client.send <- NewLoadInventoryEvent(client.Inventory)
 
 	gridCell := h.GridManager.GetCellFromPos(client.Pos)

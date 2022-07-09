@@ -66,8 +66,8 @@ type Client struct {
 
 func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 	spawnRange := 4
-	x := shared.RandIntInRange(-spawnRange, spawnRange) * stepSize
-	y := shared.RandIntInRange(-spawnRange, spawnRange) * stepSize
+	x := shared.RandIntInRange(-spawnRange, spawnRange) * StepSize
+	y := shared.RandIntInRange(-spawnRange, spawnRange) * StepSize
 	clientPostion := shared.Vector{X: x, Y: y}
 
 	sendChan := make(chan interface{}, 1024)

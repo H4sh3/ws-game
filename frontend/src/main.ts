@@ -1,12 +1,12 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignUserIdAndConfigEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isAssignUserIdAndConfigEvent, GameConfig } from './events/events';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
 import Vector from './types/vector';
 import { getInventoryBackground } from './sprites/background';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
 import { getCursorSprite } from './sprites/etc';
-import { PLAYER_STEP_SIZE, SCREEN_SIZE } from './etc/const';
+import { SCREEN_SIZE } from './etc/const';
 import { InventoryStore, Item } from './inventoryStore'
 
 import { Tilemap } from '@pixi/tilemap';
@@ -24,6 +24,8 @@ export class Game extends Container {
     keyHandler: KeyboardHandler
     ws: WebSocket
     resources: Map<string, Resource[]>
+
+    gameConfig: GameConfig
 
     worldContainer: Container
 
@@ -60,7 +62,88 @@ export class Game extends Container {
         super();
         this.app = app;
 
+        this.inventoryStore = inventoryStore
+        this.userStore = userStore
+
         this.localStorageWrapper = new LocalStorageWrapper()
+
+        this.isEditing = false
+        this.resources = new Map()
+        this.players = new Map()
+        this.npcs = new Map()
+
+        this.ws = new WebSocket(process.env.WS_API)
+
+        this.ws.onerror = (error) => {
+            console.log(error)
+        }
+
+        this.ws.onopen = () => {
+            console.log("connected!")
+            // Imediatly after websocket connection is opened
+            this.ws.send(getLoginPlayerEvent(this.localStorageWrapper.uuid))
+        }
+
+        this.ws.onmessage = (m) => {
+            if (typeof (m.data) != "string") {
+                return
+            }
+            let parsed: any = JSON.parse(m.data)
+
+            if (isMultipleEvents(parsed)) {
+                parsed.events.forEach(e => this.processEvent(e))
+            } else {
+                this.processEvent(parsed)
+            }
+        }
+    }
+
+    processEvent(parsed: any) {
+        if (isPlayerTargetPositionEvent(parsed)) {
+            this.handlePlayerTargetPositionEvent(parsed)
+
+        } else if (isLoadInventoryEvent(parsed)) {
+            console.log("isLoadInventoryEvent")
+            this.handleLoadInventoryEvent(parsed)
+
+        } else if (isUpdateInventoryEvent(parsed)) {
+            this.handleUpdateInventoryEvent(parsed)
+
+        } else if (isUpdateResourceEvent(parsed)) {
+            this.handleUpdateResourceEvent(parsed)
+
+        } else if (isResourcePositionsEvent(parsed)) {
+            this.handleAddResourceEvent(parsed)
+
+        } else if (isRemovePlayerEvent(parsed)) {
+            this.handleRemovePlayerEvent(parsed)
+
+        } else if (isNewPlayerEvent(parsed)) {
+            this.handleNewPlayerEvent(parsed)
+
+        } else if (isAssignUserIdAndConfigEvent(parsed)) {
+            console.log("isAssignUserIdAndConfigEvent")
+            this.gameConfig = parsed.gameConfig
+            this.initWorld()
+
+            this.userStore.setLoading(false)
+            this.handleAssignIdEvent(parsed)
+
+        } else if (isRemoveGridCellEvent(parsed)) {
+            this.handleRemoveGridCellEvent(parsed)
+
+        } else if (isCellDataEvent(parsed)) {
+            this.tilemapHandler.processCellDataEvent(parsed)
+
+        } else if (isNpcListEvent(parsed)) {
+            this.handleNpcListEvent(parsed)
+        } else if (isNpcTargetPositionEvent(parsed)) {
+
+            this.handleNpcTargetPositionEvent(parsed)
+        }
+    }
+
+    initWorld() {
         this.keyHandler = new KeyboardHandler()
 
         // container structurs
@@ -72,7 +155,7 @@ export class Game extends Container {
         this.textHandler.textItemContainer.sortableChildren = true
         this.textHandler.textItemContainer.zIndex = 2
 
-        this.tilemapHandler = new TilemapHandler()
+        this.tilemapHandler = new TilemapHandler(this.gameConfig)
         this.tilemapHandler.tilemapContainer.sortableChildren = true
         this.tilemapHandler.tilemapContainer.zIndex = 0
 
@@ -84,27 +167,14 @@ export class Game extends Container {
         this.worldContainer.addChild(this.npcContainer)
         this.worldContainer.addChild(this.textHandler.textItemContainer)
 
-
-
         this.soundHandler = new SoundHandler()
-
-        this.inventoryStore = inventoryStore
-        this.userStore = userStore
 
         this.sendCooldown = 0
 
-        this.ws = new WebSocket(process.env.WS_API)
-        this.isEditing = false
-        this.resources = new Map()
-        this.players = new Map()
-        this.npcs = new Map()
-
-
-        this.update = this.update.bind(this);
 
         this.player = new Player(-1, createVector(0, 0), getOwnPlayerSprite())
 
-        this.cursorSprite = getCursorSprite(app.loader)
+        this.cursorSprite = getCursorSprite(this.app.loader)
         this.player.spriteContainer.addChild(this.cursorSprite)
 
         this.cursorPos = createVector(0, 0)
@@ -149,78 +219,17 @@ export class Game extends Container {
 
         this.addChild(this.worldContainer)
         this.addChild(getInventoryBackground())
-
         this.addChild(this.player.spriteContainer)
 
-        this.ws.onerror = (error) => {
-            console.log(error)
-        }
 
-        this.ws.onopen = () => {
-            console.log("connected!")
-            // Imediatly after websocket connection is opened
-            this.ws.send(getLoginPlayerEvent(this.localStorageWrapper.uuid))
-        }
-
-        this.ws.onmessage = (m) => {
-            if (typeof (m.data) != "string") {
-                return
-            }
-            let parsed: any = JSON.parse(m.data)
-
-            if (isMultipleEvents(parsed)) {
-                parsed.events.forEach(e => this.processEvent(e))
-            } else {
-                this.processEvent(parsed)
-            }
-        }
-
-        app.ticker.add(this.update);
-    }
-
-    processEvent(parsed: any) {
-        if (isPlayerTargetPositionEvent(parsed)) {
-            this.handlePlayerTargetPositionEvent(parsed)
-
-        } else if (isLoadInventoryEvent(parsed)) {
-            this.handleLoadInventoryEvent(parsed)
-
-        } else if (isUpdateInventoryEvent(parsed)) {
-            this.handleUpdateInventoryEvent(parsed)
-
-        } else if (isUpdateResourceEvent(parsed)) {
-            this.handleUpdateResourceEvent(parsed)
-
-        } else if (isResourcePositionsEvent(parsed)) {
-            this.handleAddResourceEvent(parsed)
-
-        } else if (isRemovePlayerEvent(parsed)) {
-            this.handleRemovePlayerEvent(parsed)
-
-        } else if (isNewPlayerEvent(parsed)) {
-            this.handleNewPlayerEvent(parsed)
-
-        } else if (isAssignUserIdEvent(parsed)) {
-            this.userStore.setLoading(false)
-            this.handleAssignIdEvent(parsed)
-
-        } else if (isRemoveGridCellEvent(parsed)) {
-            this.handleRemoveGridCellEvent(parsed)
-
-        } else if (isCellDataEvent(parsed)) {
-            this.tilemapHandler.processCellDataEvent(parsed)
-
-        } else if (isNpcListEvent(parsed)) {
-            this.handleNpcListEvent(parsed)
-        } else if (isNpcTargetPositionEvent(parsed)) {
-
-            this.handleNpcTargetPositionEvent(parsed)
-        }
+        this.update = this.update.bind(this);
+        this.app.ticker.add(this.update);
     }
 
 
     // main update loop
     update(delta: number) {
+
 
         const fps = 60 / delta
         this.inventoryStore.setFrameRate(fps)
@@ -243,7 +252,7 @@ export class Game extends Container {
 
         this.sendCooldown -= delta
         if (this.sendCooldown <= 0) {
-            handleKeyBoard(this.keyHandler, this.player, this.ws, allResources)
+            this.handleKeyBoard(this.keyHandler, this.player, this.ws, allResources)
             this.sendCooldown = 5
         }
 
@@ -367,7 +376,7 @@ export class Game extends Container {
         }
     }
 
-    handleAssignIdEvent(parsed: AssignIdEvent) {
+    handleAssignIdEvent(parsed: AssignUserIdAndConfigEvent) {
         this.localStorageWrapper.setUUID(parsed.uuid)
         this.player.id = parsed.id
         this.player.currentPos.x = parsed.pos.x
@@ -461,35 +470,35 @@ export class Game extends Container {
         npcs.push(npc)
         this.npcs.set(parsed.gridCellKey, npcs)
     }
-}
 
-function handleKeyBoard(keyHandler: KeyboardHandler, player: Player, ws: WebSocket, resources: Resource[]) {
-    VALID_KEYS.forEach(key => {
-        const value = keyHandler.keys.get(key)
-        if (value == KeyStates.DOWN) {
+    handleKeyBoard(keyHandler: KeyboardHandler, player: Player, ws: WebSocket, resources: Resource[]) {
+        VALID_KEYS.forEach(key => {
+            const value = keyHandler.keys.get(key)
+            if (value == KeyStates.DOWN) {
 
-            const newPos = player.targetPos.copy()
+                const newPos = player.targetPos.copy()
 
-            switch (key) {
-                case "w":
-                    newPos.y -= PLAYER_STEP_SIZE
-                    break
-                case "a":
-                    newPos.x -= PLAYER_STEP_SIZE
-                    break
-                case "s":
-                    newPos.y += PLAYER_STEP_SIZE
-                    break
-                case "d":
-                    newPos.x += PLAYER_STEP_SIZE
-                    break
+                switch (key) {
+                    case "w":
+                        newPos.y -= this.gameConfig.playerStepSize
+                        break
+                    case "a":
+                        newPos.x -= this.gameConfig.playerStepSize
+                        break
+                    case "s":
+                        newPos.y += this.gameConfig.playerStepSize
+                        break
+                    case "d":
+                        newPos.x += this.gameConfig.playerStepSize
+                        break
+                }
+
+                const hasCollision = resources.filter(r => r.isSolid).some(r => r.pos.dist(newPos) < 40)
+                if (!hasCollision) {
+                    player.targetPos = newPos
+                    ws.send(getKeyBoardEvent(key, value))
+                }
             }
-
-            const hasCollision = resources.filter(r => r.isSolid).some(r => r.pos.dist(newPos) < 40)
-            if (!hasCollision) {
-                player.targetPos = newPos
-                ws.send(getKeyBoardEvent(key, value))
-            }
-        }
-    })
+        })
+    }
 }

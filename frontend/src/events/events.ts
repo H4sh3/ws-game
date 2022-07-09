@@ -52,13 +52,21 @@ export function isNewPlayerEvent(value: any): value is NewPlayerEvent {
     )
 }
 
-export interface AssignIdEvent extends BaseEvent {
+export interface GameConfig {
+    gridCellSize: number
+    subCells: number
+    playerStepSize: number
+    subCellSize: number
+}
+
+export interface AssignUserIdAndConfigEvent extends BaseEvent {
     id: number,
     uuid: string,
     pos: {
         x: number,
         y: number
     }
+    gameConfig: GameConfig
 }
 
 export interface PlayerTargetPositionEvent extends BaseEvent {
@@ -85,7 +93,7 @@ export function isPlayerTargetPositionEvent(value: any): value is PlayerTargetPo
     )
 }
 
-export function isAssignUserIdEvent(value: any): value is AssignIdEvent {
+export function isAssignUserIdAndConfigEvent(value: any): value is AssignUserIdAndConfigEvent {
     return (
         isBaseEvent(value) &&
         value.eventType == EVENT_TYPES.ASSIGN_USER_ID_EVENT
@@ -230,7 +238,7 @@ export function isNpcTargetPositionEvent(value: any): value is NpcTargetPosition
 
 type EventTypes =
     NewPlayerEvent |
-    AssignIdEvent |
+    AssignUserIdAndConfigEvent |
     PlayerTargetPositionEvent |
     RemovePlayerEvent |
     Hitpoints |

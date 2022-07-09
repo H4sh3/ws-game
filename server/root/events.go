@@ -44,15 +44,23 @@ func GetNewPlayerEvent(id int, pos shared.Vector) interface{} {
 	return &NewPlayerEvent{EventType: NEW_USER_EVENT, Id: id, Pos: pos}
 }
 
-type AssignUserIdEvent struct {
-	EventType EventType     `json:"eventType"`
-	Id        int           `json:"id"`
-	Pos       shared.Vector `json:"pos"`
-	UUID      string        `json:"uuid"`
+type GameConfig struct {
+	GridCellSize   int `json:"gridCellSize"`
+	SubCells       int `json:"subCells"`
+	PlayerStepSize int `json:"playerStepSize"`
+	SubCellSize    int `json:"subCellSize"`
 }
 
-func GetAssignUserIdEvent(id int, pos shared.Vector, uuid string) interface{} {
-	return &AssignUserIdEvent{EventType: ASSIGN_USER_ID_EVENT, Id: id, Pos: pos, UUID: uuid}
+type AssignUserIdEvent struct {
+	EventType  EventType     `json:"eventType"`
+	Id         int           `json:"id"`
+	Pos        shared.Vector `json:"pos"`
+	UUID       string        `json:"uuid"`
+	GameConfig GameConfig    `json:"gameConfig"`
+}
+
+func GetAssignUserIdEvent(id int, pos shared.Vector, uuid string, config GameConfig) interface{} {
+	return &AssignUserIdEvent{EventType: ASSIGN_USER_ID_EVENT, Id: id, Pos: pos, UUID: uuid, GameConfig: config}
 }
 
 type PlayerTargetPositionEvent struct {

@@ -284,18 +284,18 @@ func (cell *GridCell) CellCoro() {
 				}
 
 				// limit if step is to big
-				if Abs(diffX) > stepSize {
+				if Abs(diffX) > StepSize {
 					if diffX > 0 {
-						step.X = stepSize
+						step.X = StepSize
 					} else {
-						step.X = -stepSize
+						step.X = -StepSize
 					}
 				}
-				if Abs(diffY) > stepSize {
+				if Abs(diffY) > StepSize {
 					if diffY > 0 {
-						step.Y = stepSize
+						step.Y = StepSize
 					} else {
-						step.Y = -stepSize
+						step.Y = -StepSize
 					}
 				}
 
