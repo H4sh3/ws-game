@@ -7,10 +7,10 @@ import (
 )
 
 type Npc struct {
-	UUID             string        `json:"UUID"`
-	Pos              shared.Vector `json:"pos"`
-	Hp               float32       `json:"hp"`
-	NpcType          string        `json:"npcType"`
+	UUID             string           `json:"UUID"`
+	Pos              shared.Vector    `json:"pos"`
+	Hitpoints        shared.Hitpoints `json:"hitpoints"`
+	NpcType          string           `json:"npcType"`
 	spawnPos         shared.Vector
 	movesBackToSpawn bool
 	aggressive       bool
@@ -19,6 +19,11 @@ type Npc struct {
 	maxDamage        float32
 	actionCooldown   int
 	targetedPlayer   *Client
+	remove           bool
+}
+
+func (npc *Npc) SetRemove(value bool) {
+	npc.remove = value
 }
 
 func NewNpc(pos shared.Vector) Npc {
@@ -28,13 +33,16 @@ func NewNpc(pos shared.Vector) Npc {
 		Pos:              pos,
 		spawnPos:         pos,
 		movesBackToSpawn: false,
-		Hp:               200.0,
-		NpcType:          "",
-		aggressive:       false,
-		minDamage:        10,
-		maxDamage:        30,
-		critChance:       0.2,
-		targetedPlayer:   nil,
-		actionCooldown:   0,
+		Hitpoints: shared.Hitpoints{
+			Current: 250,
+			Max:     250,
+		},
+		NpcType:        "",
+		aggressive:     false,
+		minDamage:      10,
+		maxDamage:      30,
+		critChance:     0.2,
+		targetedPlayer: nil,
+		actionCooldown: 0,
 	}
 }

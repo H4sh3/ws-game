@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignUserIdAndConfigEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isAssignUserIdAndConfigEvent, GameConfig } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignUserIdAndConfigEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isAssignUserIdAndConfigEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent } from './events/events';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
 import Vector from './types/vector';
@@ -140,6 +140,8 @@ export class Game extends Container {
         } else if (isNpcTargetPositionEvent(parsed)) {
 
             this.handleNpcTargetPositionEvent(parsed)
+        } else if (isUpdateNpcEvent(parsed)) {
+            this.handleUpdateNpcEvent(parsed)
         }
     }
 
@@ -283,8 +285,8 @@ export class Game extends Container {
         Array.from(this.npcs.values()).map(p => {
             p.map(npc => {
                 npc.updatePosition()
-                npc.sprite.x = npc.currentPos.x
-                npc.sprite.y = npc.currentPos.y
+                npc.container.x = npc.currentPos.x
+                npc.container.y = npc.currentPos.y
             })
         })
 
@@ -333,7 +335,7 @@ export class Game extends Container {
         // unsub from cell remove npcs form cell 
 
         this.npcs.get(gridCellKey).forEach(npc => {
-            this.npcContainer.removeChild(npc.sprite)
+            this.npcContainer.removeChild(npc.container)
         })
         this.npcs.delete(gridCellKey)
     }
@@ -403,7 +405,8 @@ export class Game extends Container {
 
             r.hitPoints.current = parsed.hitpoints.current
             r.hitPoints.max = parsed.hitpoints.max
-            r.updateHealthbar()
+            r.updateHealthbar(r.container)
+
             if (r.hitPoints.current <= 0) {
                 r.container.removeChild(r.sprite)
                 this.removeChild(r.container)
@@ -446,8 +449,8 @@ export class Game extends Container {
 
     handleNpcListEvent(parsed: NpcListEvent) {
         const newNpcs: Npc[] = parsed.npcList.map(npc => {
-            const n = new Npc(npc)
-            this.npcContainer.addChild(n.sprite)
+            const n = new Npc(npc, this.ws, this.player)
+            this.npcContainer.addChild(n.container)
             return n
         })
         this.npcs.set(parsed.gridCellKey, newNpcs)
@@ -469,6 +472,32 @@ export class Game extends Container {
         npcs = npcs.filter(n => n.UUID !== parsed.npcUUID)
         npcs.push(npc)
         this.npcs.set(parsed.gridCellKey, npcs)
+    }
+
+    handleUpdateNpcEvent(parsed: UpdateNpcEvent) {
+        console.log("handleUpdateNpcEvent", parsed)
+        let npcs = this.npcs.get(parsed.gridCellKey)
+
+        if (!npcs) {
+            return
+        }
+
+        const npc = npcs.find(n => n.UUID === parsed.npcUUID)
+        if (!npc) {
+            return
+        }
+
+        npc.hitPoints.current = parsed.hitpoints.current
+        npcs = npcs.filter(n => n.UUID !== parsed.npcUUID)
+        if (parsed.remove) {
+            this.npcContainer.removeChild(npc.container)
+        } else {
+            npcs.push(npc)
+        }
+
+        this.npcs.set(parsed.gridCellKey, npcs)
+
+        npc.updateHealthbar(npc.container)
     }
 
     handleKeyBoard(keyHandler: KeyboardHandler, player: Player, ws: WebSocket, resources: Resource[]) {

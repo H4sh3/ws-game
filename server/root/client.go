@@ -259,6 +259,13 @@ func UnmarshalClientEvents(event_data BaseEvent, h *Hub, c *Client) {
 		}
 		h.HandleResourceHit(*event, c)
 
+	case HIT_NPC_EVENT:
+		event := &HitNpcEvent{}
+		if err := json.Unmarshal(event_data.Payload, &event); err != nil {
+			panic(err)
+		}
+		h.HandleNpcHit(*event, c)
+
 	case LOOT_RESOURCE_EVENT:
 		event := &LootResourceEvent{}
 		if err := json.Unmarshal(event_data.Payload, &event); err != nil {

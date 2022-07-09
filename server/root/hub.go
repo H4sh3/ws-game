@@ -296,7 +296,7 @@ func (h *Hub) HandlePlayerPlacedResource(event PlayerPlacedResourceEvent, c *Cli
 					Pos:      event.Pos,
 					Id:       h.ResourceManager.GetResourceId(),
 					Quantity: 1,
-					Hitpoints: resource.Hitpoints{
+					Hitpoints: shared.Hitpoints{
 						Current: 500,
 						Max:     500},
 					IsSolid:    true,
@@ -339,5 +339,30 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 	gridCell.AddPlayer(client)
 	for _, cell := range h.GridManager.getCells(gridCell.Pos.X/GridCellSize, gridCell.Pos.Y/GridCellSize) {
 		cell.Subscribe <- client
+	}
+}
+
+func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
+	clientPos := client.getPos()
+	cells := h.GridManager.getCells(clientPos.X/GridCellSize, clientPos.Y/GridCellSize)
+
+	for _, cell := range cells {
+		cell.NpcListMutex.Lock()
+		for npcIndex, npc := range cell.NpcList {
+			if npc.UUID == event.UUID {
+				fmt.Printf("hitting %s current hp %d\n", npc.UUID, npc.Hitpoints.Current)
+				damage := shared.RandIntInRange(34, 50)
+				npc.Hitpoints.Current -= damage
+				remove := npc.Hitpoints.Current <= 0
+
+				if remove {
+					npc.SetRemove(true)
+				}
+
+				cell.NpcList[npcIndex] = npc
+				cell.Broadcast <- NewUpdateNpcEvent(npc.UUID, cell.NpcList[npcIndex].Hitpoints.Current, cell.NpcList[npcIndex].Hitpoints.Max, remove, cell.GridCellKey, damage)
+			}
+		}
+		cell.NpcListMutex.Unlock()
 	}
 }

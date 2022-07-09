@@ -116,6 +116,7 @@ func ResourcemanagerCoro(rM *ResourceManager) {
 			}
 			// all new cells initialized
 			rM.cellsToInit = []*GridCell{}
+
 			rM.cellsToInitMutex.Unlock()
 			rM.resourcesMutex.Unlock()
 		}

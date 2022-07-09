@@ -15,11 +15,45 @@ export enum ResourceTypes {
     IronOre = "ironOre",
 }
 
-export class Resource {
+export class HasHitpoints {
+    hitPoints: Hitpoints
+    healthBar?: Graphics
+
+    constructor(hitpoints: Hitpoints) {
+        this.hitPoints = hitpoints
+    }
+
+    updateHealthbar(container: Container) {
+        if (this.healthBar) {
+            container.removeChild(this.healthBar)
+        }
+        if (this.hitPoints.current === this.hitPoints.max || this.hitPoints.current <= 0) {
+            return
+        }
+
+        const width = 50
+        this.healthBar = new Graphics();
+
+        this.healthBar.beginFill(0xcccccc);
+        this.healthBar.drawRect(-25, -20, width, 10);
+        this.healthBar.endFill();
+
+        this.healthBar.beginFill(0x00ff00);
+        this.healthBar.drawRect(-25, -20, width * (this.hitPoints.current / this.hitPoints.max), 10);
+        this.healthBar.endFill();
+
+        this.healthBar.lineStyle(2, 0x666666, 1);
+        this.healthBar.drawRect(-25, -20, width, 10);
+        this.healthBar.endFill();
+
+        container.addChild(this.healthBar)
+    }
+}
+
+export class Resource extends HasHitpoints {
     id: number
     quantity: number
     pos: Vector
-    hitPoints: Hitpoints
     isSolid: boolean
     isLootable: boolean
     resourceType: string
@@ -29,12 +63,13 @@ export class Resource {
     // render stuff
     container: Container
     sprite: Sprite
-    healthBar?: Graphics
 
     canDoAction?: () => boolean
     setCanDoAction?: (b: boolean) => void
 
     constructor(id: number, player: Player, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean, canDoAction: () => boolean = () => { return true }, setCanDoAction: (b: boolean) => void = () => { }) {
+        super(hp)
+
         this.canDoAction = canDoAction
         this.setCanDoAction = setCanDoAction
         this.id = id
@@ -45,12 +80,6 @@ export class Resource {
         this.isSolid = isSolid
         this.isLootable = isLootable
         this.resourceType = resourceType
-
-        this.hitPoints = {
-            current: hp.current,
-            max: hp.max
-        }
-
         this.container = new Container()
         this.container.x = this.pos.x
         this.container.y = this.pos.y
@@ -70,7 +99,7 @@ export class Resource {
         this.sprite.anchor.set(0.5)
         this.container.addChild(this.sprite)
 
-        this.updateHealthbar()
+        this.updateHealthbar(this.container)
 
 
         this.sprite.on('click', () => {
@@ -95,30 +124,5 @@ export class Resource {
         });
     }
 
-    updateHealthbar() {
-        if (this.healthBar) {
-            this.container.removeChild(this.healthBar)
-        }
-        if (this.hitPoints.current === this.hitPoints.max || this.hitPoints.current <= 0) {
-            return
-        }
 
-        const width = 50
-        this.healthBar = new Graphics();
-
-        this.healthBar.beginFill(0xcccccc);
-        this.healthBar.drawRect(-25, -20, width, 10);
-        this.healthBar.endFill();
-
-        this.healthBar.beginFill(0x00ff00);
-        this.healthBar.drawRect(-25, -20, width * (this.hitPoints.current / this.hitPoints.max), 10);
-        this.healthBar.endFill();
-
-        this.healthBar.lineStyle(2, 0x666666, 1);
-        this.healthBar.drawRect(-25, -20, width, 10);
-        this.healthBar.endFill();
-
-        console.log(this.container)
-        this.container.addChild(this.healthBar)
-    }
 }

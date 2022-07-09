@@ -226,6 +226,13 @@ func (cell *GridCell) CellCoro() {
 
 			// NPC Updates
 			cell.NpcListMutex.Lock()
+			for i, npc := range cell.NpcList {
+				if npc.remove {
+					fmt.Println("remove npc", npc)
+					cell.NpcList = append(cell.NpcList[:i], cell.NpcList[i+1:]...)
+				}
+			}
+
 			for index, npc := range cell.NpcList {
 
 				if !npc.movesBackToSpawn {

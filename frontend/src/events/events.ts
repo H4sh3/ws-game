@@ -21,6 +21,8 @@ export enum EVENT_TYPES {
     CELL_DATA_EVENT = 16,
     NPC_LIST_EVENT = 17,
     NPC_TARGET_POSITION_EVENT = 18,
+    HIT_NPC_EVENT = 19,
+    UPDATE_NPC_EVENT = 20,
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -147,7 +149,20 @@ export function isUpdateResourceEvent(value: any): value is UpdateResourceEvent 
     )
 }
 
+export interface UpdateNpcEvent {
+    npcUUID: string
+    gridCellKey: string
+    hitpoints: Hitpoints
+    remove: boolean
+    damage: number
+}
 
+export function isUpdateNpcEvent(value: any): value is UpdateNpcEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType === EVENT_TYPES.UPDATE_NPC_EVENT
+    )
+}
 
 export interface LoadInventoryEvent extends BaseEvent {
     items: { [key: string]: IResource }
@@ -207,7 +222,7 @@ export function isCellDataEvent(value: any): value is CellDataEvent {
 export interface INpc {
     UUID: string
     pos: IVector
-    hp: number
+    hitpoints: Hitpoints
     npcType: string
 }
 
@@ -351,6 +366,24 @@ export function getLoginPlayerEvent(uuid: string): string {
         "eventType": EVENT_TYPES.LOGIN_PLAYER_EVENT,
         "payload": {
             "uuid": uuid
+        }
+    }
+    return JSON.stringify(e)
+}
+
+interface HitNpcEvent extends BaseEvent {
+    payload: {
+        skill: string,
+        uuid: string,
+    }
+}
+
+export function getHitNpcEvent(skill: string, uuid: string): string {
+    const e: HitNpcEvent = {
+        "eventType": EVENT_TYPES.HIT_NPC_EVENT,
+        "payload": {
+            "skill": skill,
+            "uuid": uuid,
         }
     }
     return JSON.stringify(e)

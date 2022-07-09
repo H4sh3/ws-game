@@ -28,6 +28,8 @@ const (
 	CELL_DATA_EVENT              EventType = 16
 	NPC_LIST_EVENT               EventType = 17
 	NPC_TARGET_POSITION_EVENT    EventType = 18
+	HIT_NPC_EVENT                EventType = 19
+	UPDATE_NPC_EVENT             EventType = 20
 )
 
 const (
@@ -139,16 +141,16 @@ func NewUpdateInventoryEvent(r resource.Resource, remove bool) interface{} {
 }
 
 type UpdateResourceEvent struct {
-	EventType   EventType          `json:"eventType"`
-	GridCellKey string             `json:"gridCellKey"`
-	Id          int                `json:"id"`
-	Hitpoints   resource.Hitpoints `json:"hitpoints"`
-	Remove      bool               `json:"remove"`
-	Damage      int                `json:"damage"`
+	EventType   EventType        `json:"eventType"`
+	GridCellKey string           `json:"gridCellKey"`
+	Id          int              `json:"id"`
+	Hitpoints   shared.Hitpoints `json:"hitpoints"`
+	Remove      bool             `json:"remove"`
+	Damage      int              `json:"damage"`
 }
 
 func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool, gridCellKey string, damage int) interface{} {
-	hitpoints := resource.Hitpoints{Current: currentHp, Max: maxHp}
+	hitpoints := shared.Hitpoints{Current: currentHp, Max: maxHp}
 	return &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey, Damage: damage}
 }
 
@@ -202,6 +204,20 @@ func NewNpcTargetPositionEvent(gridCellKey string, npcUUID string, pos shared.Ve
 	}
 }
 
+type UpdateNpcEvent struct {
+	EventType   EventType        `json:"eventType"`
+	GridCellKey string           `json:"gridCellKey"`
+	NpcUUID     string           `json:"npcUUID"`
+	Hitpoints   shared.Hitpoints `json:"hitpoints"`
+	Remove      bool             `json:"remove"`
+	Damage      int              `json:"damage"`
+}
+
+func NewUpdateNpcEvent(uuid string, currentHp int, maxHp int, remove bool, gridCellKey string, damage int) interface{} {
+	hitpoints := shared.Hitpoints{Current: currentHp, Max: maxHp}
+	return &UpdateNpcEvent{EventType: UPDATE_NPC_EVENT, NpcUUID: uuid, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey, Damage: damage}
+}
+
 // Events send from client
 
 type BaseEvent struct {
@@ -216,6 +232,11 @@ type KeyBoardEvent struct {
 type HitResourceEvent struct {
 	Skill string `json:"skill"`
 	Id    int    `json:"id"`
+}
+
+type HitNpcEvent struct {
+	Skill string `json:"skill"`
+	UUID  string `json:"uuid"`
 }
 
 type LootResourceEvent struct {

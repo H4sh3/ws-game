@@ -19,20 +19,15 @@ const (
 	Cooper    ResourceType = "cooper"
 )
 
-type Hitpoints struct {
-	Current int `json:"current"`
-	Max     int `json:"max"`
-}
-
 type Resource struct {
-	ResourceType ResourceType  `json:"resourceType"`
-	Pos          shared.Vector `json:"pos"`
-	Id           int           `json:"id"`
-	Quantity     int           `json:"quantity"`
-	Hitpoints    Hitpoints     `json:"hitpoints"`
-	IsSolid      bool          `json:"isSolid"`
-	IsLootable   bool          `json:"isLootable"`
-	GridCellKey  string        `json:"gridCellKey"`
+	ResourceType ResourceType     `json:"resourceType"`
+	Pos          shared.Vector    `json:"pos"`
+	Id           int              `json:"id"`
+	Quantity     int              `json:"quantity"`
+	Hitpoints    shared.Hitpoints `json:"hitpoints"`
+	IsSolid      bool             `json:"isSolid"`
+	IsLootable   bool             `json:"isLootable"`
+	GridCellKey  string           `json:"gridCellKey"`
 	remove       bool
 }
 
@@ -50,7 +45,7 @@ func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity 
 		Pos:          pos,
 		Id:           id,
 		Quantity:     quantity,
-		Hitpoints: Hitpoints{
+		Hitpoints: shared.Hitpoints{
 			Current: hitpoints,
 			Max:     hitpoints,
 		},

@@ -1,5 +1,7 @@
 import { AnimatedSprite, Container, Loader, Sprite } from "pixi.js";
-import { createVector, INpc } from "../events/events";
+import { createVector, getHitNpcEvent, Hitpoints, INpc } from "../events/events";
+import { Player } from "./player";
+import { HasHitpoints } from "./resource";
 import Vector from "./vector";
 
 export const getKnightTiles = (): string[] => {
@@ -10,21 +12,29 @@ export const getKnightTiles = (): string[] => {
     return paths
 }
 
-class Npc {
+class Npc extends HasHitpoints {
     UUID: string
     currentPos: Vector
     targetPos: Vector
-    hp: number
+    hitpoints: Hitpoints
     npcType: string
 
     container: Container
     sprite: AnimatedSprite
 
-    constructor(serial: INpc) {
+    ws: WebSocket
+    player: Player
+
+    constructor(serial: INpc, ws: WebSocket, player: Player) {
+        super(serial.hitpoints)
+
+        this.player = player
+        this.ws = ws
+
         this.UUID = serial.UUID
         this.currentPos = createVector(serial.pos.x, serial.pos.y)
         this.targetPos = createVector(serial.pos.x, serial.pos.y)
-        this.hp = serial.hp
+        this.hitpoints = serial.hitpoints
 
 
         // Todo: use loader for better performance
@@ -34,11 +44,18 @@ class Npc {
         sprite.scale.set(2, 2)
 
         this.sprite = sprite
+
+        this.container = new Container()
+        this.container.addChild(this.sprite)
+
         this.sprite.interactive = true
 
         this.sprite.on('click', () => {
-            console.log("npc clicked")
+            if (this.currentPos.dist(this.player.currentPos) < 150) {
+                this.ws.send(getHitNpcEvent("1", this.UUID))
+            }
         });
+
     }
 
 

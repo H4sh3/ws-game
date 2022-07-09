@@ -5,6 +5,11 @@ import (
 	"math/rand"
 )
 
+type Hitpoints struct {
+	Current int `json:"current"`
+	Max     int `json:"max"`
+}
+
 func RandIntInRange(min int, max int) int {
 	return rand.Intn(max-min) + min
 }
