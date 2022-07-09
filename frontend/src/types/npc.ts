@@ -1,5 +1,5 @@
 import { AnimatedSprite, Container, Loader, Sprite } from "pixi.js";
-import { createVector, NpcI } from "../events/events";
+import { createVector, INpc } from "../events/events";
 import Vector from "./vector";
 
 export const getKnightTiles = (): string[] => {
@@ -10,18 +10,20 @@ export const getKnightTiles = (): string[] => {
     return paths
 }
 
-class Npc implements NpcI {
+class Npc {
     UUID: string
-    pos: Vector
+    currentPos: Vector
+    targetPos: Vector
     hp: number
     npcType: string
 
     container: Container
-    sprite: Sprite
+    sprite: AnimatedSprite
 
-    constructor(serial: NpcI) {
+    constructor(serial: INpc) {
         this.UUID = serial.UUID
-        this.pos = createVector(serial.pos.x, serial.pos.y)
+        this.currentPos = createVector(serial.pos.x, serial.pos.y)
+        this.targetPos = createVector(serial.pos.x, serial.pos.y)
         this.hp = serial.hp
 
 
@@ -37,6 +39,28 @@ class Npc implements NpcI {
         this.sprite.on('click', () => {
             console.log("npc clicked")
         });
+    }
+
+
+    updatePosition() {
+        const step = this.targetPos.copy().sub(this.currentPos).mult(0.2)
+        if (step.mag() == 0) {
+            //this.posChanged = false
+            this.sprite.stop()
+            return
+        }
+
+
+        if (step.mag() > 0.1) {
+            this.currentPos.add(step)
+        } else {
+            this.currentPos = this.targetPos.copy()
+        }
+        //this.posChanged = true
+
+        this.sprite.play()
+        // if players moves left, mirror the sprite
+        this.sprite.scale.x = step.x > 0 ? 2 : -2
     }
 }
 

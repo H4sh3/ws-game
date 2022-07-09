@@ -139,7 +139,7 @@ func (gm *GridManager) getCells(x int, y int) []*GridCell {
 			xIdx := x + xOffset
 			yIdx := y + yOffset
 
-			fmt.Printf("getting cell %d %d\n", xIdx, yIdx)
+			// fmt.Printf("getting cell %d %d\n", xIdx, yIdx)
 
 			cell := gm.GetCell(xIdx, yIdx)
 

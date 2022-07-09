@@ -6,4 +6,4 @@ export const GRID_CELL_SIZE = 1000
 export const SUB_CELLS = 20
 export const SUB_CELL_SIZE = GRID_CELL_SIZE / SUB_CELLS
 
-export const PLAYER_STEP_SIZE = 50
+export const PLAYER_STEP_SIZE = 25

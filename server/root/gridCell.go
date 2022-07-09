@@ -2,6 +2,7 @@ package root
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
 	"ws-game/resource"
@@ -70,9 +71,11 @@ func NewCell(x int, y int) *GridCell {
 
 	// test npc -> only one per cell atm
 
-	npcPos := shared.Vector{X: x * GridCellSize, Y: y * GridCellSize}
-	npc := NewNpc(npcPos)
-	cell.NpcList = append(cell.NpcList, npc)
+	for i := 0; i < 1; i++ {
+		npcPos := shared.Vector{X: (x * GridCellSize) + shared.RandIntInRange(-50, 50), Y: (y * GridCellSize) + shared.RandIntInRange(-50, 50)}
+		npc := NewNpc(npcPos)
+		cell.NpcList = append(cell.NpcList, npc)
+	}
 
 	cell.SubCells = getSubCells(x, y)
 
@@ -81,6 +84,13 @@ func NewCell(x int, y int) *GridCell {
 
 	go cell.CellCoro()
 	return cell
+}
+
+func Abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 func getKey(x int, y int) string {
@@ -207,6 +217,96 @@ func (cell *GridCell) CellCoro() {
 			cell.playersToAddMutex.Unlock()
 			cell.CellMutex.Unlock()
 
+			// NPC Updates
+			cell.NpcListMutex.Lock()
+			for index, npc := range cell.NpcList {
+
+				if !npc.MovesBackToSpawn {
+					npc.MovesBackToSpawn = npc.SpawnPos.Dist(&npc.Pos) > 500
+					npc.TargetedPlayer = nil
+				}
+
+				if npc.ActionCooldown >= 0 {
+					cell.NpcList[index].ActionCooldown -= 1
+					continue
+				}
+
+				var player *Client = npc.TargetedPlayer
+				var smallestDist = math.Inf(1)
+
+				// find closest player in cell
+
+				if player == nil {
+					for _, sub := range cell.playerSubscriptions {
+						dist := sub.Player.Pos.Dist(&npc.Pos)
+						if dist < smallestDist && dist < 150 {
+							player = sub.Player
+							cell.NpcList[index].TargetedPlayer = player
+							smallestDist = dist
+						}
+					}
+				}
+
+				// move in direction of player
+				diffX := 0
+				diffY := 0
+
+				if player != nil {
+					// no player found
+					diffX = player.Pos.X - npc.Pos.X
+					diffY = player.Pos.Y - npc.Pos.Y
+
+					if player.Pos.Dist(&npc.Pos) < 50 && !npc.MovesBackToSpawn {
+						continue
+					}
+				}
+
+				if npc.MovesBackToSpawn {
+					diffX = npc.SpawnPos.X - npc.Pos.X
+					diffY = npc.SpawnPos.Y - npc.Pos.Y
+
+					dist := npc.SpawnPos.Dist(&npc.Pos)
+					if dist <= 50 {
+						npc.MovesBackToSpawn = false
+					}
+				}
+
+				if diffX == 0 && diffY == 0 {
+					continue
+				}
+
+				step := shared.Vector{
+					X: diffX,
+					Y: diffY,
+				}
+
+				// limit if step is to big
+				if Abs(diffX) > stepSize {
+					if diffX > 0 {
+						step.X = stepSize
+					} else {
+						step.X = -stepSize
+					}
+				}
+				if Abs(diffY) > stepSize {
+					if diffY > 0 {
+						step.Y = stepSize
+					} else {
+						step.Y = -stepSize
+					}
+				}
+
+				npc.Pos.Add(step)
+				npc.ActionCooldown = 0
+
+				cell.NpcList[index] = npc
+
+				// broadcast event with new npc position
+				cell.AddEventToBroadcast(NewNpcTargetPositionEvent(cell.GridCellKey, npc.UUID, npc.Pos))
+
+			}
+			cell.NpcListMutex.Unlock()
+
 			// broadcast all events at once
 			if len(cell.eventsToBroadcast) > 0 {
 				eventsToBroadcast := cell.GetEventsToBroadcast()
@@ -273,7 +373,16 @@ func (cell *GridCell) isClientSubscribed(cId int) bool {
 func (cell *GridCell) UnsubscribeClient(cId int) {
 	cell.CellMutex.Lock()
 	delete(cell.playerSubscriptions, cId)
-	if len(cell.playerSubscriptions) == 0 {
+
+	npcHasPlayerTargetd := false
+	/* for _, npc := range cell.NpcList {
+		if npc.TargetedPlayer != nil {
+			npcHasPlayerTargetd = true
+			break
+		}
+	} */
+
+	if len(cell.playerSubscriptions) == 0 && !npcHasPlayerTargetd {
 		cell.ticker.Stop()
 		fmt.Printf("stopped cell at %s\n", cell.GridCellKey)
 	}

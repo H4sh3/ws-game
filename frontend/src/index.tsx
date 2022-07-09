@@ -33,7 +33,8 @@ const main = async () => {
     await load(app, 'assets/brick.png');
     await load(app, 'assets/cursor.png');
     await load(app, 'assets/blockade.png');
-    await load(app, 'assets/tree.png');
+    await load(app, 'assets/tree1.png');
+    await load(app, 'assets/tree2.png');
     await load(app, 'assets/log.png');
     await load(app, 'assets/ironOre.png');
     await load(app, 'assets/grass.png');

@@ -8,7 +8,7 @@ interface InventoryComponentProps {
 }
 
 const InventoryComponent: React.FC<InventoryComponentProps> = ({ inventoryStore }) => {
-    const ItemList = observer((props: InventoryComponentProps) => <div className="grid grid-cols-1 lg:grid-cols-3  gap-2 w-128">
+    const ItemList = observer((props: InventoryComponentProps) => <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 w-128">
         {props.inventoryStore.getItems.map((i, ix) => {
             return <div key={ix} className={`${ItemBase} ${props.inventoryStore.selectedItems.includes(i.resourceType) ? 'border-green-500' : ''}`}
                 onClick={() => {
@@ -28,9 +28,6 @@ const InventoryComponent: React.FC<InventoryComponentProps> = ({ inventoryStore 
         })}
         <div className="col-span-1"></div>
         <div className="col-span-1"></div>
-        <div className="col-span-3 text-center">
-            {`Fps: ${inventoryStore.frameRate.toFixed(2)}`}
-        </div>
     </div>)
 
     return <div className="bg-gray-400 flex flex-col gap-4 select-none p-2">

@@ -27,6 +27,7 @@ const (
 	LOGIN_PLAYER_EVENT           EventType = 15
 	CELL_DATA_EVENT              EventType = 16
 	NPC_LIST_EVENT               EventType = 17
+	NPC_TARGET_POSITION_EVENT    EventType = 18
 )
 
 const (
@@ -175,6 +176,22 @@ type MultipleEvents struct {
 
 func NewMultipleEvents(events []interface{}) interface{} {
 	return &MultipleEvents{EventType: MULTIPLE_EVENTS, Events: events}
+}
+
+type NpcTagetPositionEvent struct {
+	EventType   EventType     `json:"eventType"`
+	GridCellKey string        `json:"gridCellKey"`
+	NpcUUID     string        `json:"npcUUID"`
+	Pos         shared.Vector `json:"pos"`
+}
+
+func NewNpcTargetPositionEvent(gridCellKey string, npcUUID string, pos shared.Vector) NpcTagetPositionEvent {
+	return NpcTagetPositionEvent{
+		EventType:   NPC_TARGET_POSITION_EVENT,
+		GridCellKey: gridCellKey,
+		NpcUUID:     npcUUID,
+		Pos:         pos,
+	}
 }
 
 // Events send from client

@@ -1,4 +1,5 @@
 import { Sprite, Graphics, Loader, Container } from "pixi.js"
+import { randInt } from "../etc/math"
 import { Hitpoints, getHitResourceEvent, getLootResourceEvent } from "../events/events"
 import { Player } from "./player"
 import Vector from "./vector"
@@ -53,7 +54,18 @@ export class Resource {
         this.container = new Container()
         this.container.x = this.pos.x
         this.container.y = this.pos.y
-        this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}.png`].texture)
+
+        if (this.resourceType == "tree") {
+            if (randInt(1, 10) > 5) {
+                this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}1.png`].texture)
+            } else {
+                this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}2.png`].texture)
+            }
+            this.sprite.scale.set(2, 2)
+        } else {
+            this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}.png`].texture)
+        }
+
         this.sprite.interactive = true
         this.sprite.anchor.set(0.5)
         this.container.addChild(this.sprite)
@@ -63,6 +75,7 @@ export class Resource {
 
         this.sprite.on('click', () => {
             if (!this.isLootable && !this.player.canDoAction()) {
+                console.log("cant do action")
                 return
             }
             if (this.pos.dist(this.player.currentPos) < 150) {
@@ -72,18 +85,16 @@ export class Resource {
                     // is hitable
                     this.ws.send(getHitResourceEvent("1", this.id))
                 }
+            } else {
+                console.log("to far away")
             }
         });
 
         this.sprite.on('mouseover', () => {
             if (this.pos.dist(this.player.currentPos) > 150) return
-            this.sprite.scale.x = 1.1
-            this.sprite.scale.y = 1.1
         });
 
         this.sprite.on('mouseout', () => {
-            this.sprite.scale.x = 1
-            this.sprite.scale.y = 1
         });
     }
 

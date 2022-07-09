@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, isAssignUserIdEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignIdEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent } from './events/events';
 import { Player } from './types/player';
 import { Resource } from './types/resource';
 import Vector from './types/vector';
@@ -26,6 +26,8 @@ export class Game extends Container {
     resources: Map<string, Resource[]>
 
     worldContainer: Container
+
+    npcContainer: Container
     textHandler: TextHandler
     tilemap: Tilemap
 
@@ -64,19 +66,24 @@ export class Game extends Container {
         // container structurs
         this.worldContainer = new Container();
         this.worldContainer.sortableChildren = true
+        this.worldContainer.zIndex = 1
 
         this.textHandler = new TextHandler()
         this.textHandler.textItemContainer.sortableChildren = true
+        this.textHandler.textItemContainer.zIndex = 2
 
         this.tilemapHandler = new TilemapHandler()
         this.tilemapHandler.tilemapContainer.sortableChildren = true
-
         this.tilemapHandler.tilemapContainer.zIndex = 0
-        this.worldContainer.zIndex = 1
-        this.textHandler.textItemContainer.zIndex = 2
+
+        this.npcContainer = new Container();
+        this.npcContainer.sortableChildren = true
+        this.npcContainer.zIndex = 4
 
         this.worldContainer.addChild(this.tilemapHandler.tilemapContainer)
+        this.worldContainer.addChild(this.npcContainer)
         this.worldContainer.addChild(this.textHandler.textItemContainer)
+
 
 
         this.soundHandler = new SoundHandler()
@@ -205,6 +212,9 @@ export class Game extends Container {
 
         } else if (isNpcListEvent(parsed)) {
             this.handleNpcListEvent(parsed)
+        } else if (isNpcTargetPositionEvent(parsed)) {
+
+            this.handleNpcTargetPositionEvent(parsed)
         }
     }
 
@@ -260,6 +270,15 @@ export class Game extends Container {
             p.sprite.y = p.currentPos.y
         })
 
+        // update npc positions
+        Array.from(this.npcs.values()).map(p => {
+            p.map(npc => {
+                npc.updatePosition()
+                npc.sprite.x = npc.currentPos.x
+                npc.sprite.y = npc.currentPos.y
+            })
+        })
+
 
         this.player.updateCooldown(delta)
     }
@@ -303,6 +322,10 @@ export class Game extends Container {
         this.resources.delete(gridCellKey)
 
         // unsub from cell remove npcs form cell 
+
+        this.npcs.get(gridCellKey).forEach(npc => {
+            this.npcContainer.removeChild(npc.sprite)
+        })
         this.npcs.delete(gridCellKey)
     }
 
@@ -415,10 +438,28 @@ export class Game extends Container {
     handleNpcListEvent(parsed: NpcListEvent) {
         const newNpcs: Npc[] = parsed.npcList.map(npc => {
             const n = new Npc(npc)
-            this.worldContainer.addChild(n.sprite)
+            this.npcContainer.addChild(n.sprite)
             return n
         })
         this.npcs.set(parsed.gridCellKey, newNpcs)
+    }
+
+    handleNpcTargetPositionEvent(parsed: NpcTargetPositionEvent) {
+        let npcs = this.npcs.get(parsed.gridCellKey)
+
+        if (!npcs) {
+            return
+        }
+
+        const npc = npcs.find(n => n.UUID === parsed.npcUUID)
+        if (!npc) {
+            return
+        }
+
+        npc.targetPos = createVector(parsed.pos.x, parsed.pos.y)
+        npcs = npcs.filter(n => n.UUID !== parsed.npcUUID)
+        npcs.push(npc)
+        this.npcs.set(parsed.gridCellKey, npcs)
     }
 }
 

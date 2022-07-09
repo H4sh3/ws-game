@@ -28,6 +28,8 @@ export class Player {
         this.movesRight = true
         this.spriteContainer = new Container();
         this.sprite = sprite
+        this.spriteContainer.zIndex = 1
+        this.spriteContainer.sortableChildren = true
         this.spriteContainer.addChild(this.sprite)
     }
 

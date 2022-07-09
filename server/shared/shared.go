@@ -23,3 +23,15 @@ func (v1 *Vector) Dist(v2 *Vector) float64 {
 func (v1 *Vector) Copy() Vector {
 	return Vector{X: v1.X, Y: v1.Y}
 }
+
+func (v1 *Vector) Sub(v2 Vector) *Vector {
+	v1.X -= v2.X
+	v1.Y -= v2.Y
+	return v1
+}
+
+func (v1 *Vector) Add(v2 Vector) *Vector {
+	v1.X += v2.X
+	v1.Y += v2.Y
+	return v1
+}

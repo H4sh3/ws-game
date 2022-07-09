@@ -1,5 +1,5 @@
 import { Resource } from "../types/resource"
-import Vector from "../types/vector"
+import Vector, { IVector } from "../types/vector"
 
 export enum EVENT_TYPES {
     NEW_USER_EVENT = 0,
@@ -20,6 +20,7 @@ export enum EVENT_TYPES {
     LOGIN_PLAYER_EVENT = 15,
     CELL_DATA_EVENT = 16,
     NPC_LIST_EVENT = 17,
+    NPC_TARGET_POSITION_EVENT = 18,
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -195,22 +196,35 @@ export function isCellDataEvent(value: any): value is CellDataEvent {
     )
 }
 
-export interface NpcI {
+export interface INpc {
     UUID: string
-    pos: Vector
+    pos: IVector
     hp: number
     npcType: string
 }
 
 export interface NpcListEvent extends BaseEvent {
     gridCellKey: string
-    npcList: NpcI[]
+    npcList: INpc[]
 }
 
 export function isNpcListEvent(value: any): value is NpcListEvent {
     return (
         isBaseEvent(value) &&
         value.eventType == EVENT_TYPES.NPC_LIST_EVENT
+    )
+}
+
+export interface NpcTargetPositionEvent extends BaseEvent {
+    gridCellKey: string,
+    npcUUID: string
+    pos: IVector
+}
+
+export function isNpcTargetPositionEvent(value: any): value is NpcTargetPositionEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType == EVENT_TYPES.NPC_TARGET_POSITION_EVENT
     )
 }
 
@@ -228,7 +242,8 @@ type EventTypes =
     RemoveGridCellEvent |
     MultipleEvents |
     CellDataEvent |
-    NpcListEvent
+    NpcListEvent |
+    NpcTargetPositionEvent
 
 export interface MultipleEvents extends BaseEvent {
     events: EventTypes[]
