@@ -75,7 +75,6 @@ export class Resource {
 
         this.sprite.on('click', () => {
             if (!this.isLootable && !this.player.canDoAction()) {
-                console.log("cant do action")
                 return
             }
             if (this.pos.dist(this.player.currentPos) < 150) {
@@ -85,8 +84,6 @@ export class Resource {
                     // is hitable
                     this.ws.send(getHitResourceEvent("1", this.id))
                 }
-            } else {
-                console.log("to far away")
             }
         });
 
