@@ -87,7 +87,7 @@ type NpcListEvent struct {
 	NpcList     []Npc     `json:"npcList"`
 }
 
-func NewNpcListEvent(gridCellKey string, npcList []Npc) NpcListEvent {
+func NewNpcListEvent(gridCellKey string, npcList []Npc) interface{} {
 	return NpcListEvent{
 		EventType:   NPC_LIST_EVENT,
 		GridCellKey: gridCellKey,

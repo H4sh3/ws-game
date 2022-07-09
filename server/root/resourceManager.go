@@ -96,7 +96,9 @@ func ResourcemanagerCoro(rM *ResourceManager) {
 					r := resource.NewResource(resource.Stone, pos, id, 100, true, 100, false, cell.GridCellKey)
 					rM.resources[r.Id] = r
 					newResources[r.Id] = *r
+					cell.ResourcesMutex.Lock()
 					cell.Resources[r.Id] = r
+					cell.ResourcesMutex.Unlock()
 				}
 
 				// spawn trees
@@ -137,7 +139,7 @@ func (gm *ResourceManager) SetResource(r *resource.Resource) {
 
 func (gm *ResourceManager) DeleteResource(id int) {
 	gm.resourcesMutex.Lock()
-	gm.resources[id].Remove = true
+	gm.resources[id].SetRemove(true)
 	delete(gm.resources, id)
 	gm.resourcesMutex.Unlock()
 }

@@ -33,7 +33,15 @@ type Resource struct {
 	IsSolid      bool          `json:"isSolid"`
 	IsLootable   bool          `json:"isLootable"`
 	GridCellKey  string        `json:"gridCellKey"`
-	Remove       bool
+	remove       bool
+}
+
+func (r *Resource) GetRemove() bool {
+	return r.remove
+}
+
+func (r *Resource) SetRemove(value bool) {
+	r.remove = value
 }
 
 func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity int, isSolid bool, hitpoints int, isLootable bool, gridCellKey string) *Resource {
@@ -49,6 +57,6 @@ func NewResource(resourceType ResourceType, pos shared.Vector, id int, quantity 
 		IsSolid:     false, //isSolid,
 		IsLootable:  isLootable,
 		GridCellKey: gridCellKey,
-		Remove:      false,
+		remove:      false,
 	}
 }

@@ -71,10 +71,12 @@ func NewCell(x int, y int) *GridCell {
 
 	// test npc -> only one per cell atm
 
-	for i := 0; i < 1; i++ {
-		npcPos := shared.Vector{X: (x * GridCellSize) + shared.RandIntInRange(-50, 50), Y: (y * GridCellSize) + shared.RandIntInRange(-50, 50)}
-		npc := NewNpc(npcPos)
-		cell.NpcList = append(cell.NpcList, npc)
+	if cell.Pos.X == 0 && cell.Pos.Y == 0 {
+		for i := 0; i < 1; i++ {
+			npcPos := shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2}
+			npc := NewNpc(npcPos)
+			cell.NpcList = append(cell.NpcList, npc)
+		}
 	}
 
 	cell.SubCells = getSubCells(x, y)
@@ -143,7 +145,12 @@ func (cell *GridCell) CellCoro() {
 					if client.Connected {
 						client.send <- NewResourcePositionsEvent(cell.GetResources())
 						client.send <- NewCellDataEvent(cell.GridCellKey, cell.SubCells, cell.Pos)
-						client.send <- NewNpcListEvent(cell.GridCellKey, cell.NpcList)
+
+						npcs := cell.GetNpcList()
+						if cell.Pos.X == 0 && cell.Pos.Y == 0 {
+							fmt.Println(npcs)
+						}
+						client.send <- NewNpcListEvent(cell.GridCellKey, npcs)
 					}
 				}
 			}
@@ -221,27 +228,22 @@ func (cell *GridCell) CellCoro() {
 			cell.NpcListMutex.Lock()
 			for index, npc := range cell.NpcList {
 
-				if !npc.MovesBackToSpawn {
-					npc.MovesBackToSpawn = npc.SpawnPos.Dist(&npc.Pos) > 500
-					npc.TargetedPlayer = nil
+				if !npc.movesBackToSpawn {
+					npc.movesBackToSpawn = npc.spawnPos.Dist(&npc.Pos) > 500
+					npc.targetedPlayer = nil
 				}
 
-				if npc.ActionCooldown >= 0 {
-					cell.NpcList[index].ActionCooldown -= 1
-					continue
-				}
-
-				var player *Client = npc.TargetedPlayer
+				var player *Client = npc.targetedPlayer
 				var smallestDist = math.Inf(1)
 
 				// find closest player in cell
-
 				if player == nil {
 					for _, sub := range cell.playerSubscriptions {
-						dist := sub.Player.Pos.Dist(&npc.Pos)
+						subbedPlayerPos := sub.Player.getPos()
+						dist := subbedPlayerPos.Dist(&npc.Pos)
 						if dist < smallestDist && dist < 150 {
 							player = sub.Player
-							cell.NpcList[index].TargetedPlayer = player
+							cell.NpcList[index].targetedPlayer = player
 							smallestDist = dist
 						}
 					}
@@ -253,21 +255,22 @@ func (cell *GridCell) CellCoro() {
 
 				if player != nil {
 					// no player found
-					diffX = player.Pos.X - npc.Pos.X
-					diffY = player.Pos.Y - npc.Pos.Y
+					playerPos := player.getPos()
+					diffX = playerPos.X - npc.Pos.X
+					diffY = playerPos.Y - npc.Pos.Y
 
-					if player.Pos.Dist(&npc.Pos) < 50 && !npc.MovesBackToSpawn {
+					if playerPos.Dist(&npc.Pos) < 50 && !npc.movesBackToSpawn {
 						continue
 					}
 				}
 
-				if npc.MovesBackToSpawn {
-					diffX = npc.SpawnPos.X - npc.Pos.X
-					diffY = npc.SpawnPos.Y - npc.Pos.Y
+				if npc.movesBackToSpawn {
+					diffX = npc.spawnPos.X - npc.Pos.X
+					diffY = npc.spawnPos.Y - npc.Pos.Y
 
-					dist := npc.SpawnPos.Dist(&npc.Pos)
+					dist := npc.spawnPos.Dist(&npc.Pos)
 					if dist <= 50 {
-						npc.MovesBackToSpawn = false
+						npc.movesBackToSpawn = false
 					}
 				}
 
@@ -297,7 +300,6 @@ func (cell *GridCell) CellCoro() {
 				}
 
 				npc.Pos.Add(step)
-				npc.ActionCooldown = 0
 
 				cell.NpcList[index] = npc
 
@@ -423,16 +425,29 @@ func (cell *GridCell) GetResources() map[int]resource.Resource {
 	resourceMap := make(map[int]resource.Resource)
 
 	cell.ResourcesMutex.Lock()
-
 	for _, r := range cell.Resources {
-		if r.Remove {
+		if r.GetRemove() {
 			delete(cell.Resources, r.Id)
 			continue
 		}
 		resourceMap[r.Id] = *r
 	}
-
 	cell.ResourcesMutex.Unlock()
 
 	return resourceMap
+}
+
+func (cell *GridCell) GetNpcList() []Npc {
+	npcList := []Npc{}
+
+	cell.NpcListMutex.Lock()
+
+	for _, npc := range cell.NpcList {
+		//npc.TargetedPlayer = nil
+		npcList = append(npcList, npc)
+	}
+
+	cell.NpcListMutex.Unlock()
+
+	return npcList
 }
