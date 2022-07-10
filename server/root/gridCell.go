@@ -71,13 +71,13 @@ func NewCell(x int, y int) *GridCell {
 
 	// test npc -> only one per cell atm
 
-	if cell.Pos.X == 0 && cell.Pos.Y == 0 {
-		for i := 0; i < 1; i++ {
-			npcPos := shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2}
-			npc := NewNpc(npcPos)
-			cell.NpcList = append(cell.NpcList, npc)
-		}
+	for i := 0; i < 1; i++ {
+		npcPos := shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2}
+		npc := NewNpc(npcPos)
+		cell.NpcList = append(cell.NpcList, npc)
 	}
+	//if cell.Pos.X == 0 && cell.Pos.Y == 0 {
+	//}
 
 	cell.SubCells = getSubCells(x, y)
 
