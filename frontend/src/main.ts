@@ -351,15 +351,32 @@ export class Game extends Container {
     handleUpdatePlayerEvent(event: UpdatePlayerEvent) {
         const { playerId, hitpoints } = event
 
+        const spawnText = (pos: Vector) => {
+
+            pos.y -= 50
+
+            if (event.damage > 0) {
+                this.textHandler.addItem(`-${event.damage}`, pos, '0xff0000')
+            }
+
+            if (event.heal > 0) {
+                this.textHandler.addItem(`+${event.heal}`, pos, '0x00ff00')
+            }
+        }
+
         if (this.player.id == playerId) {
             this.player.hitPoints = hitpoints
             this.player.updateHealthbar(this.player.spriteContainer)
+
+            spawnText(this.player.currentPos.copy())
+
         } else {
             const player = this.players.get(playerId)
             if (player) {
                 player.hitPoints = hitpoints
                 this.players.set(player.id, player)
                 player.updateHealthbar(player.spriteContainer)
+                spawnText(player.currentPos.copy())
             }
         }
 

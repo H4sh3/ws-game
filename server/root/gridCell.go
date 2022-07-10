@@ -143,9 +143,6 @@ func (cell *GridCell) CellCoro() {
 						client.send <- NewCellDataEvent(cell.GridCellKey, cell.SubCells, cell.Pos)
 
 						npcs := cell.GetNpcList()
-						if cell.Pos.X == 0 && cell.Pos.Y == 0 {
-							fmt.Println(npcs)
-						}
 						client.send <- NewNpcListEvent(cell.GridCellKey, npcs)
 					}
 				}
@@ -224,7 +221,6 @@ func (cell *GridCell) CellCoro() {
 			cell.NpcListMutex.Lock()
 			for i, npc := range cell.NpcList {
 				if npc.remove {
-					fmt.Println("remove npc", npc)
 					cell.NpcList = append(cell.NpcList[:i], cell.NpcList[i+1:]...)
 				}
 			}
@@ -266,10 +262,10 @@ func (cell *GridCell) CellCoro() {
 					// npc reached minimum range to player -> attack
 					if playerPos.Dist(&npc.Pos) < minDistToPlayer && !npc.movesBackToSpawn {
 
-						fmt.Printf("attack cooldown %d \n", npc.attackCooldown)
 						if npc.attackCooldown == 0 {
-							player.Hitpoints.Current -= 25
-							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints))
+							npcDamage := shared.RandIntInRange(20, 35)
+							player.Hitpoints.Current -= npcDamage
+							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, npcDamage, 0))
 
 							cell.NpcList[index].attackCooldown = 10
 						} else {
@@ -280,7 +276,7 @@ func (cell *GridCell) CellCoro() {
 						if player.Hitpoints.Current <= 0 {
 
 							player.Hitpoints.Current = player.Hitpoints.Max
-							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints))
+							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, 0, player.Hitpoints.Max))
 
 							player.SetPos(shared.Vector{X: 0, Y: 0})
 							cell.AddEventToBroadcast(NewPlayerTargetPositionEvent(player.GetPos(), player.Id, true))
@@ -402,17 +398,16 @@ func (cell *GridCell) UnsubscribeClient(cId int) {
 	cell.CellMutex.Lock()
 	delete(cell.playerSubscriptions, cId)
 
-	npcHasPlayerTargetd := false
-	/* for _, npc := range cell.NpcList {
-		if npc.TargetedPlayer != nil {
-			npcHasPlayerTargetd = true
+	npcHasPlayerTarget := false
+	for _, npc := range cell.NpcList {
+		if npc.targetedPlayer != nil {
+			npcHasPlayerTarget = true
 			break
 		}
-	} */
+	}
 
-	if len(cell.playerSubscriptions) == 0 && !npcHasPlayerTargetd {
+	if len(cell.playerSubscriptions) == 0 && !npcHasPlayerTarget {
 		cell.ticker.Stop()
-		fmt.Printf("stopped cell at %s\n", cell.GridCellKey)
 	}
 	cell.CellMutex.Unlock()
 }

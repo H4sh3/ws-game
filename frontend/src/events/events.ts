@@ -257,7 +257,9 @@ export function isNpcTargetPositionEvent(value: any): value is NpcTargetPosition
 
 export interface UpdatePlayerEvent extends BaseEvent {
     playerId: number,
-    hitpoints: Hitpoints
+    hitpoints: Hitpoints,
+    damage: number,
+    heal: number,
 }
 
 export function isUpdatePlayerEvent(value: any): value is UpdatePlayerEvent {
