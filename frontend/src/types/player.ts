@@ -1,9 +1,10 @@
 import Vector from "./vector"
-import { createVector } from "../events/events"
+import { createVector, Hitpoints } from "../events/events"
 import { AnimatedSprite, Container } from "pixi.js"
 import { PLAYER_SPRITE_SCALE } from "../sprites/player"
+import { HasHitpoints } from "./resource"
 
-export class Player {
+export class Player extends HasHitpoints {
     id: number
     currentPos: Vector
     targetPos: Vector
@@ -15,8 +16,12 @@ export class Player {
     actionOnCooldown: boolean
     movesRight: boolean
     spriteContainer: Container
+    hitpoints: Hitpoints
+    isOtherPlayer?: boolean
 
-    constructor(id: number, pos: Vector, sprite: AnimatedSprite) {
+    constructor(id: number, pos: Vector, sprite: AnimatedSprite, hitpoints: Hitpoints, isOtherPlayer = true) {
+        super(hitpoints, -35)
+
         this.vel = createVector(0, 0)
         this.currentPos = pos
         this.targetPos = pos
@@ -29,6 +34,8 @@ export class Player {
         this.spriteContainer = new Container();
         this.sprite = sprite
         this.spriteContainer.addChild(this.sprite)
+        this.spriteContainer.position.set(pos.x, pos.y)
+        this.isOtherPlayer = isOtherPlayer
     }
 
     canDoAction(): boolean {
@@ -62,5 +69,10 @@ export class Player {
         this.sprite.play()
         // if players moves left, mirror the sprite
         this.sprite.scale.x = step.x > 0 ? PLAYER_SPRITE_SCALE : -PLAYER_SPRITE_SCALE
+
+        if (this.isOtherPlayer) {
+            this.spriteContainer.x = this.currentPos.x
+            this.spriteContainer.y = this.currentPos.y
+        }
     }
 }

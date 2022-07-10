@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, AssignUserIdAndConfigEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isAssignUserIdAndConfigEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent } from './events/events';
 import { Player } from './types/player';
 import Vector from './types/vector';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
@@ -102,13 +102,6 @@ export class Game extends Container {
         this.textHandler.container.zIndex = 3
 
 
-        // own player + sprite etc.
-        this.player = new Player(-1, createVector(0, 0), getOwnPlayerSprite())
-        this.player.spriteContainer.sortableChildren = true
-        this.player.spriteContainer.zIndex = 4
-        this.cursorSprite = getCursorSprite(this.app.loader)
-        this.player.spriteContainer.addChild(this.cursorSprite)
-
         // add handler containers
         this.worldContainer.addChild(this.tilemapHandler.container)
         this.worldContainer.addChild(this.npcHandler.container)
@@ -118,7 +111,6 @@ export class Game extends Container {
         this.addChild(this.worldContainer)
         // player is centered in the middle of the game -> disentangled from the world
         this.addChild(this.player.spriteContainer)
-
 
         this.cursorPos = createVector(0, 0)
 
@@ -190,12 +182,9 @@ export class Game extends Container {
         } else if (isNewPlayerEvent(parsed)) {
             this.handleNewPlayerEvent(parsed)
 
-        } else if (isAssignUserIdAndConfigEvent(parsed)) {
-            this.gameConfig = parsed.gameConfig
-            this.initWorld()
+        } else if (isUserInitEvent(parsed)) {
+            this.handleUserInitEvent(parsed)
 
-            this.userStore.setLoading(false)
-            this.handleAssignIdEvent(parsed)
 
         } else if (isRemoveGridCellEvent(parsed)) {
             this.handleRemoveGridCellEvent(parsed)
@@ -226,7 +215,6 @@ export class Game extends Container {
         this.worldContainer.x = -this.player.currentPos.x + (SCREEN_SIZE / 2)
         this.worldContainer.y = -this.player.currentPos.y + (SCREEN_SIZE / 2)
 
-
         // Translates cursor to relativ player position and grid
         const pX = this.player.currentPos.x % 50
         const pY = this.player.currentPos.y % 50
@@ -240,8 +228,6 @@ export class Game extends Container {
         // update other players positions
         Array.from(this.players.values()).map(p => {
             p.updatePosition()
-            p.sprite.x = p.currentPos.x
-            p.sprite.y = p.currentPos.y
         })
 
         // update npc positions
@@ -282,9 +268,12 @@ export class Game extends Container {
             if (player) {
                 player.targetPos = createVector(parsed.pos.x, parsed.pos.y)
             } else {
-                const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), getOtherPlayerSprite())
-                this.worldContainer.addChild(newP.sprite)
-                this.players.set(newP.id, newP)
+                // this should probably not happend -> if we can't find a player that should be updated, request it from the server
+                // Todo: implement feature that requests a player by his id
+
+                //const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), getOtherPlayerSprite())
+                //this.worldContainer.addChild(newP.sprite)
+                //this.players.set(newP.id, newP)
             }
         }
     }
@@ -300,18 +289,34 @@ export class Game extends Container {
                 existing.targetPos = createVector(parsed.pos.x, parsed.pos.y)
                 this.players.set(parsed.id, existing)
             } else {
-                const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), getOtherPlayerSprite())
-                this.worldContainer.addChild(newP.sprite)
+                const newP = new Player(parsed.id, createVector(parsed.pos.x, parsed.pos.y), getOtherPlayerSprite(), parsed.hitpoints)
+                this.worldContainer.addChild(newP.spriteContainer)
                 this.players.set(newP.id, newP)
+
+                newP.updateHealthbar(newP.spriteContainer)
             }
         }
     }
 
-    handleAssignIdEvent(parsed: AssignUserIdAndConfigEvent) {
+    handleUserInitEvent(parsed: UserInitEvent) {
+        // own player + sprite etc.
         this.localStorageWrapper.setUUID(parsed.uuid)
-        this.player.id = parsed.id
+        this.player = new Player(parsed.id, createVector(SCREEN_SIZE / 2, SCREEN_SIZE / 2), getOwnPlayerSprite(), parsed.hitpoints, false)
+
         this.player.currentPos.x = parsed.pos.x
         this.player.currentPos.y = parsed.pos.y
+
+        this.player.spriteContainer.sortableChildren = true
+        this.player.spriteContainer.zIndex = 4
+        this.cursorSprite = getCursorSprite(this.app.loader)
+        this.player.spriteContainer.addChild(this.cursorSprite)
+        this.player.updateHealthbar(this.player.spriteContainer)
+
+        this.gameConfig = parsed.gameConfig
+
+        this.initWorld()
+
+
     }
 
 

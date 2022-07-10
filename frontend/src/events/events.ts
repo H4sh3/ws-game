@@ -3,7 +3,7 @@ import Vector, { IVector } from "../types/vector"
 
 export enum EVENT_TYPES {
     NEW_USER_EVENT = 0,
-    ASSIGN_USER_ID_EVENT = 1,
+    USER_INIT_EVENT = 1,
     USER_MOVE_EVENT = 2,
     KEYBOARD_EVENT = 3,
     PLAYER_TARGET_POSITION_EVENT = 4,
@@ -45,6 +45,7 @@ export interface NewPlayerEvent extends BaseEvent {
         x: number,
         y: number
     }
+    hitpoints: Hitpoints
 }
 
 export function isNewPlayerEvent(value: any): value is NewPlayerEvent {
@@ -61,19 +62,34 @@ export interface GameConfig {
     subCellSize: number
 }
 
-export interface AssignUserIdAndConfigEvent extends BaseEvent {
+export interface UserInitEvent extends BaseEvent {
     id: number,
     uuid: string,
     pos: {
         x: number,
         y: number
     }
+    hitpoints: Hitpoints
     gameConfig: GameConfig
+}
+
+export function isUserInitEvent(value: any): value is UserInitEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType == EVENT_TYPES.USER_INIT_EVENT
+    )
 }
 
 export interface PlayerTargetPositionEvent extends BaseEvent {
     id: number
     pos: Vector
+}
+
+export function isPlayerTargetPositionEvent(value: any): value is PlayerTargetPositionEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType == EVENT_TYPES.PLAYER_TARGET_POSITION_EVENT
+    )
 }
 
 export interface RemovePlayerEvent extends BaseEvent {
@@ -87,20 +103,6 @@ export function isRemovePlayerEvent(value: any): value is RemovePlayerEvent {
     )
 }
 
-
-export function isPlayerTargetPositionEvent(value: any): value is PlayerTargetPositionEvent {
-    return (
-        isBaseEvent(value) &&
-        value.eventType == EVENT_TYPES.PLAYER_TARGET_POSITION_EVENT
-    )
-}
-
-export function isAssignUserIdAndConfigEvent(value: any): value is AssignUserIdAndConfigEvent {
-    return (
-        isBaseEvent(value) &&
-        value.eventType == EVENT_TYPES.ASSIGN_USER_ID_EVENT
-    )
-}
 
 export enum KeyStates {
     UP,
@@ -253,7 +255,7 @@ export function isNpcTargetPositionEvent(value: any): value is NpcTargetPosition
 
 type EventTypes =
     NewPlayerEvent |
-    AssignUserIdAndConfigEvent |
+    UserInitEvent |
     PlayerTargetPositionEvent |
     RemovePlayerEvent |
     Hitpoints |

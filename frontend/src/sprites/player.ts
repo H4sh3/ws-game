@@ -1,5 +1,4 @@
 import { AnimatedSprite } from "pixi.js";
-import { SCREEN_SIZE } from "../etc/const";
 
 
 export const getHumanTiles = (): string[] => {
@@ -26,8 +25,6 @@ export function getOtherPlayerSprite(): AnimatedSprite {
 export function getOwnPlayerSprite(): AnimatedSprite {
     const sprite = AnimatedSprite.fromFrames(humanTiles);
     sprite.animationSpeed = 0.3;
-    sprite.x = (SCREEN_SIZE / 2)
-    sprite.y = (SCREEN_SIZE / 2)
     sprite.anchor.set(0.5)
     sprite.scale.set(PLAYER_SPRITE_SCALE, PLAYER_SPRITE_SCALE)
     return sprite

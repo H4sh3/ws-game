@@ -29,6 +29,7 @@ export class HasHitpoints {
         if (this.healthBar) {
             container.removeChild(this.healthBar)
         }
+
         if (this.hitPoints.current === this.hitPoints.max || this.hitPoints.current <= 0) {
             return
         }
