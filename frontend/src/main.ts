@@ -369,15 +369,17 @@ export class Game extends Container {
         }
 
         if (this.player.id == playerId) {
-            this.player.hitPoints = hitpoints
+
+            this.player.updateHitpoints(hitpoints)
             this.player.updateHealthbar(this.player.spriteContainer)
+
 
             spawnText(this.player.currentPos.copy())
 
         } else {
             const player = this.players.get(playerId)
             if (player) {
-                player.hitPoints = hitpoints
+                player.updateHitpoints(hitpoints)
                 this.players.set(player.id, player)
                 player.updateHealthbar(player.spriteContainer)
                 spawnText(player.currentPos.copy())

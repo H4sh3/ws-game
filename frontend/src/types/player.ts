@@ -3,6 +3,9 @@ import { createVector, Hitpoints } from "../events/events"
 import { AnimatedSprite, Container } from "pixi.js"
 import { PLAYER_SPRITE_SCALE } from "../sprites/player"
 import { HasHitpoints } from "./resource"
+import { getTexturesFromSpriteSheet } from "./npc"
+
+const deadAnimationTextures = getTexturesFromSpriteSheet('assets/human/dead/sprite_sheet.png', 5, 48, 64)
 
 export class Player extends HasHitpoints {
     id: number
@@ -73,6 +76,21 @@ export class Player extends HasHitpoints {
         if (this.isOtherPlayer) {
             this.spriteContainer.x = this.currentPos.x
             this.spriteContainer.y = this.currentPos.y
+        }
+    }
+
+    updateHitpoints(hitpoints: Hitpoints) {
+        this.hitPoints = hitpoints
+
+        if (this.hitPoints.current <= 0) {
+            this.sprite.scale.set(0, 0)
+            const anim = new AnimatedSprite(deadAnimationTextures);
+            this.spriteContainer.addChild(anim)
+            anim.scale.set(2, 2)
+            anim.anchor.set(0.5, 0.5)
+            anim.loop = false
+            anim.play()
+            anim.animationSpeed = 0.05
         }
     }
 }

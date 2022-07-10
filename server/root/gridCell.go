@@ -286,6 +286,8 @@ func (cell *GridCell) CellCoro() {
 							player.Hitpoints.Current = player.Hitpoints.Max
 							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, 0, player.Hitpoints.Max, false))
 
+							cell.NpcList[index].movesBackToSpawn = true
+							cell.NpcList[index].targetedPlayer = nil
 							player.SetPos(shared.Vector{X: 0, Y: 0})
 							cell.AddEventToBroadcast(NewPlayerTargetPositionEvent(player.GetPos(), player.Id, true))
 						}

@@ -4,24 +4,20 @@ import { Player } from "./player";
 import { HasHitpoints } from "./resource";
 import Vector from "./vector";
 
-function getTexturesFromSpriteSheet(path: string, numFrames: number) {
+export function getTexturesFromSpriteSheet(path: string, numFrames: number, w: number, h: number) {
     const atlas = {
         frames: {
         },
         meta: {
             image: path,
             format: 'RGBA8888',
-            size: { w: 1440, h: 64 },
+            //size: { w: 1440, h: 64 },
             scale: "1"
         },
         animations: {
             frameNames: [] as string[]
         }
     }
-
-    // sprites are 96*64
-    const w = 96
-    const h = 64
 
     const frames: { [id: string]: any } = {}
     const frameNames = []
@@ -55,8 +51,8 @@ function getTexturesFromSpriteSheet(path: string, numFrames: number) {
     return textures
 }
 
-const deadKnightAnim = getTexturesFromSpriteSheet('assets/npcs/knight/dead/sprite_sheet.png', 15)
-const walkingKnightAnim = getTexturesFromSpriteSheet('assets/npcs/knight/walking/sprite_sheet.png', 8)
+const deadKnightAnim = getTexturesFromSpriteSheet('assets/npcs/knight/dead/sprite_sheet.png', 15, 96, 64)
+const walkingKnightAnim = getTexturesFromSpriteSheet('assets/npcs/knight/walking/sprite_sheet.png', 8, 96, 64)
 
 export function spawnDeadAnim(container: Container, npc: Npc) {
     const anim = new AnimatedSprite(deadKnightAnim);
