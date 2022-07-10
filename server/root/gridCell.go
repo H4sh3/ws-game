@@ -132,11 +132,7 @@ func (cell *GridCell) CellCoro() {
 					}
 
 					if client.Connected {
-						cell.AddEventToBroadcast(GetNewPlayerEvent(player.Id, player.getPos()))
-					}
-
-					if player.Connected {
-						cell.AddEventToBroadcast(GetNewPlayerEvent(client.Id, client.getPos()))
+						cell.AddEventToBroadcast(GetNewPlayerEvent(player.Id, player.getPos(), player.Hitpoints))
 					}
 				}
 
@@ -217,7 +213,7 @@ func (cell *GridCell) CellCoro() {
 			for _, c := range cell.playersToAdd {
 				cell.Players[c.Id] = c
 				pos := c.getPos()
-				event := GetNewPlayerEvent(c.Id, pos)
+				event := GetNewPlayerEvent(c.Id, pos, c.Hitpoints)
 				cell.AddEventToBroadcast(event)
 			}
 			cell.playersToAdd = []*Client{}

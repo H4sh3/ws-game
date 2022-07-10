@@ -48,11 +48,12 @@ type Client struct {
 	conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send     chan interface{} //[]byte
-	Id       int
-	UUID     string
-	Pos      shared.Vector
-	PosMutex sync.Mutex
+	send      chan interface{} //[]byte
+	Id        int
+	UUID      string
+	Pos       shared.Vector
+	Hitpoints shared.Hitpoints
+	PosMutex  sync.Mutex
 	// Inventory []resource.Resource
 	Inventory           map[resource.ResourceType]resource.Resource
 	ZoneChangeTick      int
@@ -72,6 +73,11 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 
 	sendChan := make(chan interface{}, 1024)
 
+	hitpoints := shared.Hitpoints{
+		Current: 500,
+		Max:     500,
+	}
+
 	gridCell := hub.GridManager.GetCellFromPos(clientPostion)
 	client := &Client{
 		hub:                 hub,
@@ -86,6 +92,7 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 		ZoneChangeTickMutex: sync.Mutex{},
 		GridCellMutex:       sync.Mutex{},
 		NeedsInit:           true,
+		Hitpoints:           hitpoints,
 		// NeedsInit gets set to false after first cell data is provided to the client
 	}
 

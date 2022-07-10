@@ -10,7 +10,7 @@ type EventType int
 
 const (
 	NEW_USER_EVENT               EventType = 0
-	ASSIGN_USER_ID_EVENT         EventType = 1
+	USER_INIT_EVENT              EventType = 1
 	USER_MOVE_EVENT              EventType = 2
 	KEYBOARD_EVENT               EventType = 3
 	PLAYER_TARGET_POSITION_EVENT EventType = 4
@@ -37,13 +37,14 @@ const (
 )
 
 type NewPlayerEvent struct {
-	EventType EventType     `json:"eventType"`
-	Id        int           `json:"id"`
-	Pos       shared.Vector `json:"pos"`
+	EventType EventType        `json:"eventType"`
+	Id        int              `json:"id"`
+	Pos       shared.Vector    `json:"pos"`
+	Hitpoints shared.Hitpoints `json:"hitpoints"`
 }
 
-func GetNewPlayerEvent(id int, pos shared.Vector) interface{} {
-	return &NewPlayerEvent{EventType: NEW_USER_EVENT, Id: id, Pos: pos}
+func GetNewPlayerEvent(id int, pos shared.Vector, hitpoints shared.Hitpoints) interface{} {
+	return &NewPlayerEvent{EventType: NEW_USER_EVENT, Id: id, Pos: pos, Hitpoints: hitpoints}
 }
 
 type GameConfig struct {
@@ -53,16 +54,24 @@ type GameConfig struct {
 	SubCellSize    int `json:"subCellSize"`
 }
 
-type AssignUserIdEvent struct {
-	EventType  EventType     `json:"eventType"`
-	Id         int           `json:"id"`
-	Pos        shared.Vector `json:"pos"`
-	UUID       string        `json:"uuid"`
-	GameConfig GameConfig    `json:"gameConfig"`
+type UserInitEvent struct {
+	EventType  EventType        `json:"eventType"`
+	Id         int              `json:"id"`
+	Pos        shared.Vector    `json:"pos"`
+	Hitpoints  shared.Hitpoints `json:"hitpoints"`
+	UUID       string           `json:"uuid"`
+	GameConfig GameConfig       `json:"gameConfig"`
 }
 
-func GetAssignUserIdEvent(id int, pos shared.Vector, uuid string, config GameConfig) interface{} {
-	return &AssignUserIdEvent{EventType: ASSIGN_USER_ID_EVENT, Id: id, Pos: pos, UUID: uuid, GameConfig: config}
+func NewUserInitEvent(id int, pos shared.Vector, hitpoints shared.Hitpoints, uuid string, config GameConfig) interface{} {
+	return &UserInitEvent{
+		EventType:  USER_INIT_EVENT,
+		Id:         id,
+		Pos:        pos,
+		Hitpoints:  hitpoints,
+		UUID:       uuid,
+		GameConfig: config,
+	}
 }
 
 type PlayerTargetPositionEvent struct {

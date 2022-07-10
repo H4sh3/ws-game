@@ -15,6 +15,7 @@ import (
 type ClientPersistance struct {
 	Pos       shared.Vector
 	Inventory map[resource.ResourceType]resource.Resource
+	Hitpoints shared.Hitpoints
 }
 
 // Hub maintains the set of active clients and broadcasts messages to them
@@ -115,6 +116,7 @@ func (h *Hub) Run() {
 			persistanceEntry := ClientPersistance{
 				Pos:       client.Pos,
 				Inventory: client.Inventory,
+				Hitpoints: client.Hitpoints,
 			}
 			h.persistedClientData[client.UUID] = persistanceEntry
 
@@ -323,6 +325,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 		client.UUID = uuid
 		client.Pos = persistanceEntry.Pos
 		client.Inventory = persistanceEntry.Inventory
+		client.Hitpoints = persistanceEntry.Hitpoints
 	} else {
 		// Initialize new client
 		uuid := gUUID.New().String()
@@ -332,7 +335,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 		client.Inventory = inventory
 	}
 
-	client.send <- GetAssignUserIdEvent(client.Id, client.Pos, client.UUID, h.gameConfig)
+	client.send <- NewUserInitEvent(client.Id, client.Pos, client.Hitpoints, client.UUID, h.gameConfig)
 	client.send <- NewLoadInventoryEvent(client.Inventory)
 
 	gridCell := h.GridManager.GetCellFromPos(client.Pos)
