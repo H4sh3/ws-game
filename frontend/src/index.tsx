@@ -12,7 +12,6 @@ import { InventoryStore } from './inventoryStore';
 import { UserStore } from './userStore';
 import BuilderComponent from './components/builderComponent';
 import { getHumanTiles } from './sprites/player';
-import { getKnightTiles } from './types/npc';
 
 const load = (app: PIXI.Application, asset: string) => {
     return new Promise<void>((resolve) => {
@@ -59,11 +58,6 @@ const main = async () => {
     const humanTiles = getHumanTiles()
     for (let i = 0; i < humanTiles.length; i++) {
         await load(app, humanTiles[i]);
-    }
-
-    const knightTiles = getKnightTiles()
-    for (let i = 0; i < knightTiles.length; i++) {
-        await load(app, knightTiles[i]);
     }
 
     const x = document.getElementById("mainView")

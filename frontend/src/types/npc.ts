@@ -4,65 +4,62 @@ import { Player } from "./player";
 import { HasHitpoints } from "./resource";
 import Vector from "./vector";
 
-export const getKnightTiles = (): string[] => {
-    const paths = []
-    for (let i = 0; i <= 7; i++) {
-        paths.push(`assets/npcs/knight/walking/tile00${i}.png`)
+function getTexturesFromSpriteSheet(path: string, numFrames: number) {
+    const atlas = {
+        frames: {
+        },
+        meta: {
+            image: path,
+            format: 'RGBA8888',
+            size: { w: 1440, h: 64 },
+            scale: "1"
+        },
+        animations: {
+            frameNames: [] as string[]
+        }
     }
-    return paths
+
+    // sprites are 96*64
+    const w = 96
+    const h = 64
+
+    const frames: { [id: string]: any } = {}
+    const frameNames = []
+
+    for (let i = 0; i < numFrames; i++) {
+        const frameName = `${i}`
+        frameNames.push(frameName)
+
+        frames[frameName] = {
+            frame: { x: i * w, y: 0, w, h },
+            sourceSize: { w, h },
+            spriteSourceSize: { x: 0, y: 0, w: w, h: h }
+        }
+    }
+
+    atlas.frames = frames
+    atlas.animations.frameNames = frameNames
+
+
+    // Create the SpriteSheet from data and image
+    const spritesheet = new Spritesheet(
+        BaseTexture.from(atlas.meta.image),
+        atlas
+    );
+
+    // Generate all the Textures asynchronously
+    let textures: Texture[];
+    spritesheet.parse(() => {
+        textures = spritesheet.animations.frameNames
+    });
+    return textures
 }
 
-
-
-const atlasData = {
-    frames: {
-    },
-    meta: {
-        image: 'assets/npcs/knight/dead/sprite_sheet.png',
-        format: 'RGBA8888',
-        size: { w: 1440, h: 64 },
-        scale: "1"
-    },
-    animations: {
-        knight_dead: [] as string[]
-    }
-}
-
-// sprites are 96*64
-const w = 96
-const h = 64
-
-const frames: { [id: string]: any } = {}
-const frameNames = []
-
-for (let i = 0; i < 15; i++) {
-    const frameName = `knight_dead${i}`
-    frameNames.push(frameName)
-
-    frames[frameName] = {
-        frame: { x: i * w, y: 0, w, h },
-        sourceSize: { w, h },
-        spriteSourceSize: { x: 0, y: 0, w: w, h: h }
-    }
-}
-atlasData.frames = frames
-atlasData.animations.knight_dead = frameNames
-
-
-// Create the SpriteSheet from data and image
-const spritesheet = new Spritesheet(
-    BaseTexture.from(atlasData.meta.image),
-    atlasData
-);
-
-// Generate all the Textures asynchronously
-let knightAnim: Texture[];
-spritesheet.parse(() => {
-    knightAnim = spritesheet.animations.knight_dead
-});
+const deadKnightAnim = getTexturesFromSpriteSheet('assets/npcs/knight/dead/sprite_sheet.png', 15)
+const walkingKnightAnim = getTexturesFromSpriteSheet('assets/npcs/knight/walking/sprite_sheet.png', 8)
 
 export function spawnDeadAnim(container: Container, npc: Npc) {
-    const anim = new AnimatedSprite(knightAnim);
+    const anim = new AnimatedSprite(deadKnightAnim);
     anim.play()
     anim.animationSpeed = 0.25
     anim.loop = false
@@ -107,7 +104,7 @@ class Npc extends HasHitpoints {
 
 
         // Todo: use loader for better performance
-        const sprite = AnimatedSprite.fromFrames(getKnightTiles());
+        const sprite = new AnimatedSprite(walkingKnightAnim)//.fromFrames(getKnightTiles());
         sprite.animationSpeed = 0.3;
         sprite.anchor.set(0.5)
         sprite.scale.set(2, 2)
