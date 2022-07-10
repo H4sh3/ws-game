@@ -265,8 +265,8 @@ func (cell *GridCell) CellCoro() {
 					playerPos := player.getPos()
 					diffX = playerPos.X - npc.Pos.X
 					diffY = playerPos.Y - npc.Pos.Y
-
-					if playerPos.Dist(&npc.Pos) < 50 && !npc.movesBackToSpawn {
+					minDistToPlayer := 75.0
+					if playerPos.Dist(&npc.Pos) < minDistToPlayer && !npc.movesBackToSpawn {
 						continue
 					}
 				}
