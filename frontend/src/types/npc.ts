@@ -90,7 +90,7 @@ class Npc extends HasHitpoints {
     player: Player
 
     constructor(serial: INpc, ws: WebSocket, player: Player) {
-        super(serial.hitpoints)
+        super(serial.hitpoints, -50)
 
         this.player = player
         this.ws = ws

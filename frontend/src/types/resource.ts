@@ -18,9 +18,11 @@ export enum ResourceTypes {
 export class HasHitpoints {
     hitPoints: Hitpoints
     healthBar?: Graphics
+    healthBarOffsetY?: number
 
-    constructor(hitpoints: Hitpoints) {
+    constructor(hitpoints: Hitpoints, healthBarOffsetY = -20) {
         this.hitPoints = hitpoints
+        this.healthBarOffsetY = healthBarOffsetY
     }
 
     updateHealthbar(container: Container) {
@@ -32,18 +34,19 @@ export class HasHitpoints {
         }
 
         const width = 50
+
         this.healthBar = new Graphics();
 
         this.healthBar.beginFill(0xcccccc);
-        this.healthBar.drawRect(-25, -20, width, 10);
+        this.healthBar.drawRect(-25, this.healthBarOffsetY, width, 10);
         this.healthBar.endFill();
 
         this.healthBar.beginFill(0x00ff00);
-        this.healthBar.drawRect(-25, -20, width * (this.hitPoints.current / this.hitPoints.max), 10);
+        this.healthBar.drawRect(-25, this.healthBarOffsetY, width * (this.hitPoints.current / this.hitPoints.max), 10);
         this.healthBar.endFill();
 
         this.healthBar.lineStyle(2, 0x666666, 1);
-        this.healthBar.drawRect(-25, -20, width, 10);
+        this.healthBar.drawRect(-25, this.healthBarOffsetY, width, 10);
         this.healthBar.endFill();
 
         container.addChild(this.healthBar)
