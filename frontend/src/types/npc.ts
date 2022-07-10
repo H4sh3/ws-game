@@ -1,4 +1,4 @@
-import { AnimatedSprite, Container, Loader, Sprite } from "pixi.js";
+import { AnimatedSprite, BaseTexture, Container, Loader, Sprite, Spritesheet, Texture } from "pixi.js";
 import { createVector, getHitNpcEvent, Hitpoints, INpc } from "../events/events";
 import { Player } from "./player";
 import { HasHitpoints } from "./resource";
@@ -7,9 +7,75 @@ import Vector from "./vector";
 export const getKnightTiles = (): string[] => {
     const paths = []
     for (let i = 0; i <= 7; i++) {
-        paths.push(`assets/npcs/knight/tile00${i}.png`)
+        paths.push(`assets/npcs/knight/walking/tile00${i}.png`)
     }
     return paths
+}
+
+
+
+const atlasData = {
+    frames: {
+    },
+    meta: {
+        image: 'assets/npcs/knight/dead/sprite_sheet.png',
+        format: 'RGBA8888',
+        size: { w: 1440, h: 64 },
+        scale: "1"
+    },
+    animations: {
+        knight_dead: [] as string[]
+    }
+}
+
+// sprites are 96*64
+const w = 96
+const h = 64
+
+const frames: { [id: string]: any } = {}
+const frameNames = []
+
+for (let i = 0; i < 15; i++) {
+    const frameName = `knight_dead${i}`
+    frameNames.push(frameName)
+
+    frames[frameName] = {
+        frame: { x: i * w, y: 0, w, h },
+        sourceSize: { w, h },
+        spriteSourceSize: { x: 0, y: 0, w: w, h: h }
+    }
+}
+atlasData.frames = frames
+atlasData.animations.knight_dead = frameNames
+
+
+// Create the SpriteSheet from data and image
+const spritesheet = new Spritesheet(
+    BaseTexture.from(atlasData.meta.image),
+    atlasData
+);
+
+// Generate all the Textures asynchronously
+let knightAnim: Texture[];
+spritesheet.parse(() => {
+    knightAnim = spritesheet.animations.knight_dead
+});
+
+export function spawnDeadAnim(container: Container, npc: Npc) {
+    const anim = new AnimatedSprite(knightAnim);
+    anim.play()
+    anim.animationSpeed = 0.25
+    anim.loop = false
+
+    if (npc.movesRight) {
+        anim.scale.set(2, 2)
+    } else {
+        anim.scale.set(-2, 2)
+    }
+
+    anim.anchor.set(0.5, 0.5)
+    anim.position.set(npc.currentPos.x, npc.currentPos.y)
+    container.addChild(anim)
 }
 
 class Npc extends HasHitpoints {
@@ -18,6 +84,7 @@ class Npc extends HasHitpoints {
     targetPos: Vector
     hitpoints: Hitpoints
     npcType: string
+    movesRight: boolean
 
     container: Container
     sprite: AnimatedSprite
@@ -30,6 +97,8 @@ class Npc extends HasHitpoints {
 
         this.player = player
         this.ws = ws
+
+        this.movesRight = true
 
         this.UUID = serial.UUID
         this.currentPos = createVector(serial.pos.x, serial.pos.y)
@@ -61,6 +130,9 @@ class Npc extends HasHitpoints {
 
     updatePosition() {
         const step = this.targetPos.copy().sub(this.currentPos).mult(0.2)
+
+        // used for dead anim mirror scale
+
         if (step.mag() == 0) {
             //this.posChanged = false
             this.sprite.stop()
@@ -78,6 +150,7 @@ class Npc extends HasHitpoints {
         this.sprite.play()
         // if players moves left, mirror the sprite
         this.sprite.scale.x = step.x > 0 ? 2 : -2
+        this.movesRight = step.x > 0
     }
 }
 

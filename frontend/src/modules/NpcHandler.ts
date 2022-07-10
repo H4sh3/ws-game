@@ -1,16 +1,16 @@
 import { Container } from "pixi.js"
 import { createVector, NpcListEvent, NpcTargetPositionEvent, UpdateNpcEvent } from "../events/events"
 import { Game } from "../main"
-import Npc from "../types/npc"
+import Npc, { spawnDeadAnim } from "../types/npc"
+
 
 class NpcHandler {
     npcMap: Map<string, Npc[]>
-    npcArray: Npc[]
     container: Container
+
 
     constructor() {
         this.npcMap = new Map()
-        this.npcArray = []
         this.container = new Container()
     }
 
@@ -24,7 +24,6 @@ class NpcHandler {
         this.npcMap.set(gridCellKey, newNpcs)
 
         // update npc array after new npc listings event
-        this.npcMapToArray()
     }
 
     removeGridCellNpcs(gridCellKey: string) {
@@ -32,23 +31,22 @@ class NpcHandler {
             this.container.removeChild(npc.container)
         })
         this.npcMap.delete(gridCellKey)
-
-        this.npcMapToArray()
     }
 
     update() {
-        this.npcArray.map(npc => {
+        this.npcArray().map(npc => {
             npc.updatePosition()
             npc.container.x = npc.currentPos.x
             npc.container.y = npc.currentPos.y
         })
     }
 
-    npcMapToArray() {
-        this.npcArray = []
+    npcArray() {
+        let npcArray: Npc[] = []
         Array.from(this.npcMap.values()).map(p => {
-            this.npcArray = [...this.npcArray, ...p]
+            npcArray = [...npcArray, ...p]
         })
+        return npcArray
     }
 
 
@@ -88,8 +86,10 @@ class NpcHandler {
 
         npc.hitPoints.current = hitpoints.current
         npcs = npcs.filter(n => n.UUID !== npcUUID)
-        if (remove) {
+        if (remove) { // npc dead
             this.container.removeChild(npc.container)
+            spawnDeadAnim(this.container, npc)
+            // create dead npc animation
         } else {
             npcs.push(npc)
         }
