@@ -132,7 +132,7 @@ func (cell *GridCell) CellCoro() {
 					}
 
 					if client.Connected {
-						cell.AddEventToBroadcast(GetNewPlayerEvent(player.Id, player.getPos(), player.Hitpoints))
+						cell.AddEventToBroadcast(GetNewPlayerEvent(player.Id, player.GetPos(), player.Hitpoints))
 					}
 				}
 
@@ -212,7 +212,7 @@ func (cell *GridCell) CellCoro() {
 			cell.CellMutex.Lock()
 			for _, c := range cell.playersToAdd {
 				cell.Players[c.Id] = c
-				pos := c.getPos()
+				pos := c.GetPos()
 				event := GetNewPlayerEvent(c.Id, pos, c.Hitpoints)
 				cell.AddEventToBroadcast(event)
 			}
@@ -242,7 +242,7 @@ func (cell *GridCell) CellCoro() {
 				// find closest player in cell
 				if player == nil {
 					for _, sub := range cell.playerSubscriptions {
-						subbedPlayerPos := sub.Player.getPos()
+						subbedPlayerPos := sub.Player.GetPos()
 						dist := subbedPlayerPos.Dist(&npc.Pos)
 						if dist < smallestDist && dist < 150 {
 							player = sub.Player
@@ -258,11 +258,34 @@ func (cell *GridCell) CellCoro() {
 
 				if player != nil {
 					// no player found
-					playerPos := player.getPos()
+					playerPos := player.GetPos()
 					diffX = playerPos.X - npc.Pos.X
 					diffY = playerPos.Y - npc.Pos.Y
 					minDistToPlayer := 75.0
+
+					// npc reached minimum range to player -> attack
 					if playerPos.Dist(&npc.Pos) < minDistToPlayer && !npc.movesBackToSpawn {
+
+						fmt.Printf("attack cooldown %d \n", npc.attackCooldown)
+						if npc.attackCooldown == 0 {
+							player.Hitpoints.Current -= 25
+							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints))
+
+							cell.NpcList[index].attackCooldown = 10
+						} else {
+							cell.NpcList[index].attackCooldown -= 1
+						}
+
+						// player died: reset hitpoints and respawn in cell 0,0
+						if player.Hitpoints.Current <= 0 {
+
+							player.Hitpoints.Current = player.Hitpoints.Max
+							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints))
+
+							player.SetPos(shared.Vector{X: 0, Y: 0})
+							cell.AddEventToBroadcast(NewPlayerTargetPositionEvent(player.GetPos(), player.Id, true))
+						}
+
 						continue
 					}
 				}

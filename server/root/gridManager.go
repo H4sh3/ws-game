@@ -48,12 +48,12 @@ func GridManagerCoro(gm *GridManager) {
 
 		case c := <-gm.UpdateClientPosition:
 			// check if cell changed
-			cPos := c.getPos()
+			cPos := c.GetPos()
 			newX := cPos.X / GridCellSize
 			newY := cPos.Y / GridCellSize
 
 			gridCell := gm.GetCellFromPos(cPos)
-			gridCell.Broadcast <- NewPlayerTargetPositionEvent(cPos, c.Id)
+			gridCell.Broadcast <- NewPlayerTargetPositionEvent(cPos, c.Id, false)
 
 			clientCell := c.getGridCell()
 			if newX != clientCell.Pos.X || newY != clientCell.Pos.Y || c.NeedsInit {

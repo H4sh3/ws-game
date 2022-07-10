@@ -30,6 +30,7 @@ const (
 	NPC_TARGET_POSITION_EVENT    EventType = 18
 	HIT_NPC_EVENT                EventType = 19
 	UPDATE_NPC_EVENT             EventType = 20
+	UPDATE_PLAYER_EVENT          EventType = 21
 )
 
 const (
@@ -78,10 +79,11 @@ type PlayerTargetPositionEvent struct {
 	EventType EventType     `json:"eventType"`
 	Id        int           `json:"id"`
 	Pos       shared.Vector `json:"pos"`
+	Force     bool          `json:"force"`
 }
 
-func NewPlayerTargetPositionEvent(v shared.Vector, id int) interface{} {
-	return &PlayerTargetPositionEvent{EventType: PLAYER_TARGET_POSITION_EVENT, Pos: v, Id: id}
+func NewPlayerTargetPositionEvent(v shared.Vector, id int, force bool) interface{} {
+	return &PlayerTargetPositionEvent{EventType: PLAYER_TARGET_POSITION_EVENT, Pos: v, Id: id, Force: force}
 }
 
 type ResourcePositionsEvent struct {
@@ -225,6 +227,16 @@ type UpdateNpcEvent struct {
 func NewUpdateNpcEvent(uuid string, currentHp int, maxHp int, remove bool, gridCellKey string, damage int) interface{} {
 	hitpoints := shared.Hitpoints{Current: currentHp, Max: maxHp}
 	return &UpdateNpcEvent{EventType: UPDATE_NPC_EVENT, NpcUUID: uuid, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey, Damage: damage}
+}
+
+type UpdatePlayerEvent struct {
+	EventType EventType        `json:"eventType"`
+	PlayerId  int              `json:"playerId"`
+	Hitpoints shared.Hitpoints `json:"hitpoints"`
+}
+
+func NewUpdatePlayerEvent(playerId int, hitpoints shared.Hitpoints) interface{} {
+	return &UpdatePlayerEvent{EventType: UPDATE_PLAYER_EVENT, PlayerId: playerId, Hitpoints: hitpoints}
 }
 
 // Events send from client

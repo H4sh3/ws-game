@@ -170,7 +170,7 @@ func (h *Hub) handleMovementEvent(event KeyBoardEvent, c *Client) {
 	}
 
 	if !collision {
-		c.setPos(*newPos)
+		c.SetPos(*newPos)
 		h.GridManager.UpdateClientPosition <- c
 	}
 }
@@ -346,7 +346,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 }
 
 func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
-	clientPos := client.getPos()
+	clientPos := client.GetPos()
 	cells := h.GridManager.getCells(clientPos.X/GridCellSize, clientPos.Y/GridCellSize)
 
 	for _, cell := range cells {

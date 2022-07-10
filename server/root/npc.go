@@ -17,7 +17,8 @@ type Npc struct {
 	critChance       float32
 	minDamage        float32
 	maxDamage        float32
-	actionCooldown   int
+	movementCooldown int
+	attackCooldown   int
 	targetedPlayer   *Client
 	remove           bool
 }
@@ -37,12 +38,13 @@ func NewNpc(pos shared.Vector) Npc {
 			Current: 250,
 			Max:     250,
 		},
-		NpcType:        "",
-		aggressive:     false,
-		minDamage:      10,
-		maxDamage:      30,
-		critChance:     0.2,
-		targetedPlayer: nil,
-		actionCooldown: 0,
+		NpcType:          "",
+		aggressive:       false,
+		minDamage:        10,
+		maxDamage:        30,
+		critChance:       0.2,
+		targetedPlayer:   nil,
+		movementCooldown: 0,
+		attackCooldown:   0,
 	}
 }

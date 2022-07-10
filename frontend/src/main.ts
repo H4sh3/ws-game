@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent } from './events/events';
 import { Player } from './types/player';
 import Vector from './types/vector';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
@@ -198,6 +198,8 @@ export class Game extends Container {
             this.npcHandler.handleNpcTargetPositionEvent(parsed)
         } else if (isUpdateNpcEvent(parsed)) {
             this.npcHandler.handleUpdateNpcEvent(parsed)
+        } else if (isUpdatePlayerEvent(parsed)) {
+            this.handleUpdatePlayerEvent(parsed)
         }
     }
 
@@ -222,8 +224,8 @@ export class Game extends Container {
         const cY = this.cursorPos.y
         const x1 = Math.floor((cX + 25 + pX) / 50) * 50
         const y1 = Math.floor((cY + 25 + pY) / 50) * 50
-        this.cursorSprite.position.x = x1 - pX
-        this.cursorSprite.position.y = y1 - pY
+        this.cursorSprite.position.x = x1 - pX - SCREEN_SIZE / 2
+        this.cursorSprite.position.y = y1 - pY - SCREEN_SIZE / 2
 
         // update other players positions
         Array.from(this.players.values()).map(p => {
@@ -258,8 +260,7 @@ export class Game extends Container {
     handlePlayerTargetPositionEvent(parsed: PlayerTargetPositionEvent) {
         if (parsed.id === this.player.id) {
             const newPos = createVector(parsed.pos.x, parsed.pos.y)
-            if (newPos.dist(this.player.targetPos) > 1000) {
-                console.log("hard update")
+            if (newPos.dist(this.player.targetPos) > 1000 || parsed.force) {
                 // only update players target pos with server side pos if a threshold is exceeded
                 this.player.targetPos = newPos
             }
@@ -345,6 +346,23 @@ export class Game extends Container {
             }
             this.inventoryStore.addItem(item)
         })
+    }
+
+    handleUpdatePlayerEvent(event: UpdatePlayerEvent) {
+        const { playerId, hitpoints } = event
+
+        if (this.player.id == playerId) {
+            this.player.hitPoints = hitpoints
+            this.player.updateHealthbar(this.player.spriteContainer)
+        } else {
+            const player = this.players.get(playerId)
+            if (player) {
+                player.hitPoints = hitpoints
+                this.players.set(player.id, player)
+                player.updateHealthbar(player.spriteContainer)
+            }
+        }
+
     }
 
 }

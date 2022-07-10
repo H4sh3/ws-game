@@ -112,14 +112,14 @@ func (c *Client) setConnected(v bool) {
 	c.ConnectedMutex.Unlock()
 }
 
-func (c *Client) getPos() shared.Vector {
+func (c *Client) GetPos() shared.Vector {
 	c.PosMutex.Lock()
 	pos := c.Pos
 	c.PosMutex.Unlock()
 	return pos
 }
 
-func (c *Client) setPos(newPos shared.Vector) {
+func (c *Client) SetPos(newPos shared.Vector) {
 	c.PosMutex.Lock()
 	c.Pos = newPos
 	c.PosMutex.Unlock()

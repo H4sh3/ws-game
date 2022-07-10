@@ -23,6 +23,7 @@ export enum EVENT_TYPES {
     NPC_TARGET_POSITION_EVENT = 18,
     HIT_NPC_EVENT = 19,
     UPDATE_NPC_EVENT = 20,
+    UPDATE_PLAYER_EVENT = 21
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -83,6 +84,7 @@ export function isUserInitEvent(value: any): value is UserInitEvent {
 export interface PlayerTargetPositionEvent extends BaseEvent {
     id: number
     pos: Vector
+    force: boolean
 }
 
 export function isPlayerTargetPositionEvent(value: any): value is PlayerTargetPositionEvent {
@@ -250,6 +252,18 @@ export function isNpcTargetPositionEvent(value: any): value is NpcTargetPosition
     return (
         isBaseEvent(value) &&
         value.eventType == EVENT_TYPES.NPC_TARGET_POSITION_EVENT
+    )
+}
+
+export interface UpdatePlayerEvent extends BaseEvent {
+    playerId: number,
+    hitpoints: Hitpoints
+}
+
+export function isUpdatePlayerEvent(value: any): value is UpdatePlayerEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType == EVENT_TYPES.UPDATE_PLAYER_EVENT
     )
 }
 
