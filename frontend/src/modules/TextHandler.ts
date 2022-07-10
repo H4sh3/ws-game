@@ -6,10 +6,17 @@ class TextItem {
     text: Text
     tick: number
 
-    constructor(displayText: string, pos: Vector, color: string) {
-        let text = new Text(displayText, { fontFamily: 'Arial', fontSize: 16, fill: color, align: 'center' });
+    constructor(displayText: string, pos: Vector, color: string, crit: boolean) {
+        let text: Text;
+        let yOffset = 0
+        if (crit) {
+            text = new Text(displayText, { fontFamily: 'Arial Black', fontSize: 24, fill: color, align: 'center' });
+            yOffset = -5
+        } else {
+            text = new Text(displayText, { fontFamily: 'Arial', fontSize: 16, fill: color, align: 'center' });
+        }
         this.container = new Container()
-        this.container.position.set(pos.x, pos.y)
+        this.container.position.set(pos.x, pos.y + yOffset)
         this.container.addChild(text)
         this.tick = 0
     }
@@ -35,8 +42,8 @@ class TextHandler {
     }
 
 
-    addItem(displayText: string, pos: Vector, color: string) {
-        const item = new TextItem(displayText, pos, color)
+    addItem(displayText: string, pos: Vector, color: string, crit: boolean = false) {
+        const item = new TextItem(displayText, pos, color, crit)
         this.container.addChild(item.container)
         this.items.push(item)
     }

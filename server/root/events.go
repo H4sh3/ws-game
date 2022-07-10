@@ -235,10 +235,11 @@ type UpdatePlayerEvent struct {
 	Hitpoints shared.Hitpoints `json:"hitpoints"`
 	Damage    int              `json:"damage"`
 	Heal      int              `json:"heal"`
+	Crit      bool             `json:"crit"`
 }
 
-func NewUpdatePlayerEvent(playerId int, hitpoints shared.Hitpoints, damage int, heal int) interface{} {
-	return &UpdatePlayerEvent{EventType: UPDATE_PLAYER_EVENT, PlayerId: playerId, Hitpoints: hitpoints, Damage: damage, Heal: heal}
+func NewUpdatePlayerEvent(playerId int, hitpoints shared.Hitpoints, damage int, heal int, crit bool) interface{} {
+	return &UpdatePlayerEvent{EventType: UPDATE_PLAYER_EVENT, PlayerId: playerId, Hitpoints: hitpoints, Damage: damage, Heal: heal, Crit: crit}
 }
 
 // Events send from client

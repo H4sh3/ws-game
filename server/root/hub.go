@@ -353,7 +353,6 @@ func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
 		cell.NpcListMutex.Lock()
 		for npcIndex, npc := range cell.NpcList {
 			if npc.UUID == event.UUID {
-				fmt.Printf("hitting %s current hp %d\n", npc.UUID, npc.Hitpoints.Current)
 				damage := shared.RandIntInRange(34, 50)
 				npc.Hitpoints.Current -= damage
 				remove := npc.Hitpoints.Current <= 0

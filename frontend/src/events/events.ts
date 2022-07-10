@@ -260,6 +260,7 @@ export interface UpdatePlayerEvent extends BaseEvent {
     hitpoints: Hitpoints,
     damage: number,
     heal: number,
+    crit: boolean
 }
 
 export function isUpdatePlayerEvent(value: any): value is UpdatePlayerEvent {

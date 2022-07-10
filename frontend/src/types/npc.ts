@@ -73,6 +73,10 @@ export function spawnDeadAnim(container: Container, npc: Npc) {
     anim.anchor.set(0.5, 0.5)
     anim.position.set(npc.currentPos.x, npc.currentPos.y)
     container.addChild(anim)
+
+    anim.onComplete = () => {
+        console.log("dead animation finished!")
+    }
 }
 
 class Npc extends HasHitpoints {

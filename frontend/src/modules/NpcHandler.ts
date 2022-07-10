@@ -2,6 +2,7 @@ import { Container } from "pixi.js"
 import { createVector, NpcListEvent, NpcTargetPositionEvent, UpdateNpcEvent } from "../events/events"
 import { Game } from "../main"
 import Npc, { spawnDeadAnim } from "../types/npc"
+import Vector from "../types/vector"
 
 
 class NpcHandler {
@@ -70,7 +71,7 @@ class NpcHandler {
         this.npcMap.set(gridCellKey, npcs)
     }
 
-    handleUpdateNpcEvent(event: UpdateNpcEvent) {
+    handleUpdateNpcEvent(event: UpdateNpcEvent): Vector {
         const { gridCellKey, npcUUID, hitpoints, remove } = event
 
         let npcs = this.npcMap.get(gridCellKey)
@@ -97,6 +98,8 @@ class NpcHandler {
         this.npcMap.set(gridCellKey, npcs)
 
         npc.updateHealthbar(npc.container)
+
+        return npc.currentPos.copy()
     }
 }
 

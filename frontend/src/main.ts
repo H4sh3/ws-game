@@ -197,9 +197,13 @@ export class Game extends Container {
         } else if (isNpcTargetPositionEvent(parsed)) {
             this.npcHandler.handleNpcTargetPositionEvent(parsed)
         } else if (isUpdateNpcEvent(parsed)) {
-            this.npcHandler.handleUpdateNpcEvent(parsed)
+            const pos = this.npcHandler.handleUpdateNpcEvent(parsed)
+
+            this.textHandler.addItem(`-${parsed.damage}`, pos, "0xff0000")
+
         } else if (isUpdatePlayerEvent(parsed)) {
             this.handleUpdatePlayerEvent(parsed)
+
         }
     }
 
@@ -356,11 +360,11 @@ export class Game extends Container {
             pos.y -= 50
 
             if (event.damage > 0) {
-                this.textHandler.addItem(`-${event.damage}`, pos, '0xff0000')
+                this.textHandler.addItem(`-${event.damage}`, pos, '0xff0000', event.crit)
             }
 
             if (event.heal > 0) {
-                this.textHandler.addItem(`+${event.heal}`, pos, '0x00ff00')
+                this.textHandler.addItem(`+${event.heal}`, pos, '0x00ff00', event.crit)
             }
         }
 

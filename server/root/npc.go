@@ -42,7 +42,7 @@ func NewNpc(pos shared.Vector) Npc {
 		aggressive:       false,
 		minDamage:        10,
 		maxDamage:        30,
-		critChance:       0.2,
+		critChance:       0.5,
 		targetedPlayer:   nil,
 		movementCooldown: 0,
 		attackCooldown:   0,

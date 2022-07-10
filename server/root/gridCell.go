@@ -264,8 +264,16 @@ func (cell *GridCell) CellCoro() {
 
 						if npc.attackCooldown == 0 {
 							npcDamage := shared.RandIntInRange(20, 35)
+
+							crit := shared.RandIntInRange(1, 100) > int(npc.critChance*100)
+
+							if crit {
+								npcDamage *= 2
+							}
+
 							player.Hitpoints.Current -= npcDamage
-							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, npcDamage, 0))
+
+							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, npcDamage, 0, crit))
 
 							cell.NpcList[index].attackCooldown = 10
 						} else {
@@ -276,7 +284,7 @@ func (cell *GridCell) CellCoro() {
 						if player.Hitpoints.Current <= 0 {
 
 							player.Hitpoints.Current = player.Hitpoints.Max
-							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, 0, player.Hitpoints.Max))
+							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, 0, player.Hitpoints.Max, false))
 
 							player.SetPos(shared.Vector{X: 0, Y: 0})
 							cell.AddEventToBroadcast(NewPlayerTargetPositionEvent(player.GetPos(), player.Id, true))
