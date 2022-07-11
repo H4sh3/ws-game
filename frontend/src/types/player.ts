@@ -5,7 +5,7 @@ import { PLAYER_SPRITE_SCALE } from "../sprites/player"
 import { HasHitpoints } from "./resource"
 import { getTexturesFromSpriteSheet } from "./npc"
 
-const deadAnimationTextures = getTexturesFromSpriteSheet('assets/human/dead/sprite_sheet.png', 5, 48, 64)
+const deadAnimationTextures = getTexturesFromSpriteSheet("player_dead", 'assets/human/dead/sprite_sheet.png', 5, 48, 64)
 
 export class Player extends HasHitpoints {
     id: number

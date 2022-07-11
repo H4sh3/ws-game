@@ -1,10 +1,10 @@
-import { AnimatedSprite, BaseTexture, Container, Loader, Sprite, Spritesheet, Texture } from "pixi.js";
+import { AnimatedSprite, BaseTexture, Container, Spritesheet, Texture } from "pixi.js";
 import { createVector, getHitNpcEvent, Hitpoints, INpc } from "../events/events";
 import { Player } from "./player";
 import { HasHitpoints } from "./resource";
 import Vector from "./vector";
 
-export function getTexturesFromSpriteSheet(path: string, numFrames: number, w: number, h: number) {
+export function getTexturesFromSpriteSheet(name: string, path: string, numFrames: number, w: number, h: number) {
     const atlas = {
         frames: {
         },
@@ -23,7 +23,7 @@ export function getTexturesFromSpriteSheet(path: string, numFrames: number, w: n
     const frameNames = []
 
     for (let i = 0; i < numFrames; i++) {
-        const frameName = `${i}`
+        const frameName = `${name}-${i}`
         frameNames.push(frameName)
 
         frames[frameName] = {
@@ -50,9 +50,10 @@ export function getTexturesFromSpriteSheet(path: string, numFrames: number, w: n
     });
     return textures
 }
-
-const deadKnightAnim = getTexturesFromSpriteSheet('assets/npcs/knight/dead/sprite_sheet.png', 15, 96, 64)
-const walkingKnightAnim = getTexturesFromSpriteSheet('assets/npcs/knight/walking/sprite_sheet.png', 8, 96, 64)
+console.log("test1")
+const deadKnightAnim = getTexturesFromSpriteSheet("knight_dead", 'assets/npcs/knight/dead/sprite_sheet.png', 15, 96, 64)
+const walkingKnightAnim = getTexturesFromSpriteSheet("knight_walk", 'assets/npcs/knight/walking/sprite_sheet.png', 8, 96, 64)
+console.log("test2")
 
 export function spawnDeadAnim(container: Container, npc: Npc) {
     const anim = new AnimatedSprite(deadKnightAnim);
