@@ -23,7 +23,8 @@ export enum EVENT_TYPES {
     NPC_TARGET_POSITION_EVENT = 18,
     HIT_NPC_EVENT = 19,
     UPDATE_NPC_EVENT = 20,
-    UPDATE_PLAYER_EVENT = 21
+    UPDATE_PLAYER_EVENT = 21,
+    NPC_ATTACK_ANIM_EVENT = 22,
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -271,6 +272,18 @@ export function isUpdatePlayerEvent(value: any): value is UpdatePlayerEvent {
     )
 }
 
+export interface NpcAttackAnimEvent extends BaseEvent {
+    npcUUID: string
+    attackId: number
+}
+
+export function isNpcAttackAnimEvent(value: any): value is NpcAttackAnimEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType == EVENT_TYPES.NPC_ATTACK_ANIM_EVENT
+    )
+}
+
 type EventTypes =
     NewPlayerEvent |
     UserInitEvent |
@@ -287,7 +300,8 @@ type EventTypes =
     CellDataEvent |
     NpcListEvent |
     NpcTargetPositionEvent |
-    UpdatePlayerEvent
+    UpdatePlayerEvent |
+    NpcAttackAnimEvent
 
 export interface MultipleEvents extends BaseEvent {
     events: EventTypes[]

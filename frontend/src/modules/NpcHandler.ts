@@ -1,5 +1,5 @@
 import { Container } from "pixi.js"
-import { createVector, NpcListEvent, NpcTargetPositionEvent, UpdateNpcEvent } from "../events/events"
+import { createVector, NpcAttackAnimEvent, NpcListEvent, NpcTargetPositionEvent, UpdateNpcEvent } from "../events/events"
 import { Game } from "../main"
 import Npc, { spawnDeadAnim } from "../types/npc"
 import Vector from "../types/vector"
@@ -100,6 +100,14 @@ class NpcHandler {
         npc.updateHealthbar(npc.container)
 
         return npc.currentPos.copy()
+    }
+
+    handleNpcAttackAnimEvent(event: NpcAttackAnimEvent) {
+        this.npcArray().forEach(npc => {
+            if (npc.UUID === event.npcUUID) {
+                npc.playAttack()
+            }
+        })
     }
 }
 

@@ -60,7 +60,7 @@ export function getTexturesFromSpriteSheet(name: string, path: string, numFrames
 const deadKnightAnim = getTexturesFromSpriteSheet("knight_dead", 'assets/npcs/knight/dead/sprite_sheet.png', 15, 96, 64)
 const walkingKnightAnim = getTexturesFromSpriteSheet("knight_walk", 'assets/npcs/knight/walking/sprite_sheet.png', 8, 96, 64)
 const idleKnightAnim = getTexturesFromSpriteSheet("knight_idle", 'assets/npcs/knight/idle/sprite_sheet.png', 15, 64, 64)
-const attackKnightAnim = getTexturesFromSpriteSheet("knight_attack", 'assets/npcs/knight/attack/sprite_sheet.png', 22, 96, 64)
+const attackKnightAnim = getTexturesFromSpriteSheet("knight_attack", 'assets/npcs/knight/attack/sprite_sheet.png', 13, 144, 64)
 
 export function spawnDeadAnim(container: Container, npc: Npc) {
     const anim = new AnimatedSprite(deadKnightAnim);
@@ -78,8 +78,6 @@ export function spawnDeadAnim(container: Container, npc: Npc) {
     anim.position.set(npc.currentPos.x, npc.currentPos.y)
     container.addChild(anim)
 
-    anim.onComplete = () => {
-    }
 }
 
 class Npc extends HasHitpoints {
@@ -127,6 +125,10 @@ class Npc extends HasHitpoints {
 
 
     updatePosition() {
+
+        // dont move on attack
+        if (this.activeAnimation === AnimationNames.attacking) return
+
         const step = this.targetPos.copy().sub(this.currentPos).mult(0.2)
 
         // used for dead anim mirror scale
@@ -146,13 +148,13 @@ class Npc extends HasHitpoints {
         this.useWalkSprite()
 
         // if players moves left, mirror the sprite
-        this.sprite.scale.x = step.x > 0 ? 2 : -2
-
         this.movesRight = step.x > 0
+        this.sprite.scale.x = this.movesRight ? 2 : -2
+
     }
 
     useWalkSprite() {
-        if (this.activeAnimation === AnimationNames.walking) return
+        if (this.activeAnimation === AnimationNames.walking || this.activeAnimation === AnimationNames.attacking) return
 
         if (this.sprite === undefined) {
             this.sprite = new AnimatedSprite(walkingKnightAnim)
@@ -166,8 +168,8 @@ class Npc extends HasHitpoints {
         this.activeAnimation = AnimationNames.walking
     }
 
-    useIdleSprite() {
-        if (this.activeAnimation === AnimationNames.idle) return
+    useIdleSprite(force: boolean = false) {
+        if (!force && (this.activeAnimation === AnimationNames.idle || this.activeAnimation === AnimationNames.attacking)) return
 
         if (this.sprite === undefined) {
             this.sprite = new AnimatedSprite(idleKnightAnim)
@@ -192,11 +194,15 @@ class Npc extends HasHitpoints {
         this.sprite.animationSpeed = 0.4;
         this.sprite.anchor.set(0.5)
         this.sprite.scale.set(2, 2)
+        this.sprite.scale.x = this.movesRight ? 2 : -2
+
         this.sprite.play()
+        this.sprite.loop = false
         this.activeAnimation = AnimationNames.attacking
 
         this.sprite.onComplete = () => {
-            this.useIdleSprite()
+            console.log("back to idle")
+            this.useIdleSprite(true)
         }
     }
 }

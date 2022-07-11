@@ -31,6 +31,7 @@ const (
 	HIT_NPC_EVENT                EventType = 19
 	UPDATE_NPC_EVENT             EventType = 20
 	UPDATE_PLAYER_EVENT          EventType = 21
+	NPC_ATTACK_ANIM_EVENT        EventType = 22
 )
 
 const (
@@ -242,6 +243,16 @@ type UpdatePlayerEvent struct {
 
 func NewUpdatePlayerEvent(playerId int, hitpoints shared.Hitpoints, damage int, heal int, crit bool) interface{} {
 	return &UpdatePlayerEvent{EventType: UPDATE_PLAYER_EVENT, PlayerId: playerId, Hitpoints: hitpoints, Damage: damage, Heal: heal, Crit: crit}
+}
+
+type NpcAttackAnimEvent struct {
+	EventType EventType `json:"eventType"`
+	NpcUUID   string    `json:"npcUUID"`
+	AttackID  int       `json:"attackID"`
+}
+
+func NewNpcAttackAnimEvent(npcUUID string, attackID int) interface{} {
+	return &NpcAttackAnimEvent{EventType: NPC_ATTACK_ANIM_EVENT, NpcUUID: npcUUID, AttackID: attackID}
 }
 
 // Events send from client

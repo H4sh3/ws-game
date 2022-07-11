@@ -324,6 +324,7 @@ func (cell *GridCell) CellCoro() {
 
 							player.Hitpoints.Current -= npcDamage
 
+							cell.AddEventToBroadcast(NewNpcAttackAnimEvent(npc.UUID, 0))
 							cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, npcDamage, 0, crit))
 
 							cell.NpcList[index].attackCooldown = 10
@@ -344,6 +345,8 @@ func (cell *GridCell) CellCoro() {
 						}
 
 						continue
+					} else {
+						cell.NpcList[index].attackCooldown = 0
 					}
 				}
 
@@ -357,7 +360,10 @@ func (cell *GridCell) CellCoro() {
 					}
 				}
 
-				if diffX == 0 && diffY == 0 {
+				if diffX == 0 && diffY == 0 || cell.NpcList[index].attackCooldown > 0 {
+					if cell.NpcList[index].attackCooldown >= 1 {
+						cell.NpcList[index].attackCooldown -= 1
+					}
 					continue
 				}
 
