@@ -36,7 +36,6 @@ const main = async () => {
     await load(app, 'assets/tree2.png');
     await load(app, 'assets/log.png');
     await load(app, 'assets/ironOre.png');
-    await load(app, 'assets/grass.png');
 
     await load(app, 'assets/sounds/hit1.wav');
     await load(app, 'assets/sounds/hit2.wav');
