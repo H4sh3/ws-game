@@ -50,10 +50,9 @@ export function getTexturesFromSpriteSheet(name: string, path: string, numFrames
     });
     return textures
 }
-console.log("test1")
+
 const deadKnightAnim = getTexturesFromSpriteSheet("knight_dead", 'assets/npcs/knight/dead/sprite_sheet.png', 15, 96, 64)
 const walkingKnightAnim = getTexturesFromSpriteSheet("knight_walk", 'assets/npcs/knight/walking/sprite_sheet.png', 8, 96, 64)
-console.log("test2")
 
 export function spawnDeadAnim(container: Container, npc: Npc) {
     const anim = new AnimatedSprite(deadKnightAnim);
