@@ -4,6 +4,12 @@ import { Player } from "./player";
 import { HasHitpoints } from "./resource";
 import Vector from "./vector";
 
+enum AnimationNames {
+    idle = 0,
+    walking = 1,
+    attacking = 2,
+}
+
 export function getTexturesFromSpriteSheet(name: string, path: string, numFrames: number, w: number, h: number) {
     const atlas = {
         frames: {
@@ -53,6 +59,8 @@ export function getTexturesFromSpriteSheet(name: string, path: string, numFrames
 
 const deadKnightAnim = getTexturesFromSpriteSheet("knight_dead", 'assets/npcs/knight/dead/sprite_sheet.png', 15, 96, 64)
 const walkingKnightAnim = getTexturesFromSpriteSheet("knight_walk", 'assets/npcs/knight/walking/sprite_sheet.png', 8, 96, 64)
+const idleKnightAnim = getTexturesFromSpriteSheet("knight_idle", 'assets/npcs/knight/idle/sprite_sheet.png', 15, 64, 64)
+const attackKnightAnim = getTexturesFromSpriteSheet("knight_attack", 'assets/npcs/knight/attack/sprite_sheet.png', 22, 96, 64)
 
 export function spawnDeadAnim(container: Container, npc: Npc) {
     const anim = new AnimatedSprite(deadKnightAnim);
@@ -71,7 +79,6 @@ export function spawnDeadAnim(container: Container, npc: Npc) {
     container.addChild(anim)
 
     anim.onComplete = () => {
-        console.log("dead animation finished!")
     }
 }
 
@@ -89,6 +96,8 @@ class Npc extends HasHitpoints {
     ws: WebSocket
     player: Player
 
+    activeAnimation: AnimationNames
+
     constructor(serial: INpc, ws: WebSocket, player: Player) {
         super(serial.hitpoints, -50)
 
@@ -104,24 +113,16 @@ class Npc extends HasHitpoints {
 
 
         // Todo: use loader for better performance
-        const sprite = new AnimatedSprite(walkingKnightAnim)//.fromFrames(getKnightTiles());
-        sprite.animationSpeed = 0.3;
-        sprite.anchor.set(0.5)
-        sprite.scale.set(2, 2)
-
-        this.sprite = sprite
-
-        this.container = new Container()
-        this.container.addChild(this.sprite)
-
+        this.useIdleSprite()
         this.sprite.interactive = true
-
         this.sprite.on('click', () => {
             if (this.currentPos.dist(this.player.currentPos) < 150) {
                 this.ws.send(getHitNpcEvent("1", this.UUID))
             }
         });
 
+        this.container = new Container()
+        this.container.addChild(this.sprite)
     }
 
 
@@ -131,8 +132,7 @@ class Npc extends HasHitpoints {
         // used for dead anim mirror scale
 
         if (step.mag() == 0) {
-            //this.posChanged = false
-            this.sprite.stop()
+            this.useIdleSprite()
             return
         }
 
@@ -142,12 +142,62 @@ class Npc extends HasHitpoints {
         } else {
             this.currentPos = this.targetPos.copy()
         }
-        //this.posChanged = true
 
-        this.sprite.play()
+        this.useWalkSprite()
+
         // if players moves left, mirror the sprite
         this.sprite.scale.x = step.x > 0 ? 2 : -2
+
         this.movesRight = step.x > 0
+    }
+
+    useWalkSprite() {
+        if (this.activeAnimation === AnimationNames.walking) return
+
+        if (this.sprite === undefined) {
+            this.sprite = new AnimatedSprite(walkingKnightAnim)
+        }
+
+        this.sprite.textures = walkingKnightAnim
+        this.sprite.animationSpeed = 0.3;
+        this.sprite.anchor.set(0.5)
+        this.sprite.scale.set(2, 2)
+        this.sprite.play()
+        this.activeAnimation = AnimationNames.walking
+    }
+
+    useIdleSprite() {
+        if (this.activeAnimation === AnimationNames.idle) return
+
+        if (this.sprite === undefined) {
+            this.sprite = new AnimatedSprite(idleKnightAnim)
+        }
+
+        this.sprite.textures = idleKnightAnim
+        this.sprite.animationSpeed = 0.4;
+        this.sprite.anchor.set(0.5)
+        this.sprite.scale.set(2, 2)
+        this.sprite.play()
+        this.activeAnimation = AnimationNames.idle
+    }
+
+    playAttack() {
+        if (this.activeAnimation === AnimationNames.attacking) return
+
+        if (this.sprite === undefined) {
+            this.sprite = new AnimatedSprite(attackKnightAnim)
+        }
+
+        this.sprite.textures = attackKnightAnim
+        this.sprite.animationSpeed = 0.4;
+        this.sprite.anchor.set(0.5)
+        this.sprite.scale.set(2, 2)
+        this.sprite.play()
+        this.activeAnimation = AnimationNames.attacking
+
+        this.sprite.onComplete = () => {
+            this.useIdleSprite()
+        }
     }
 }
 
