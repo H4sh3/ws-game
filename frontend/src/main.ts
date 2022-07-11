@@ -1,4 +1,4 @@
-import { Application, Container, Sprite } from 'pixi.js';
+import { Application, Container, Graphics, Sprite } from 'pixi.js';
 import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent } from './events/events';
 import { Player } from './types/player';
 import Vector from './types/vector';
@@ -15,6 +15,7 @@ import { SoundHandler } from './modules/SoundHandler';
 import TextHandler from './modules/TextHandler';
 import NpcHandler from './modules/NpcHandler';
 import ResourceHandler from './modules/ResourceHandler';
+import MiniMapHandler from './modules/MinimapHandler';
 
 export class Game extends Container {
     app: Application;
@@ -30,7 +31,7 @@ export class Game extends Container {
     soundHandler: SoundHandler
     npcHandler: NpcHandler
     resourceHandler: ResourceHandler
-
+    miniMapHandler: MiniMapHandler
 
     player: Player
     players: Map<number, Player>
@@ -84,6 +85,7 @@ export class Game extends Container {
     initWorld() {
         this.keyHandler = new KeyboardHandler()
         this.soundHandler = new SoundHandler()
+        this.miniMapHandler = new MiniMapHandler(this.player.currentPos)
 
         // container structurs
         this.worldContainer = new Container();
@@ -110,6 +112,7 @@ export class Game extends Container {
 
         this.addChild(this.worldContainer)
         // player is centered in the middle of the game -> disentangled from the world
+        this.addChild(this.miniMapHandler.container)
         this.addChild(this.player.spriteContainer)
 
         this.cursorPos = createVector(0, 0)
@@ -160,50 +163,52 @@ export class Game extends Container {
     }
 
 
+    // Todo write short description of events
     processEvent(parsed: any) {
         if (isPlayerTargetPositionEvent(parsed)) {
+
             this.handlePlayerTargetPositionEvent(parsed)
-
         } else if (isLoadInventoryEvent(parsed)) {
+
             this.handleLoadInventoryEvent(parsed)
-
         } else if (isUpdateInventoryEvent(parsed)) {
+
             this.handleUpdateInventoryEvent(parsed)
-
         } else if (isUpdateResourceEvent(parsed)) {
+
             this.resourceHandler.handleUpdateResourceEvent(parsed, this)
-
         } else if (isResourcePositionsEvent(parsed)) {
+
             this.resourceHandler.handleAddResourceEvent(parsed, this)
-
         } else if (isRemovePlayerEvent(parsed)) {
+
             this.handleRemovePlayerEvent(parsed)
-
         } else if (isNewPlayerEvent(parsed)) {
+
             this.handleNewPlayerEvent(parsed)
-
         } else if (isUserInitEvent(parsed)) {
+
             this.handleUserInitEvent(parsed)
-
-
         } else if (isRemoveGridCellEvent(parsed)) {
+
             this.handleRemoveGridCellEvent(parsed)
-
         } else if (isCellDataEvent(parsed)) {
-            this.tilemapHandler.processCellDataEvent(parsed)
 
+            this.miniMapHandler.addTiles(parsed)
+            this.tilemapHandler.processCellDataEvent(parsed)
         } else if (isNpcListEvent(parsed)) {
+
             this.npcHandler.handleNpcListEvent(parsed, this)
         } else if (isNpcTargetPositionEvent(parsed)) {
+
             this.npcHandler.handleNpcTargetPositionEvent(parsed)
         } else if (isUpdateNpcEvent(parsed)) {
+
             const pos = this.npcHandler.handleUpdateNpcEvent(parsed)
-
             this.textHandler.addItem(`-${parsed.damage}`, pos, "0xff0000")
-
         } else if (isUpdatePlayerEvent(parsed)) {
-            this.handleUpdatePlayerEvent(parsed)
 
+            this.handleUpdatePlayerEvent(parsed)
         }
     }
 
@@ -220,6 +225,8 @@ export class Game extends Container {
         this.player.updatePosition()
         this.worldContainer.x = -this.player.currentPos.x + (SCREEN_SIZE / 2)
         this.worldContainer.y = -this.player.currentPos.y + (SCREEN_SIZE / 2)
+
+        this.miniMapHandler.update(this.player.currentPos, this.gameConfig.gridCellSize, this.gameConfig.subCells)
 
         // Translates cursor to relativ player position and grid
         const pX = this.player.currentPos.x % 50

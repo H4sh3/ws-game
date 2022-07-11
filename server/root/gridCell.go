@@ -1,12 +1,18 @@
 package root
 
 import (
+	"bytes"
 	"fmt"
+	"image"
+	"image/color"
+	"image/png"
 	"math"
 	"sync"
 	"time"
 	"ws-game/resource"
 	"ws-game/shared"
+
+	"encoding/base64"
 )
 
 const (
@@ -39,9 +45,14 @@ type GridCell struct {
 	SubCells               []SubCell
 	NpcList                []Npc
 	NpcListMutex           sync.Mutex
+	SubCellBase64          string
 }
 
 func NewCell(x int, y int) *GridCell {
+
+	subCells := getSubCells(x, y)
+	subCellsBase64 := getCellMiniMapPng(subCells)
+
 	cell := &GridCell{
 		Pos:                    shared.Vector{X: x, Y: y},
 		GridCellKey:            getKey(x, y),
@@ -64,9 +75,10 @@ func NewCell(x int, y int) *GridCell {
 		CellMutex:              sync.Mutex{},
 		eventsToBroadcast:      []interface{}{},
 		eventsToBroadcastMutex: sync.Mutex{},
-		SubCells:               []SubCell{},
 		NpcList:                []Npc{},
 		NpcListMutex:           sync.Mutex{},
+		SubCells:               subCells,
+		SubCellBase64:          subCellsBase64,
 	}
 
 	// test npc -> only one per cell atm
@@ -79,13 +91,50 @@ func NewCell(x int, y int) *GridCell {
 	//if cell.Pos.X == 0 && cell.Pos.Y == 0 {
 	//}
 
-	cell.SubCells = getSubCells(x, y)
-
 	t := time.NewTicker(CellUpdateRate)
 	cell.ticker = *t
 
 	go cell.CellCoro()
 	return cell
+}
+
+func getCellMiniMapPng(subCells []SubCell) string {
+
+	var img = image.NewRGBA(image.Rect(0, 0, SubCells, SubCells))
+
+	hue := uint8(255)
+
+	water := color.RGBA{0, 98, 168, hue}
+	shallowWater := color.RGBA{67, 199, 247, hue}
+	grass := color.RGBA{99, 171, 63, hue}
+	sand := color.RGBA{255, 255, 0, hue}
+
+	for _, subCell := range subCells {
+		if subCell.TerrainType == "Water" {
+			img.Set(subCell.Pos.X, subCell.Pos.Y, water)
+		}
+		if subCell.TerrainType == "Grass" {
+			img.Set(subCell.Pos.X, subCell.Pos.Y, grass)
+		}
+		if subCell.TerrainType == "ShallowWater" {
+			img.Set(subCell.Pos.X, subCell.Pos.Y, shallowWater)
+		}
+		if subCell.TerrainType == "Sand" {
+			img.Set(subCell.Pos.X, subCell.Pos.Y, sand)
+		}
+	}
+
+	buff := new(bytes.Buffer)
+	err := png.Encode(buff, img)
+	if err != nil {
+		fmt.Println("failed to create buffer", err)
+		return ""
+	}
+
+	base64String := "data:image/png;base64,"
+	base64String += base64.StdEncoding.EncodeToString(buff.Bytes())
+
+	return base64String
 }
 
 func Abs(x int) int {
@@ -126,7 +175,9 @@ func (cell *GridCell) CellCoro() {
 			// if a client subs to a new cell provide him with players inside this cell
 			cell.wantsToSubMutex.Lock()
 			for _, client := range cell.wantsToSub {
+
 				for _, player := range cell.Players {
+					fmt.Printf("player in cell %s \n", player.UUID)
 					if player.Id == client.Id {
 						continue
 					}
@@ -140,7 +191,7 @@ func (cell *GridCell) CellCoro() {
 					// this code is executed if a client subs first time to a cell
 					if client.Connected {
 						client.send <- NewResourcePositionsEvent(cell.GetResources())
-						client.send <- NewCellDataEvent(cell.GridCellKey, cell.SubCells, cell.Pos)
+						client.send <- NewCellDataEvent(cell.GridCellKey, cell.SubCells, cell.Pos, cell.SubCellBase64)
 
 						npcs := cell.GetNpcList()
 						client.send <- NewNpcListEvent(cell.GridCellKey, npcs)

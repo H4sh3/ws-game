@@ -214,6 +214,7 @@ export interface CellDataEvent extends BaseEvent {
     },
     subCells: SubCell[]
     gridCellKey: string,
+    subCellBase64: string
 }
 
 export function isCellDataEvent(value: any): value is CellDataEvent {
@@ -285,7 +286,8 @@ type EventTypes =
     MultipleEvents |
     CellDataEvent |
     NpcListEvent |
-    NpcTargetPositionEvent
+    NpcTargetPositionEvent |
+    UpdatePlayerEvent
 
 export interface MultipleEvents extends BaseEvent {
     events: EventTypes[]

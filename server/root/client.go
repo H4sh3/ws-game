@@ -66,16 +66,16 @@ type Client struct {
 }
 
 func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
-	spawnRange := 4
-	x := shared.RandIntInRange(-spawnRange, spawnRange) * StepSize
-	y := shared.RandIntInRange(-spawnRange, spawnRange) * StepSize
-	clientPostion := shared.Vector{X: x, Y: y}
+	//spawnRange := 4
+	//x := shared.RandIntInRange(-spawnRange, spawnRange) * StepSize
+	//y := shared.RandIntInRange(-spawnRange, spawnRange) * StepSize
+	clientPostion := shared.Vector{X: 500, Y: 500}
 
 	sendChan := make(chan interface{}, 1024)
 
 	hitpoints := shared.Hitpoints{
-		Current: 500,
-		Max:     500,
+		Current: 50000000,
+		Max:     50000000,
 	}
 
 	gridCell := hub.GridManager.GetCellFromPos(clientPostion)

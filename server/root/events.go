@@ -175,18 +175,20 @@ func NewRemoveGridCellEvent(gridCellKey string) interface{} {
 }
 
 type CellDataEvent struct {
-	EventType   EventType     `json:"eventType"`
-	GridCellKey string        `json:"gridCellKey"`
-	Pos         shared.Vector `json:"pos"`
-	SubCells    []SubCell     `json:"subCells"`
+	EventType     EventType     `json:"eventType"`
+	GridCellKey   string        `json:"gridCellKey"`
+	Pos           shared.Vector `json:"pos"`
+	SubCells      []SubCell     `json:"subCells"`
+	SubCellBase64 string        `json:"subCellBase64"`
 }
 
-func NewCellDataEvent(gridCellKey string, subCells []SubCell, pos shared.Vector) interface{} {
+func NewCellDataEvent(gridCellKey string, subCells []SubCell, pos shared.Vector, subCellBase64 string) interface{} {
 	return &CellDataEvent{
-		EventType:   CELL_DATA_EVENT,
-		GridCellKey: gridCellKey,
-		SubCells:    subCells,
-		Pos:         pos,
+		EventType:     CELL_DATA_EVENT,
+		GridCellKey:   gridCellKey,
+		SubCells:      subCells,
+		Pos:           pos,
+		SubCellBase64: subCellBase64,
 	}
 }
 

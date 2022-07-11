@@ -1,6 +1,6 @@
 import Vector from "./vector"
 import { createVector, Hitpoints } from "../events/events"
-import { AnimatedSprite, Container } from "pixi.js"
+import { AnimatedSprite, Container, Graphics } from "pixi.js"
 import { PLAYER_SPRITE_SCALE } from "../sprites/player"
 import { HasHitpoints } from "./resource"
 import { getTexturesFromSpriteSheet } from "./npc"

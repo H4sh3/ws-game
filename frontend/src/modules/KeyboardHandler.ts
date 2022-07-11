@@ -1,7 +1,5 @@
 import { getKeyBoardEvent, KeyStates } from "../events/events"
 import { Game } from "../main"
-import { Player } from "../types/player"
-import { Resource } from "../types/resource"
 
 export const VALID_KEYS = ["w", "a", "s", "d"]
 
