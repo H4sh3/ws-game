@@ -6,6 +6,15 @@ import (
 	"github.com/google/uuid"
 )
 
+type NpcState int
+
+const (
+	Idle      NpcState = 0
+	Walk      NpcState = 1
+	Attack    NpcState = 2
+	Returning NpcState = 3
+)
+
 type Npc struct {
 	UUID             string           `json:"UUID"`
 	Pos              shared.Vector    `json:"pos"`
@@ -21,6 +30,7 @@ type Npc struct {
 	attackCooldown   int
 	targetedPlayer   *Client
 	remove           bool
+	State            NpcState
 }
 
 func (npc *Npc) SetRemove(value bool) {
@@ -46,5 +56,6 @@ func NewNpc(pos shared.Vector) Npc {
 		targetedPlayer:   nil,
 		movementCooldown: 0,
 		attackCooldown:   0,
+		State:            Idle,
 	}
 }
