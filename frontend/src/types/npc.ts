@@ -87,6 +87,7 @@ class Npc extends HasHitpoints {
     hitpoints: Hitpoints
     npcType: string
     movesRight: boolean
+    attackSpeed: number
 
     container: Container
     sprite: AnimatedSprite
@@ -105,9 +106,11 @@ class Npc extends HasHitpoints {
         this.movesRight = true
 
         this.UUID = serial.UUID
-        this.currentPos = createVector(serial.pos.x, serial.pos.y)
-        this.targetPos = createVector(serial.pos.x, serial.pos.y)
         this.hitpoints = serial.hitpoints
+        this.attackSpeed = serial.attackSpeed
+
+        this.currentPos = createVector(serial.pos.x, serial.pos.y)
+        this.targetPos = this.currentPos.copy()
 
 
         // Todo: use loader for better performance
@@ -154,7 +157,7 @@ class Npc extends HasHitpoints {
     }
 
     useWalkSprite() {
-        if (this.activeAnimation === AnimationNames.walking || this.activeAnimation === AnimationNames.attacking) return
+        if (this.activeAnimation === AnimationNames.walking) return
 
         if (this.sprite === undefined) {
             this.sprite = new AnimatedSprite(walkingKnightAnim)
@@ -169,7 +172,7 @@ class Npc extends HasHitpoints {
     }
 
     useIdleSprite(force: boolean = false) {
-        if (!force && (this.activeAnimation === AnimationNames.idle || this.activeAnimation === AnimationNames.attacking)) return
+        if (!force && (this.activeAnimation === AnimationNames.idle)) return
 
         if (this.sprite === undefined) {
             this.sprite = new AnimatedSprite(idleKnightAnim)
@@ -179,6 +182,7 @@ class Npc extends HasHitpoints {
         this.sprite.animationSpeed = 0.4;
         this.sprite.anchor.set(0.5)
         this.sprite.scale.set(2, 2)
+        this.sprite.scale.x = this.movesRight ? 2 : -2
         this.sprite.play()
         this.activeAnimation = AnimationNames.idle
     }
@@ -191,7 +195,8 @@ class Npc extends HasHitpoints {
         }
 
         this.sprite.textures = attackKnightAnim
-        this.sprite.animationSpeed = 0.4;
+        const calcedAnimSpeed = 2 - ((this.attackSpeed * 50) / 750);
+        this.sprite.animationSpeed = calcedAnimSpeed <= 0 ? 0.1 : calcedAnimSpeed
         this.sprite.anchor.set(0.5)
         this.sprite.scale.set(2, 2)
         this.sprite.scale.x = this.movesRight ? 2 : -2

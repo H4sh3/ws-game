@@ -20,6 +20,7 @@ type Npc struct {
 	Pos              shared.Vector    `json:"pos"`
 	Hitpoints        shared.Hitpoints `json:"hitpoints"`
 	NpcType          string           `json:"npcType"`
+	AttackSpeed      int              `json:"attackSpeed"`
 	spawnPos         shared.Vector
 	movesBackToSpawn bool
 	aggressive       bool
@@ -27,6 +28,7 @@ type Npc struct {
 	minDamage        float32
 	maxDamage        float32
 	movementCooldown int
+	walkCooldown     int
 	attackCooldown   int
 	targetedPlayer   *Client
 	remove           bool
@@ -55,7 +57,9 @@ func NewNpc(pos shared.Vector) Npc {
 		critChance:       0.5,
 		targetedPlayer:   nil,
 		movementCooldown: 0,
+		walkCooldown:     0,
 		attackCooldown:   0,
 		State:            Idle,
+		AttackSpeed:      1,
 	}
 }

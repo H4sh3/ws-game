@@ -1,10 +1,13 @@
 import { Container, Text } from "pixi.js";
+import { randInt } from "../etc/math";
+import { createVector } from "../events/events";
 import Vector from "../types/vector";
 
 class TextItem {
     container: Container
     text: Text
     tick: number
+    pos: Vector
 
     constructor(displayText: string, pos: Vector, color: string, crit: boolean) {
         let text: Text;
@@ -19,6 +22,7 @@ class TextItem {
         this.container.position.set(pos.x, pos.y + yOffset)
         this.container.addChild(text)
         this.tick = 0
+        this.pos = pos
     }
 
     update() {
@@ -43,7 +47,18 @@ class TextHandler {
 
 
     addItem(displayText: string, pos: Vector, color: string, crit: boolean = false) {
-        const item = new TextItem(displayText, pos, color, crit)
+        const validPos = pos.copy()
+        let cTrie = 0
+        const maxTrie = 50
+        const step = 25
+        while (this.items.some(i => i.pos.dist(validPos) < 15)) {
+            if (cTrie >= maxTrie) break
+
+            validPos.add(createVector(randInt(-step, step), randInt(-step, step)))
+            cTrie++
+        }
+
+        const item = new TextItem(displayText, validPos, color, crit)
         this.container.addChild(item.container)
         this.items.push(item)
     }

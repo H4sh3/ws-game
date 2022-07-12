@@ -84,7 +84,7 @@ func NewCell(x int, y int) *GridCell {
 	// test npc -> only one per cell atm
 
 	for i := 0; i < 1; i++ {
-		npcPos := shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2}
+		npcPos := shared.Vector{X: (x * GridCellSize), Y: (y * GridCellSize)}
 		npc := NewNpc(npcPos)
 		cell.NpcList = append(cell.NpcList, npc)
 	}
@@ -160,108 +160,111 @@ func (cell *GridCell) GetSubscriptions() []GridSubscription {
 	return subs
 }
 
-func (cell *GridCell) NpcUpdates() {
-	// NPC Stuff
-	cell.NpcListMutex.Lock()
+func (cell *GridCell) UpdateNpc(index int, npc Npc) {
+	defer func() {
+		cell.NpcList[index] = npc
+	}()
 
-	// Remove npcs
-	for i, npc := range cell.NpcList {
-		if npc.remove {
-			cell.NpcList = append(cell.NpcList[:i], cell.NpcList[i+1:]...)
-		}
+	var player *Client = npc.targetedPlayer
+	minDistToAttack := 75.0
+
+	if player != nil && !player.Connected {
+		npc.targetedPlayer = nil
+		return
 	}
 
-	// Update Npces
-	for index, npc := range cell.NpcList {
+	if npc.State == Idle {
+		// either we are in idle with or without a target player
 
-		if !npc.movesBackToSpawn {
-			npc.movesBackToSpawn = npc.spawnPos.Dist(&npc.Pos) > 500
-			npc.targetedPlayer = nil
-		}
-
-		var player *Client = npc.targetedPlayer
+		// see if a player is nearby
 		var smallestDist = math.Inf(1)
-
-		// find closest player in cell
 		if player == nil {
 			for _, sub := range cell.playerSubscriptions {
 				subbedPlayerPos := sub.Player.GetPos()
 				dist := subbedPlayerPos.Dist(&npc.Pos)
 				if dist < smallestDist && dist < 150 {
 					player = sub.Player
-					cell.NpcList[index].targetedPlayer = player
+					npc.targetedPlayer = player
 					smallestDist = dist
 				}
 			}
+
+			// return early no matter if we found one or not
+			return
 		}
 
-		// move in direction of player
-		diffX := 0
-		diffY := 0
+		// we have a target player but still in idle state
+		// check if we are close enough to attack
 
-		if player != nil {
-			// no player found
-			playerPos := player.GetPos()
-			diffX = playerPos.X - npc.Pos.X
-			diffY = playerPos.Y - npc.Pos.Y
-			minDistToPlayer := 75.0
-
+		playerPos := player.GetPos()
+		if playerPos.Dist(&npc.Pos) < minDistToAttack {
 			// npc reached minimum range to player -> attack
-			if playerPos.Dist(&npc.Pos) < minDistToPlayer && !npc.movesBackToSpawn {
+			// we are close enough -> change to attack state
+			npc.State = Attack
+		} else {
+			// we are to far away -> run to target
+			npc.State = Walk
+		}
+		return
+	}
 
-				if npc.attackCooldown == 0 {
-					npcDamage := shared.RandIntInRange(20, 35)
+	if npc.State == Returning {
+		diffX := npc.spawnPos.X - npc.Pos.X
+		diffY := npc.spawnPos.Y - npc.Pos.Y
 
-					crit := shared.RandIntInRange(1, 100) > int(npc.critChance*100)
+		step := shared.Vector{
+			X: diffX,
+			Y: diffY,
+		}
 
-					if crit {
-						npcDamage *= 2
-					}
-
-					player.Hitpoints.Current -= npcDamage
-
-					cell.AddEventToBroadcast(NewNpcAttackAnimEvent(npc.UUID, 0))
-					cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, npcDamage, 0, crit))
-
-					cell.NpcList[index].attackCooldown = 10
-				} else {
-					cell.NpcList[index].attackCooldown -= 1
-				}
-
-				// player died: reset hitpoints and respawn in cell 0,0
-				if player.Hitpoints.Current <= 0 {
-
-					player.Hitpoints.Current = player.Hitpoints.Max
-					cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, 0, player.Hitpoints.Max, false))
-
-					cell.NpcList[index].movesBackToSpawn = true
-					cell.NpcList[index].targetedPlayer = nil
-					player.SetPos(shared.Vector{X: 0, Y: 0})
-					cell.AddEventToBroadcast(NewPlayerTargetPositionEvent(player.GetPos(), player.Id, true))
-				}
-
-				continue
+		if Abs(diffX) > StepSize {
+			if diffX > 0 {
+				step.X = StepSize
 			} else {
-				cell.NpcList[index].attackCooldown = 0
+				step.X = -StepSize
+			}
+		}
+		if Abs(diffY) > StepSize {
+			if diffY > 0 {
+				step.Y = StepSize
+			} else {
+				step.Y = -StepSize
 			}
 		}
 
-		if npc.movesBackToSpawn {
-			diffX = npc.spawnPos.X - npc.Pos.X
-			diffY = npc.spawnPos.Y - npc.Pos.Y
+		// take step in player direction
+		npc.Pos.Add(step)
+		cell.AddEventToBroadcast(NewNpcTargetPositionEvent(cell.GridCellKey, npc.UUID, npc.Pos))
 
-			dist := npc.spawnPos.Dist(&npc.Pos)
-			if dist <= 50 {
-				npc.movesBackToSpawn = false
-			}
+		// check if npc is back at spawn
+		dist := npc.spawnPos.Dist(&npc.Pos)
+		if dist <= 50 {
+			npc.State = Idle
 		}
 
-		if diffX == 0 && diffY == 0 || cell.NpcList[index].attackCooldown > 0 {
-			if cell.NpcList[index].attackCooldown >= 1 {
-				cell.NpcList[index].attackCooldown -= 1
-			}
-			continue
+		return
+	}
+
+	if npc.State == Walk {
+
+		if npc.movementCooldown > 0 {
+			npc.movementCooldown -= 1
+			return
 		}
+
+		// check if npc walked to far away from his spawn position -> switch to return mode
+		if npc.spawnPos.Dist(&npc.Pos) > 500 {
+			npc.State = Returning
+			npc.Hitpoints.Current = npc.Hitpoints.Max
+
+			cell.AddEventToBroadcast(NewUpdateNpcEvent(npc.UUID, npc.Hitpoints.Current, npc.Hitpoints.Max, false, cell.GridCellKey, 0))
+			npc.targetedPlayer = nil
+			return
+		}
+
+		playerPos := player.GetPos()
+		diffX := playerPos.X - npc.Pos.X
+		diffY := playerPos.Y - npc.Pos.Y
 
 		step := shared.Vector{
 			X: diffX,
@@ -284,15 +287,71 @@ func (cell *GridCell) NpcUpdates() {
 			}
 		}
 
+		// take step in player direction
 		npc.Pos.Add(step)
-
-		cell.NpcList[index] = npc
-
-		// broadcast event with new npc position
 		cell.AddEventToBroadcast(NewNpcTargetPositionEvent(cell.GridCellKey, npc.UUID, npc.Pos))
 
+		// check if we are close enough to attack
+		if playerPos.Dist(&npc.Pos) < minDistToAttack {
+			npc.State = Attack
+			fmt.Println("ATTACK!")
+			return
+		}
+
+		npc.State = Idle
+		npc.movementCooldown = 2
+		return
 	}
-	cell.NpcListMutex.Unlock()
+
+	// check if we are still in attack range
+	if npc.State == Attack && npc.attackCooldown == 0 {
+		playerPos := player.GetPos()
+		if playerPos.Dist(&npc.Pos) > minDistToAttack {
+			npc.State = Walk
+			return
+		}
+	}
+
+	if npc.State == Attack {
+		if npc.attackCooldown == 0 {
+			npcDamage := shared.RandIntInRange(20, 35)
+
+			crit := shared.RandIntInRange(1, 100) > int(npc.critChance*100)
+
+			if crit {
+				npcDamage *= 2
+			}
+
+			player.Hitpoints.Current -= npcDamage
+
+			cell.AddEventToBroadcast(NewNpcAttackAnimEvent(npc.UUID, 0))
+			cell.AddEventToBroadcast(NewUpdatePlayerEvent(player.Id, player.Hitpoints, npcDamage, 0, crit))
+
+			npc.attackCooldown = npc.AttackSpeed
+			npc.movementCooldown = 2
+		}
+	}
+	npc.attackCooldown -= 1
+}
+
+func (cell *GridCell) NpcUpdates() {
+	// NPC Stuff
+	cell.NpcListMutex.Lock()
+
+	defer cell.NpcListMutex.Unlock()
+
+	// Remove npcs
+	for i, npc := range cell.NpcList {
+		if npc.remove {
+			cell.NpcList = append(cell.NpcList[:i], cell.NpcList[i+1:]...)
+		}
+	}
+
+	// Update Npces
+	for index, npc := range cell.NpcList {
+		cell.UpdateNpc(index, npc)
+	}
+
 }
 
 func (cell *GridCell) CellCoro() {

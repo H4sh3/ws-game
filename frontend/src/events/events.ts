@@ -230,6 +230,7 @@ export interface INpc {
     pos: IVector
     hitpoints: Hitpoints
     npcType: string
+    attackSpeed: number
 }
 
 export interface NpcListEvent extends BaseEvent {
