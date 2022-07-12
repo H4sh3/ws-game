@@ -10,7 +10,7 @@ enum AnimationNames {
     attacking = 2,
 }
 
-export function getTexturesFromSpriteSheet(name: string, path: string, numFrames: number, w: number, h: number) {
+export function getTexturesFromSpriteSheet(name: string, path: string, numFrames: number, w: number, h: number): Texture[] {
     const atlas = {
         frames: {
         },
