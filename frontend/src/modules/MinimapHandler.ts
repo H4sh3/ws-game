@@ -106,7 +106,7 @@ class MiniMapHandler {
         const tX = -(playerPos.x / 50) % subCells
         const tY = -(playerPos.y / 50) % subCells
 
-        this.tilemap.position.set(tX, tY)
+        this.tilemap.position.set(tX - 20, tY - 20)
 
         // remove previous tilemap just before we add the new one
         while (this.container.children[0]) {
@@ -117,7 +117,7 @@ class MiniMapHandler {
         const pixelSize = 2
         const pixel = new PIXI.Graphics();
         pixel.beginFill(0x000000);
-        pixel.drawRect(0, 20, pixelSize, pixelSize);
+        pixel.drawRect(0, 0, pixelSize, pixelSize);
         pixel.endFill();
         this.container.addChild(pixel)
 
