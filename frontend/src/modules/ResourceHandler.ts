@@ -69,7 +69,7 @@ class ResourceHandler {
             }
 
             if (r.hitPoints.current !== parsed.hitpoints.current) {
-                game.soundHandler.hitResource(r.resourceType)
+                game.soundHandler.playerHitResource(r.resourceType)
             }
 
             if (parsed.damage > 0) {

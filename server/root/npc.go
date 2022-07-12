@@ -60,6 +60,6 @@ func NewNpc(pos shared.Vector) Npc {
 		walkCooldown:     0,
 		attackCooldown:   0,
 		State:            Idle,
-		AttackSpeed:      1,
+		AttackSpeed:      15,
 	}
 }

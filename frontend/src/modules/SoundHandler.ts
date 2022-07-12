@@ -6,6 +6,8 @@ export class SoundHandler {
     hit1: Sound
     hit2: Sound
     treeHit1: Sound
+    playerHit: Sound
+
     constructor() {
         this.hit1 = sound.add('hit1', 'assets/sounds/hit1.wav');
         this.hit1.volume = 0.1
@@ -15,12 +17,16 @@ export class SoundHandler {
 
         this.treeHit1 = sound.add('treeHit1', 'assets/sounds/treeHit1.wav');
         this.treeHit1.volume = 0.1
+
+        this.playerHit = sound.add('playerHit', 'assets/sounds/playerHit.wav');
+        this.playerHit.volume = 0.1
     }
 
-    randomHitSound() {
+    playerPlayerHit() {
+        this.playerHit.play()
     }
 
-    hitResource(resourceType: string) {
+    playerHitResource(resourceType: string) {
         switch (resourceType) {
             case ResourceTypes.Stone:
                 this.hit2.play()

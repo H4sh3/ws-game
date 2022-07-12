@@ -294,7 +294,6 @@ func (cell *GridCell) UpdateNpc(index int, npc Npc) {
 		// check if we are close enough to attack
 		if playerPos.Dist(&npc.Pos) < minDistToAttack {
 			npc.State = Attack
-			fmt.Println("ATTACK!")
 			return
 		}
 

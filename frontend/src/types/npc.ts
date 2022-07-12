@@ -60,7 +60,7 @@ export function getTexturesFromSpriteSheet(name: string, path: string, numFrames
 const deadKnightAnim = getTexturesFromSpriteSheet("knight_dead", 'assets/npcs/knight/dead/sprite_sheet.png', 15, 96, 64)
 const walkingKnightAnim = getTexturesFromSpriteSheet("knight_walk", 'assets/npcs/knight/walking/sprite_sheet.png', 8, 96, 64)
 const idleKnightAnim = getTexturesFromSpriteSheet("knight_idle", 'assets/npcs/knight/idle/sprite_sheet.png', 15, 64, 64)
-const attackKnightAnim = getTexturesFromSpriteSheet("knight_attack", 'assets/npcs/knight/attack/sprite_sheet.png', 13, 144, 64)
+const attackKnightAnim = getTexturesFromSpriteSheet("knight_attack", 'assets/npcs/knight/attack/sprite_sheet.png', 17, 144, 64)
 
 export function spawnDeadAnim(container: Container, npc: Npc) {
     const anim = new AnimatedSprite(deadKnightAnim);

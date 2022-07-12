@@ -366,10 +366,10 @@ export class Game extends Container {
         const { playerId, hitpoints } = event
 
         const spawnText = (pos: Vector) => {
-
             pos.y -= 50
 
             if (event.damage > 0) {
+                this.soundHandler.playerPlayerHit()
                 this.textHandler.addItem(`-${event.damage}`, pos, '0xff0000', event.crit)
             }
 
