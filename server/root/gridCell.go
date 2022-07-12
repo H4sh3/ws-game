@@ -168,8 +168,14 @@ func (cell *GridCell) UpdateNpc(index int, npc Npc) {
 	var player *Client = npc.targetedPlayer
 	minDistToAttack := 75.0
 
-	if player != nil && !player.Connected {
+	if player != nil && !player.getConnected() {
 		npc.targetedPlayer = nil
+		return
+	}
+
+	// Example: Player disconncts while npc has him targeted
+	if npc.State != Idle && npc.State != Returning && player == nil {
+		npc.State = Returning
 		return
 	}
 
