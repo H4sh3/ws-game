@@ -1,6 +1,7 @@
 import { Sprite, Graphics, Loader, Container } from "pixi.js"
 import { randInt } from "../etc/math"
 import { Hitpoints, getHitResourceEvent, getLootResourceEvent } from "../events/events"
+import { getItemTexture } from "../modules/ResourceHandler"
 import { Player } from "./player"
 import Vector from "./vector"
 
@@ -14,6 +15,8 @@ export enum ResourceTypes {
     Blockade = "blockade",
     IronOre = "ironOre",
 }
+
+const itemTextures = getItemTexture("assets/items/item_collection.png")
 
 export class HasHitpoints {
     hitPoints: Hitpoints
@@ -95,6 +98,10 @@ export class Resource extends HasHitpoints {
                 this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}2.png`].texture)
             }
             this.sprite.scale.set(2, 2)
+        } else if (this.resourceType == "brick") {
+            this.sprite = new Sprite(itemTextures.brick)
+        } else if (this.resourceType == "log") {
+            this.sprite = new Sprite(itemTextures.log)
         } else {
             this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}.png`].texture)
         }

@@ -1,8 +1,68 @@
-import { Container } from "pixi.js";
+import { BaseTexture, Container, Sprite, Spritesheet, Texture } from "pixi.js";
 import { createVector, ResourcePositionsEvent, UpdateResourceEvent } from "../events/events";
 import { Game } from "../main";
-import { Player } from "../types/player";
 import { Resource } from "../types/resource";
+
+
+interface ItemTextures {
+    brick?: Texture
+    log?: Texture
+}
+
+export function getItemTexture(path: string): ItemTextures {
+    const atlas = {
+        frames: {
+        },
+        meta: {
+            image: path,
+            format: 'RGBA8888',
+            size: { w: 512, h: 867 },
+            scale: "1"
+        },
+        animations: {
+            frameNames: [] as string[]
+        }
+    }
+
+    //  x:1 y:18
+    const frames: { [id: string]: any } = {
+        "brick": {
+            frame: { x: 1 * 32, y: 17 * 32, w: 32, h: 32 },
+            sourceSize: { w: 32, h: 32 },
+            spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
+        },
+        "log": {
+            frame: { x: 0 * 32, y: 17 * 32, w: 32, h: 32 },
+            sourceSize: { w: 32, h: 32 },
+            spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
+        }
+    }
+
+    const frameNames = [
+        "brick",
+        "log"
+    ]
+
+    atlas.frames = frames
+    atlas.animations.frameNames = frameNames
+
+
+    // Create the SpriteSheet from data and image
+    const spritesheet = new Spritesheet(
+        BaseTexture.from(atlas.meta.image),
+        atlas
+    );
+
+    // Generate all the Textures asynchronously
+    const itemTextures: ItemTextures = {};
+
+    spritesheet.parse(() => {
+        itemTextures.brick = spritesheet.animations.frameNames[0]
+        itemTextures.log = spritesheet.animations.frameNames[1]
+    });
+
+    return itemTextures
+}
 
 class ResourceHandler {
     // resources located in a gridcell
@@ -21,7 +81,9 @@ class ResourceHandler {
         parsed.resources.forEach(r => {
             const pos = createVector(r.pos.x, r.pos.y)
             const resource: Resource = new Resource(r.id, game.player, r.quantity, r.resourceType, pos, r.hitpoints, r.isSolid, game.app.loader, game.ws, r.isLootable)
+
             game.worldContainer.addChild(resource.container);
+
 
             const { gridCellKey } = r;
             if (this.resourceMap.has(gridCellKey)) {
