@@ -5,7 +5,6 @@ import Vector from './types/vector';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
 import { getCursorSprite } from './sprites/etc';
 import { SCREEN_SIZE } from './etc/const';
-import { InventoryStore, Item } from './inventoryStore'
 
 import { UserStore } from './userStore';
 import { LocalStorageWrapper } from './localStorageWrapper';
@@ -17,6 +16,7 @@ import NpcHandler from './modules/NpcHandler';
 import ResourceHandler from './modules/ResourceHandler';
 import MiniMapHandler from './modules/MinimapHandler';
 import InventoryHandler from './modules/InventoryHandler';
+import BuilderHandler from './modules/BuilderHandler';
 
 export class Game extends Container {
     app: Application;
@@ -34,6 +34,7 @@ export class Game extends Container {
     resourceHandler: ResourceHandler
     miniMapHandler: MiniMapHandler
     inventoryHandler: InventoryHandler
+    builderHandler: BuilderHandler
 
     player: Player
     players: Map<number, Player>
@@ -43,15 +44,13 @@ export class Game extends Container {
     cursorPos: Vector
 
 
-    inventoryStore: InventoryStore
     userStore: UserStore
     localStorageWrapper: LocalStorageWrapper
 
-    constructor(app: Application, inventoryStore: InventoryStore, userStore: UserStore) {
+    constructor(app: Application, userStore: UserStore) {
         super();
         this.app = app;
 
-        this.inventoryStore = inventoryStore
         this.userStore = userStore
 
         this.localStorageWrapper = new LocalStorageWrapper()
@@ -88,6 +87,7 @@ export class Game extends Container {
         this.keyHandler = new KeyboardHandler()
         this.soundHandler = new SoundHandler()
         this.inventoryHandler = new InventoryHandler()
+        this.builderHandler = new BuilderHandler(this.app.loader)
 
         this.miniMapHandler = new MiniMapHandler(this.player.currentPos)
 
@@ -119,6 +119,8 @@ export class Game extends Container {
         this.addChild(this.miniMapHandler.container)
         this.addChild(this.player.spriteContainer)
         this.addChild(this.inventoryHandler.container)
+        this.addChild(this.builderHandler.container)
+        this.addChild(this.builderHandler.toggleButton)
 
         this.cursorPos = createVector(0, 0)
 
@@ -130,13 +132,13 @@ export class Game extends Container {
             this.cursorPos.y = y
 
 
-            /*             const selectedResource = this.inventoryStore.selectedRecipe.buildResourceType
-                        if (selectedResource.length > 0) {
-                            this.cursorSprite.visible = true
-                            this.cursorSprite.texture = this.app.loader.resources[`assets/${selectedResource}.png`].texture
-                        } else {
-                            this.cursorSprite.visible = false
-                        } */
+            const selectedResource = this.builderHandler.selectedBuildResourceType
+            if (selectedResource.length > 0) {
+                this.cursorSprite.visible = true
+                this.cursorSprite.texture = this.app.loader.resources[`assets/${selectedResource}.png`].texture
+            } else {
+                this.cursorSprite.visible = false
+            }
         })
 
         this.app.stage.on("click", (e) => {
@@ -144,7 +146,7 @@ export class Game extends Container {
             const cY = this.cursorPos.y
 
             // nothing selected -> return
-            // if (this.inventoryStore.selectedRecipe.buildResourceType.length === 0) return
+            if (this.builderHandler.selectedBuildResourceType.length === 0) return
 
             // cant build -> return
             // if (!this.inventoryStore.canBuildResource(this.inventoryStore.selectedRecipe)) return
@@ -226,7 +228,6 @@ export class Game extends Container {
     // main update loop
     update(delta: number) {
         const fps = 60 / delta
-        this.inventoryStore.setFrameRate(fps)
 
         this.textHandler.update()
 

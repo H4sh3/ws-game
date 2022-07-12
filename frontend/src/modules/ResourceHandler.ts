@@ -8,6 +8,8 @@ interface ItemTextures {
     brick?: Texture
     log?: Texture
     ironOre?: Texture
+    builderIcon?: Texture
+    button?: Texture
 }
 
 export function getItemTexture(path: string): ItemTextures {
@@ -41,13 +43,25 @@ export function getItemTexture(path: string): ItemTextures {
             frame: { x: 0 * 32, y: 22 * 32, w: 32, h: 32 },
             sourceSize: { w: 32, h: 32 },
             spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
-        }
+        },
+        "builderIcon": {
+            frame: { x: 5 * 32, y: 4 * 32, w: 32, h: 32 },
+            sourceSize: { w: 32, h: 32 },
+            spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
+        },
+        "button": {
+            frame: { x: 1 * 32, y: 23 * 32, w: 32, h: 32 },
+            sourceSize: { w: 32, h: 32 },
+            spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
+        },
     }
 
     const frameNames = [
         "brick",
         "log",
-        "ironOre"
+        "ironOre",
+        "builderIcon",
+        "button"
     ]
 
     atlas.frames = frames
@@ -67,10 +81,14 @@ export function getItemTexture(path: string): ItemTextures {
         itemTextures.brick = spritesheet.animations.frameNames[0]
         itemTextures.log = spritesheet.animations.frameNames[1]
         itemTextures.ironOre = spritesheet.animations.frameNames[2]
+        itemTextures.builderIcon = spritesheet.animations.frameNames[3]
+        itemTextures.button = spritesheet.animations.frameNames[4]
     });
 
     return itemTextures
 }
+
+export const itemTextures = getItemTexture("assets/items/item_collection.png")
 
 class ResourceHandler {
     // resources located in a gridcell

@@ -6,9 +6,7 @@ import { SCREEN_SIZE } from './etc/const';
 
 import React from 'react';
 import * as ReactDOM from 'react-dom';
-import { InventoryStore } from './inventoryStore';
 import { UserStore } from './userStore';
-import BuilderComponent from './components/builderComponent';
 import { getHumanTiles } from './sprites/player';
 
 const load = (app: PIXI.Application, asset: string) => {
@@ -64,14 +62,11 @@ const main = async () => {
 
 
     // Init Stores
-    const inventoryStore = new InventoryStore()
     const userStore = new UserStore()
 
     // Set scene
-    var scene = new Game(app, inventoryStore, userStore);
+    var scene = new Game(app, userStore);
     app.stage.addChild(scene);
-
-    ReactDOM.render(<BuilderComponent inventoryStore={inventoryStore} />, document.getElementById("builderDiv"));
 
     const licenseDive = document.getElementById("licenseDiv")
     licenseDive.style.display = "flex"

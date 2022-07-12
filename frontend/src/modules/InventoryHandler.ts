@@ -1,7 +1,7 @@
 import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { SCREEN_SIZE } from "../etc/const";
-import { IResource, ResourceMin, UpdateInventoryEvent } from "../events/events";
-import { itemTextures } from "../types/resource";
+import { ResourceMin, UpdateInventoryEvent } from "../events/events";
+import { itemTextures } from "./ResourceHandler";
 
 
 export interface InventoryItem {

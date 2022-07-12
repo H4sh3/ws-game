@@ -1,7 +1,7 @@
 import { Sprite, Graphics, Loader, Container } from "pixi.js"
 import { randInt } from "../etc/math"
 import { Hitpoints, getHitResourceEvent, getLootResourceEvent } from "../events/events"
-import { getItemTexture } from "../modules/ResourceHandler"
+import { itemTextures } from "../modules/ResourceHandler"
 import { Player } from "./player"
 import Vector from "./vector"
 
@@ -16,7 +16,6 @@ export enum ResourceTypes {
     IronOre = "ironOre",
 }
 
-export const itemTextures = getItemTexture("assets/items/item_collection.png")
 
 export class HasHitpoints {
     hitPoints: Hitpoints
