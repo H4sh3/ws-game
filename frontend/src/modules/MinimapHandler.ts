@@ -120,40 +120,6 @@ class MiniMapHandler {
         pixel.drawRect(0, 0, pixelSize, pixelSize);
         pixel.endFill();
         this.container.addChild(pixel)
-
-        /* 
-                // remove all children on redraw
-                while (this.container.children[0]) {
-                    this.container.removeChild(this.container.children[0]);
-                }
-        
-                const offsetRange = 30
-                for (let x = -offsetRange; x < offsetRange; x += 2) {
-                    for (let y = -offsetRange; y < offsetRange; y += 2) {
-        
-                        const pixel = new Graphics();
-        
-                        if (this.dataMatrix[subCelX + x][subCelY + y] == 1) {
-                            pixel.beginFill(0x00ff00);
-                        } else if (this.dataMatrix[subCelX + x][subCelY + y] == 2) {
-                            pixel.beginFill(0x0000ff);
-                        } else if (this.dataMatrix[subCelX + x][subCelY + y] == 3) {
-                            pixel.beginFill(0x0000aa);
-                        } else if (this.dataMatrix[subCelX + x][subCelY + y] == 4) {
-                            pixel.beginFill(0xffff00);
-                        }
-        
-                        if (x == 0 && y == 0) {
-                            pixel.beginFill(0x000000);
-                        }
-        
-                        const pixelSize = 2
-                        pixel.drawRect(x, y, pixelSize, pixelSize);
-                        pixel.endFill();
-                        this.container.addChild(pixel)
-        
-                    }
-                } */
     }
 }
 
