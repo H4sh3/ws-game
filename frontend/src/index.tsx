@@ -4,8 +4,6 @@ import * as PIXI from 'pixi.js';
 import { Game } from './main';
 import { SCREEN_SIZE } from './etc/const';
 
-import InventoryComponent from './components/inventoryComponent';
-
 import React from 'react';
 import * as ReactDOM from 'react-dom';
 import { InventoryStore } from './inventoryStore';
@@ -73,7 +71,6 @@ const main = async () => {
     var scene = new Game(app, inventoryStore, userStore);
     app.stage.addChild(scene);
 
-    ReactDOM.render(<InventoryComponent inventoryStore={inventoryStore} />, document.getElementById("inventoryDiv"));
     ReactDOM.render(<BuilderComponent inventoryStore={inventoryStore} />, document.getElementById("builderDiv"));
 
     const licenseDive = document.getElementById("licenseDiv")

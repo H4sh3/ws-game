@@ -19,6 +19,11 @@ const (
 	Cooper    ResourceType = "cooper"
 )
 
+type ResourceMin struct {
+	ResourceType ResourceType `json:"resourceType"`
+	Quantity     int          `json:"quantity"`
+}
+
 type Resource struct {
 	ResourceType ResourceType     `json:"resourceType"`
 	Pos          shared.Vector    `json:"pos"`

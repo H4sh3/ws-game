@@ -278,7 +278,12 @@ func (h *Hub) HandleLootResource(event LootResourceEvent, c *Client) {
 
 		// Todo broadcast UpdateResourceEvent to clients subbed to cell
 
-		c.send <- NewUpdateInventoryEvent(*r, false)
+		resourceToAddToInventry := resource.ResourceMin{
+			Quantity:     r.Quantity,
+			ResourceType: r.ResourceType,
+		}
+
+		c.send <- NewUpdateInventoryEvent(resourceToAddToInventry, false)
 
 		h.ResourceManager.DeleteResource(r.Id)
 	}
@@ -306,7 +311,15 @@ func (h *Hub) HandlePlayerPlacedResource(event PlayerPlacedResourceEvent, c *Cli
 				}
 
 				h.ResourceManager.AddResource <- r
-				c.send <- NewUpdateInventoryEvent(*r, true)
+
+				// translate build resource to inventory update
+
+				resourceToRemoveFromInventry := resource.ResourceMin{
+					Quantity:     5,
+					ResourceType: resource.Brick,
+				}
+
+				c.send <- NewUpdateInventoryEvent(resourceToRemoveFromInventry, true)
 			}
 		}
 

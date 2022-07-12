@@ -127,27 +127,37 @@ func NewRemovePlayerEvent(id int) interface{} {
 }
 
 type LoadInventoryEvent struct {
-	EventType EventType                                   `json:"eventType"`
-	Items     map[resource.ResourceType]resource.Resource `json:"items"`
+	EventType EventType              `json:"eventType"`
+	Resources []resource.ResourceMin `json:"resources"`
 }
 
 func NewLoadInventoryEvent(inventory map[resource.ResourceType]resource.Resource) interface{} {
+
+	resources := []resource.ResourceMin{}
+
+	for _, entry := range inventory {
+		resources = append(resources, resource.ResourceMin{
+			Quantity:     entry.Quantity,
+			ResourceType: entry.ResourceType,
+		})
+	}
+
 	return &LoadInventoryEvent{
 		EventType: LOAD_INVENTORY_EVENT,
-		Items:     inventory,
+		Resources: resources,
 	}
 }
 
 type UpdateInventoryEvent struct {
-	EventType EventType         `json:"eventType"`
-	Item      resource.Resource `json:"item"`
-	Remove    bool              `json:"remove"`
+	EventType EventType            `json:"eventType"`
+	Resource  resource.ResourceMin `json:"resource"`
+	Remove    bool                 `json:"remove"`
 }
 
-func NewUpdateInventoryEvent(r resource.Resource, remove bool) interface{} {
+func NewUpdateInventoryEvent(r resource.ResourceMin, remove bool) interface{} {
 	return &UpdateInventoryEvent{
 		EventType: UPDATE_INVENTORY_EVENT,
-		Item:      r,
+		Resource:  r,
 		Remove:    remove,
 	}
 }

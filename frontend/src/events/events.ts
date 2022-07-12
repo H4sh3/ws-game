@@ -117,6 +117,11 @@ export interface Hitpoints {
     max: number
 }
 
+export interface ResourceMin {
+    resourceType: string,
+    quantity: number,
+}
+
 export interface IResource {
     resourceType: string,
     id: number,
@@ -170,7 +175,7 @@ export function isUpdateNpcEvent(value: any): value is UpdateNpcEvent {
 }
 
 export interface LoadInventoryEvent extends BaseEvent {
-    items: { [key: string]: IResource }
+    resources: ResourceMin[]
 }
 
 export function isLoadInventoryEvent(value: any): value is LoadInventoryEvent {
@@ -181,9 +186,10 @@ export function isLoadInventoryEvent(value: any): value is LoadInventoryEvent {
 }
 
 export interface UpdateInventoryEvent extends BaseEvent {
-    item: Resource,
+    resource: ResourceMin,
     remove: boolean
 }
+
 export function isUpdateInventoryEvent(value: any): value is UpdateInventoryEvent {
     return (
         isBaseEvent(value) &&

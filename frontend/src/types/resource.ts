@@ -16,7 +16,7 @@ export enum ResourceTypes {
     IronOre = "ironOre",
 }
 
-const itemTextures = getItemTexture("assets/items/item_collection.png")
+export const itemTextures = getItemTexture("assets/items/item_collection.png")
 
 export class HasHitpoints {
     hitPoints: Hitpoints
@@ -102,6 +102,8 @@ export class Resource extends HasHitpoints {
             this.sprite = new Sprite(itemTextures.brick)
         } else if (this.resourceType == "log") {
             this.sprite = new Sprite(itemTextures.log)
+        } else if (this.resourceType == "ironOre") {
+            this.sprite = new Sprite(itemTextures.ironOre)
         } else {
             this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}.png`].texture)
         }

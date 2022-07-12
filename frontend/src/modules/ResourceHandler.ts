@@ -7,6 +7,7 @@ import { Resource } from "../types/resource";
 interface ItemTextures {
     brick?: Texture
     log?: Texture
+    ironOre?: Texture
 }
 
 export function getItemTexture(path: string): ItemTextures {
@@ -35,12 +36,18 @@ export function getItemTexture(path: string): ItemTextures {
             frame: { x: 0 * 32, y: 17 * 32, w: 32, h: 32 },
             sourceSize: { w: 32, h: 32 },
             spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
+        },
+        "ironOre": {
+            frame: { x: 0 * 32, y: 22 * 32, w: 32, h: 32 },
+            sourceSize: { w: 32, h: 32 },
+            spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
         }
     }
 
     const frameNames = [
         "brick",
-        "log"
+        "log",
+        "ironOre"
     ]
 
     atlas.frames = frames
@@ -59,6 +66,7 @@ export function getItemTexture(path: string): ItemTextures {
     spritesheet.parse(() => {
         itemTextures.brick = spritesheet.animations.frameNames[0]
         itemTextures.log = spritesheet.animations.frameNames[1]
+        itemTextures.ironOre = spritesheet.animations.frameNames[2]
     });
 
     return itemTextures

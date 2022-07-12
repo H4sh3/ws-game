@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, IResource } from './events/events';
 import { Player } from './types/player';
 import Vector from './types/vector';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
@@ -16,6 +16,7 @@ import TextHandler from './modules/TextHandler';
 import NpcHandler from './modules/NpcHandler';
 import ResourceHandler from './modules/ResourceHandler';
 import MiniMapHandler from './modules/MinimapHandler';
+import InventoryHandler from './modules/InventoryHandler';
 
 export class Game extends Container {
     app: Application;
@@ -32,6 +33,7 @@ export class Game extends Container {
     npcHandler: NpcHandler
     resourceHandler: ResourceHandler
     miniMapHandler: MiniMapHandler
+    inventoryHandler: InventoryHandler
 
     player: Player
     players: Map<number, Player>
@@ -85,6 +87,8 @@ export class Game extends Container {
     initWorld() {
         this.keyHandler = new KeyboardHandler()
         this.soundHandler = new SoundHandler()
+        this.inventoryHandler = new InventoryHandler()
+
         this.miniMapHandler = new MiniMapHandler(this.player.currentPos)
 
         // container structurs
@@ -114,6 +118,7 @@ export class Game extends Container {
         // player is centered in the middle of the game -> disentangled from the world
         this.addChild(this.miniMapHandler.container)
         this.addChild(this.player.spriteContainer)
+        this.addChild(this.inventoryHandler.container)
 
         this.cursorPos = createVector(0, 0)
 
@@ -125,13 +130,13 @@ export class Game extends Container {
             this.cursorPos.y = y
 
 
-            const selectedResource = this.inventoryStore.selectedRecipe.buildResourceType
-            if (selectedResource.length > 0) {
-                this.cursorSprite.visible = true
-                this.cursorSprite.texture = this.app.loader.resources[`assets/${selectedResource}.png`].texture
-            } else {
-                this.cursorSprite.visible = false
-            }
+            /*             const selectedResource = this.inventoryStore.selectedRecipe.buildResourceType
+                        if (selectedResource.length > 0) {
+                            this.cursorSprite.visible = true
+                            this.cursorSprite.texture = this.app.loader.resources[`assets/${selectedResource}.png`].texture
+                        } else {
+                            this.cursorSprite.visible = false
+                        } */
         })
 
         this.app.stage.on("click", (e) => {
@@ -139,10 +144,10 @@ export class Game extends Container {
             const cY = this.cursorPos.y
 
             // nothing selected -> return
-            if (this.inventoryStore.selectedRecipe.buildResourceType.length === 0) return
+            // if (this.inventoryStore.selectedRecipe.buildResourceType.length === 0) return
 
             // cant build -> return
-            if (!this.inventoryStore.canBuildResource(this.inventoryStore.selectedRecipe)) return
+            // if (!this.inventoryStore.canBuildResource(this.inventoryStore.selectedRecipe)) return
 
             // Players cursor position relativ to players position and locked to world grid
             const pX = this.player.currentPos.x % 50
@@ -170,6 +175,7 @@ export class Game extends Container {
             this.handlePlayerTargetPositionEvent(parsed)
         } else if (isLoadInventoryEvent(parsed)) {
 
+            // Todo: refactor this in the user init event
             this.handleLoadInventoryEvent(parsed)
         } else if (isUpdateInventoryEvent(parsed)) {
 
@@ -338,30 +344,25 @@ export class Game extends Container {
 
 
     handleUpdateInventoryEvent(parsed: UpdateInventoryEvent) {
-        const item: Item = {
-            resourceType: parsed.item.resourceType,
-            quantity: parsed.item.quantity
-        }
-        if (parsed.remove) {
-            this.inventoryStore.itemBuild(item)
-        } else {
-            this.inventoryStore.addItem(item)
-            const pos = this.player.targetPos.copy()
-            pos.x -= 25
-            pos.y -= 35
-            this.textHandler.addItem(`${item.resourceType} +${item.quantity}`, pos, "0x1dff20")
-        }
+        this.inventoryHandler.updateItem(parsed)
+        /*         const item: Item = {
+                    resourceType: parsed.item.resourceType,
+                    quantity: parsed.item.quantity
+                }
+            
+                if (parsed.remove) {
+                    this.inventoryStore.itemBuild(item)
+                } else {
+                    this.inventoryStore.addItem(item)
+                    const pos = this.player.targetPos.copy()
+                    pos.x -= 25
+                    pos.y -= 35
+                    this.textHandler.addItem(`${item.resourceType} +${item.quantity}`, pos, "0x1dff20")
+                } */
     }
 
     handleLoadInventoryEvent(parsed: LoadInventoryEvent) {
-        Object.keys(parsed.items).forEach(k => {
-            const { resourceType, quantity } = parsed.items[k]
-            const item: Item = {
-                resourceType: resourceType,
-                quantity: quantity
-            }
-            this.inventoryStore.addItem(item)
-        })
+        this.inventoryHandler.init(parsed.resources)
     }
 
     handleUpdatePlayerEvent(event: UpdatePlayerEvent) {
