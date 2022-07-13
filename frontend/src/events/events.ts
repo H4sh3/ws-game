@@ -293,6 +293,11 @@ export function isNpcAttackAnimEvent(value: any): value is NpcAttackAnimEvent {
     )
 }
 
+export interface ItemPositionsEvent {
+    eventType: string
+    gridCellKey: string
+    items: IItem[]
+}
 
 export function isItemPositionsEvent(value: any): value is ItemPositionsEvent {
     return (
@@ -301,11 +306,6 @@ export function isItemPositionsEvent(value: any): value is ItemPositionsEvent {
     )
 }
 
-export interface ItemPositionsEvent {
-    eventType: string
-    gridCellKey: string
-    items: IItem[]
-}
 
 type EventTypes =
     NewPlayerEvent |
@@ -324,7 +324,8 @@ type EventTypes =
     NpcListEvent |
     NpcTargetPositionEvent |
     UpdatePlayerEvent |
-    NpcAttackAnimEvent
+    NpcAttackAnimEvent |
+    ItemPositionsEvent
 
 export interface MultipleEvents extends BaseEvent {
     events: EventTypes[]
