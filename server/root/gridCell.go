@@ -49,6 +49,8 @@ type GridCell struct {
 	NpcList                []Npc
 	NpcListMutex           sync.Mutex
 	SubCellBase64          string
+	ItemsToAdd             []item.Item
+	ItemsToAddMutex        sync.Mutex
 }
 
 func NewCell(x int, y int) *GridCell {
@@ -84,6 +86,8 @@ func NewCell(x int, y int) *GridCell {
 		SubCellBase64:          subCellsBase64,
 		Items:                  make(map[string]*item.Item),
 		ItemsMutex:             sync.Mutex{},
+		ItemsToAdd:             []item.Item{},
+		ItemsToAddMutex:        sync.Mutex{},
 	}
 
 	// test npc -> only one per cell atm
@@ -94,25 +98,36 @@ func NewCell(x int, y int) *GridCell {
 	}
 
 	// spawn some items for testing
-	cell.ItemsMutex.Lock()
-	for i := 0; i < 5; i++ {
 
+	cell.ItemsMutex.Lock()
+	cellCenter := shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2}
+	for i := 0; i < 5; i++ {
 		// start with center
-		spawnPos := shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2}
+		spawnPos := cellCenter.Copy()
 		spawnPos.X += shared.RandIntInRange(-GridCellSize/2, GridCellSize/2)
+		spawnPos.Y += shared.RandIntInRange(-GridCellSize/2, GridCellSize/2)
 
 		item := item.NewItem(0, spawnPos)
 		cell.Items[item.UUID] = &item
 	}
 	cell.ItemsMutex.Unlock()
 
-	fmt.Println(cell.Items)
-
 	t := time.NewTicker(CellUpdateRate)
 	cell.ticker = *t
 
 	go cell.CellCoro()
 	return cell
+}
+
+func (c *GridCell) SpawnItem(pos shared.Vector) {
+	c.ItemsToAddMutex.Lock()
+	defer c.ItemsToAddMutex.Unlock()
+
+	r := 50
+	pos.X += shared.RandIntInRange(-r, r)
+	pos.Y += shared.RandIntInRange(-r, r)
+
+	c.ItemsToAdd = append(c.ItemsToAdd, item.NewItem(0, pos))
 }
 
 func getCellMiniMapPng(subCells []SubCell) string {
@@ -187,6 +202,25 @@ func (cell *GridCell) GetItems() []item.Item {
 	}
 
 	return items
+
+}
+
+func (c *GridCell) AddQueuedItems() {
+	c.ItemsMutex.Lock()
+	c.ItemsToAddMutex.Lock()
+	c.eventsToBroadcastMutex.Lock()
+	defer func() {
+		c.ItemsMutex.Unlock()
+		c.ItemsToAddMutex.Unlock()
+		c.eventsToBroadcastMutex.Unlock()
+	}()
+
+	for _, item := range c.ItemsToAdd {
+		c.Items[item.UUID] = &item
+	}
+
+	c.eventsToBroadcast = append(c.eventsToBroadcast, NewItemPositionsEvent(c.ItemsToAdd, c.GridCellKey))
+	c.ItemsToAdd = []item.Item{}
 
 }
 
@@ -499,6 +533,7 @@ func (cell *GridCell) CellCoro() {
 			cell.CellMutex.Unlock()
 
 			cell.NpcUpdates()
+			cell.AddQueuedItems()
 
 			// broadcast all events at once
 			if len(cell.eventsToBroadcast) > 0 {

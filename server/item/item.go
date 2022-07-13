@@ -16,26 +16,26 @@ import (
 type ItemType string
 
 const (
-	Armour     ItemType = "ArmourItem"
-	Weapon     ItemType = "WeaponItem"
-	Consumable ItemType = "ConsumableItem"
+	Armour     ItemType = "armourItem"
+	Weapon     ItemType = "weaponItem"
+	Consumable ItemType = "consumableItem"
 )
 
 type ItemSubType string
 
 // weapons
 const (
-	Axe    ItemSubType = "Axe"
-	Sword  ItemSubType = "Sword"
-	Hammer ItemSubType = "Hammer"
+	Axe    ItemSubType = "axe"
+	Sword  ItemSubType = "sword"
+	Hammer ItemSubType = "hammer"
 )
 
 type BoniAttribute string
 
 const (
-	Strength BoniAttribute = "Strength"
-	Agility  BoniAttribute = "Agility"
-	Vitality BoniAttribute = "Vitality"
+	Strength BoniAttribute = "strength"
+	Agility  BoniAttribute = "agility"
+	Vitality BoniAttribute = "vitality"
 )
 
 // improves str agi vita
@@ -47,10 +47,10 @@ type Boni struct {
 type Rarity string
 
 const (
-	NormalRarity Rarity = "NormalRarity" // 50%
-	MagicRarity  Rarity = "MagicRarity"  // 80%
-	UniqueRarity Rarity = "UniqueRarity" // 9%
-	UltraRarity  Rarity = "UltraRarity"  // 1%
+	NormalRarity Rarity = "normalRarity" // 50%
+	MagicRarity  Rarity = "magicRarity"  // 80%
+	UniqueRarity Rarity = "uniqueRarity" // 9%
+	UltraRarity  Rarity = "ultraRarity"  // 1%
 )
 
 type Item struct {

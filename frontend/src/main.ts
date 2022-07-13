@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, IResource } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, IResource, isItemPositionsEvent } from './events/events';
 import { Player } from './types/player';
 import Vector from './types/vector';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
@@ -17,6 +17,7 @@ import ResourceHandler, { getTextureFromResourceType } from './modules/ResourceH
 import MiniMapHandler from './modules/MinimapHandler';
 import InventoryHandler from './modules/InventoryHandler';
 import BuilderHandler from './modules/BuilderHandler';
+import ItemHandler from './modules/ItemHandler';
 
 export class Game extends Container {
     app: Application;
@@ -35,6 +36,7 @@ export class Game extends Container {
     miniMapHandler: MiniMapHandler
     inventoryHandler: InventoryHandler
     builderHandler: BuilderHandler
+    itemHandler: ItemHandler
 
     player: Player
     players: Map<number, Player>
@@ -107,11 +109,15 @@ export class Game extends Container {
         this.textHandler = new TextHandler()
         this.textHandler.container.zIndex = 3
 
+        this.itemHandler = new ItemHandler()
+        this.itemHandler.container.zIndex = 4
+
 
         // add handler containers
         this.worldContainer.addChild(this.tilemapHandler.container)
         this.worldContainer.addChild(this.npcHandler.container)
         this.worldContainer.addChild(this.textHandler.container)
+        this.worldContainer.addChild(this.itemHandler.container)
 
 
         this.addChild(this.worldContainer)
@@ -224,6 +230,10 @@ export class Game extends Container {
             this.handleUpdatePlayerEvent(parsed)
         } else if (isNpcAttackAnimEvent(parsed)) {
             this.npcHandler.handleNpcAttackAnimEvent(parsed)
+        } else if (isItemPositionsEvent(parsed)) {
+            this.itemHandler.handleItemPositionsEvent(parsed)
+            console.log("new items positions event ")
+            console.log(parsed)
         }
     }
 
@@ -334,7 +344,7 @@ export class Game extends Container {
 
         this.player.spriteContainer.sortableChildren = true
         this.player.spriteContainer.zIndex = 4
-        this.cursorSprite = getCursorSprite(this.app.loader)
+        this.cursorSprite = getCursorSprite()
         this.player.spriteContainer.addChild(this.cursorSprite)
         this.player.updateHealthbar(this.player.spriteContainer)
 

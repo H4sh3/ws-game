@@ -1,4 +1,4 @@
-import { Resource } from "../types/resource"
+import { IItem } from "../types/item"
 import Vector, { IVector } from "../types/vector"
 
 export enum EVENT_TYPES {
@@ -25,6 +25,7 @@ export enum EVENT_TYPES {
     UPDATE_NPC_EVENT = 20,
     UPDATE_PLAYER_EVENT = 21,
     NPC_ATTACK_ANIM_EVENT = 22,
+    ITEM_POSITIONS_EVENT = 23
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -289,6 +290,20 @@ export function isNpcAttackAnimEvent(value: any): value is NpcAttackAnimEvent {
         isBaseEvent(value) &&
         value.eventType == EVENT_TYPES.NPC_ATTACK_ANIM_EVENT
     )
+}
+
+
+export function isItemPositionsEvent(value: any): value is ItemPositionsEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType === EVENT_TYPES.ITEM_POSITIONS_EVENT
+    )
+}
+
+export interface ItemPositionsEvent {
+    eventType: string
+    gridCellKey: string
+    items: IItem[]
 }
 
 type EventTypes =

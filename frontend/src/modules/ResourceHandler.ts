@@ -15,6 +15,7 @@ interface ItemTextures {
     blockade?: Texture
     woodBlockade?: Texture
     stone?: Texture
+    sword?: Texture
 }
 
 export function getItemTexture(path: string): ItemTextures {
@@ -79,6 +80,11 @@ export function getItemTexture(path: string): ItemTextures {
             sourceSize: { w: 32, h: 32 },
             spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
         },
+        "sword": {
+            frame: { x: 2 * 32, y: 5 * 32, w: 32, h: 32 },
+            sourceSize: { w: 32, h: 32 },
+            spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
+        },
     }
 
     const frameNames = [
@@ -90,7 +96,8 @@ export function getItemTexture(path: string): ItemTextures {
         "button",
         "blockade",
         "woodBlockade",
-        "stone"
+        "stone",
+        "sword"
     ]
 
     atlas.frames = frames
@@ -116,6 +123,7 @@ export function getItemTexture(path: string): ItemTextures {
         itemTextures.blockade = spritesheet.animations.frameNames[6]
         itemTextures.woodBlockade = spritesheet.animations.frameNames[7]
         itemTextures.stone = spritesheet.animations.frameNames[8]
+        itemTextures.sword = spritesheet.animations.frameNames[9]
     });
 
     return itemTextures
@@ -145,6 +153,8 @@ export const getTextureFromResourceType = (resourceType: string): Texture => {
         return itemTextures.woodBlockade
     } else if (resourceType == "stone") {
         return itemTextures.stone
+    } else if (resourceType == "sword") {
+        return itemTextures.sword
     }
     console.error(`no sprite for ${resourceType}`)
     return itemTextures.placeholder

@@ -385,6 +385,11 @@ func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
 
 				if remove {
 					npc.SetRemove(true)
+
+					// spawn some loot
+					for i := 0; i < 5; i++ {
+						cell.SpawnItem(npc.Pos)
+					}
 				}
 
 				cell.NpcList[npcIndex] = npc
