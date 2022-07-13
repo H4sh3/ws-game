@@ -35,6 +35,7 @@ const (
 	NPC_ATTACK_ANIM_EVENT        EventType = 22
 	ITEM_POSITIONS_EVENT         EventType = 23
 	PLAYER_CLICKED_ITEM_EVENT    EventType = 24
+	REMOVE_ITEM_EVENT            EventType = 25
 )
 
 const (
@@ -119,6 +120,15 @@ func NewItemPositionsEvent(items []item.Item, gridCellKey string) interface{} {
 		GridCellKey: gridCellKey,
 		Items:       items,
 	}
+}
+
+type RemoveItemEvent struct {
+	EventType EventType `json:"eventType"`
+	UUID      string    `json:"uuid"`
+}
+
+func NewRemoveItemEvent(uuid string) RemoveItemEvent {
+	return RemoveItemEvent{EventType: REMOVE_ITEM_EVENT, UUID: uuid}
 }
 
 type NpcListEvent struct {
@@ -319,5 +329,6 @@ type LoginPlayerEvent struct {
 }
 
 type PlayerClickedItemEvent struct {
-	UUID string `json:"uuid"`
+	UUID        string        `json:"uuid"`
+	GridCellPos shared.Vector `json:"gridCellPos"`
 }

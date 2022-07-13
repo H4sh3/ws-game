@@ -21,22 +21,25 @@ class ItemHandler {
     handleItemPositionsEvent(event: ItemPositionsEvent) {
         event.items.forEach(iitem => {
             const item = new Item(iitem, this.ws)
-
+            this.items.push(item)
             this.container.addChild(item.container)
 
-            this.items.push(item)
         })
     }
 
     removeItem(uuid: string) {
+
         const item = this.items.find(i => i.uuid)
         if (!item) return
+        console.log(`remove ${uuid}`)
+        // remove item
+        console.log(`items length ${this.items.length}`)
+        this.items = this.items.filter(i => i.uuid !== uuid)
+        console.log(`items length ${this.items.length}`)
 
         // remove sprite from container; beeing rendered
         this.container.removeChild(item.container)
-
-        // remove item reference
-        this.items = this.items.filter(i => i.uuid !== uuid)
+        this.container.removeChild(item.sprite)
     }
 }
 

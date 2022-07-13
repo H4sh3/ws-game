@@ -297,8 +297,7 @@ func UnmarshalClientEvents(event_data BaseEvent, h *Hub, c *Client) {
 		}
 
 		//h.HandlePlayerPlacedResource(*event, c)
-		fmt.Println("recieved player clicked item event")
-		fmt.Println(event)
+		h.PlayerClickedItemEvent(*event, c)
 	}
 
 }

@@ -399,3 +399,12 @@ func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
 		cell.NpcListMutex.Unlock()
 	}
 }
+
+func (h *Hub) PlayerClickedItemEvent(event PlayerClickedItemEvent, c *Client) {
+	cell := h.GridManager.GetCell(event.GridCellPos.X, event.GridCellPos.Y)
+	cell.RemoveItem(event.UUID)
+
+	// Todo: Add item to clients items inventory
+
+	c.send <- NewRemoveItemEvent(event.UUID)
+}

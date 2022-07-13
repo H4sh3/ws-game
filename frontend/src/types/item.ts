@@ -11,7 +11,7 @@ export interface Boni {
 
 // item interface from websocket -> on load
 export interface IItem {
-
+    gridCellPos: IVector
     itemType: string
     itemSubType: string
     pos: IVector
@@ -30,26 +30,29 @@ export interface IItem {
 
 // item object used in client for visualization with pixijs sprites
 export class Item {
+    gridCellPos: IVector
     pos: Vector
     container: Container
     uuid: string
     ws: WebSocket
+    sprite: Sprite
 
 
     constructor(rawItem: IItem, ws: WebSocket) {
+        this.gridCellPos = rawItem.gridCellPos
         this.ws = ws
         this.pos = createVector(rawItem.pos.x, rawItem.pos.y)
         this.uuid = rawItem.uuid
         this.container = new Container()
         this.container.position.set(this.pos.x, this.pos.y)
 
-        const sprite = new Sprite(getTextureFromResourceType(rawItem.itemSubType)) // shows only a blob
-        sprite.interactive = true
-        sprite.on("click", () => {
-            ws.send(getPlayerClickedItemEvent(this.uuid))
+        this.sprite = new Sprite(getTextureFromResourceType(rawItem.itemSubType)) // shows only a blob
+        this.sprite.interactive = true
+        this.sprite.on("click", () => {
+            ws.send(getPlayerClickedItemEvent(this.uuid, this.gridCellPos))
         })
 
-        this.container.addChild(sprite)
+        this.container.addChild(this.sprite)
     }
 
 

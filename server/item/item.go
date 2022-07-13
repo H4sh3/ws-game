@@ -54,6 +54,7 @@ const (
 )
 
 type Item struct {
+	GridCellPos shared.Vector `json:"gridCellPos"`
 	ItemType    ItemType      `json:"itemType"`
 	ItemSubType ItemSubType   `json:"itemSubType"`
 	Pos         shared.Vector `json:"pos"`
@@ -84,9 +85,10 @@ func rollRarity() Rarity {
 	return UltraRarity
 }
 
-func NewItem(zoneLevel int, pos shared.Vector) Item {
+func NewItem(gridCellPos shared.Vector, zoneLevel int, pos shared.Vector) Item {
 
 	item := Item{
+		GridCellPos: gridCellPos,
 		ItemType:    Weapon,
 		ItemSubType: Sword,
 		Pos:         pos,

@@ -51,6 +51,8 @@ type GridCell struct {
 	SubCellBase64          string
 	ItemsToAdd             []item.Item
 	ItemsToAddMutex        sync.Mutex
+	ItemsToRemove          []string
+	ItemsToRemoveMutex     sync.Mutex
 }
 
 func NewCell(x int, y int) *GridCell {
@@ -88,6 +90,8 @@ func NewCell(x int, y int) *GridCell {
 		ItemsMutex:             sync.Mutex{},
 		ItemsToAdd:             []item.Item{},
 		ItemsToAddMutex:        sync.Mutex{},
+		ItemsToRemove:          []string{}, // UUID of item to remove
+		ItemsToRemoveMutex:     sync.Mutex{},
 	}
 
 	// test npc -> only one per cell atm
@@ -107,7 +111,7 @@ func NewCell(x int, y int) *GridCell {
 		spawnPos.X += shared.RandIntInRange(-GridCellSize/2, GridCellSize/2)
 		spawnPos.Y += shared.RandIntInRange(-GridCellSize/2, GridCellSize/2)
 
-		item := item.NewItem(0, spawnPos)
+		item := item.NewItem(cell.Pos, 0, spawnPos)
 		cell.Items[item.UUID] = &item
 	}
 	cell.ItemsMutex.Unlock()
@@ -127,7 +131,7 @@ func (c *GridCell) SpawnItem(pos shared.Vector) {
 	pos.X += shared.RandIntInRange(-r, r)
 	pos.Y += shared.RandIntInRange(-r, r)
 
-	c.ItemsToAdd = append(c.ItemsToAdd, item.NewItem(0, pos))
+	c.ItemsToAdd = append(c.ItemsToAdd, item.NewItem(c.Pos, 0, pos))
 }
 
 func getCellMiniMapPng(subCells []SubCell) string {
@@ -179,6 +183,13 @@ func Abs(x int) int {
 func getKey(x int, y int) string {
 	return fmt.Sprintf("%d#%d", x, y)
 }
+func (cell *GridCell) RemoveItem(uuid string) {
+	cell.ItemsToRemoveMutex.Lock()
+	defer cell.ItemsToRemoveMutex.Unlock()
+
+	cell.ItemsToRemove = append(cell.ItemsToRemove, uuid)
+
+}
 
 func (cell *GridCell) GetSubscriptions() []GridSubscription {
 	subs := []GridSubscription{}
@@ -203,6 +214,24 @@ func (cell *GridCell) GetItems() []item.Item {
 
 	return items
 
+}
+
+func (c *GridCell) RemoveQueuedItems() {
+	c.ItemsMutex.Lock()
+	c.ItemsToRemoveMutex.Lock()
+	c.eventsToBroadcastMutex.Lock()
+	defer func() {
+		c.ItemsMutex.Unlock()
+		c.ItemsToRemoveMutex.Unlock()
+		c.eventsToBroadcastMutex.Unlock()
+	}()
+
+	for _, itemUUID := range c.ItemsToRemove {
+		delete(c.Items, itemUUID)
+		c.eventsToBroadcast = append(c.eventsToBroadcast, NewRemoveItemEvent(itemUUID))
+	}
+
+	c.ItemsToRemove = []string{}
 }
 
 func (c *GridCell) AddQueuedItems() {
@@ -538,6 +567,7 @@ func (cell *GridCell) CellCoro() {
 
 			cell.NpcUpdates()
 			cell.AddQueuedItems()
+			cell.RemoveQueuedItems()
 
 			// broadcast all events at once
 			if len(cell.eventsToBroadcast) > 0 {
