@@ -24,14 +24,8 @@ const main = async () => {
     const app = new PIXI.Application({ width: SCREEN_SIZE, height: SCREEN_SIZE });
 
     // Load assets
-    await load(app, 'assets/stone.png');
-    await load(app, 'assets/brick.png');
-    await load(app, 'assets/cursor.png');
-    await load(app, 'assets/blockade.png');
     await load(app, 'assets/tree1.png');
     await load(app, 'assets/tree2.png');
-    await load(app, 'assets/log.png');
-    await load(app, 'assets/ironOre.png');
 
     await load(app, 'assets/sounds/hit1.wav');
     await load(app, 'assets/sounds/hit2.wav');
