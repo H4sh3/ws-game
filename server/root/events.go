@@ -2,6 +2,7 @@ package root
 
 import (
 	"encoding/json"
+	"ws-game/item"
 	"ws-game/resource"
 	"ws-game/shared"
 )
@@ -32,6 +33,7 @@ const (
 	UPDATE_NPC_EVENT             EventType = 20
 	UPDATE_PLAYER_EVENT          EventType = 21
 	NPC_ATTACK_ANIM_EVENT        EventType = 22
+	ITEM_POSITIONS_EVENT         EventType = 23
 )
 
 const (
@@ -101,6 +103,21 @@ func NewResourcePositionsEvent(resources map[int]resource.Resource) interface{} 
 	}
 
 	return &ResourcePositionsEvent{EventType: RESOURCE_POSITIONS_EVENT, Resources: v}
+}
+
+type ItemPositionsEvent struct {
+	EventType   EventType   `json:"eventType"`
+	GridCellKey string      `json:"gridCellKey"`
+	Items       []item.Item `json:"items"`
+}
+
+func NewItemPositionsEvent(items []item.Item, gridCellKey string) interface{} {
+
+	return &ItemPositionsEvent{
+		EventType:   ITEM_POSITIONS_EVENT,
+		GridCellKey: gridCellKey,
+		Items:       items,
+	}
 }
 
 type NpcListEvent struct {

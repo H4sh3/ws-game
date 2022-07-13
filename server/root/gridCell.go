@@ -96,8 +96,12 @@ func NewCell(x int, y int) *GridCell {
 	// spawn some items for testing
 	cell.ItemsMutex.Lock()
 	for i := 0; i < 5; i++ {
-		itemPos := shared.Vector{X: (x * GridCellSize), Y: (y * GridCellSize)}
-		item := item.NewItem(0, itemPos)
+
+		// start with center
+		spawnPos := shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2}
+		spawnPos.X += shared.RandIntInRange(-GridCellSize/2, -GridCellSize/2)
+
+		item := item.NewItem(0, spawnPos)
 		cell.Items[item.UUID] = &item
 	}
 	cell.ItemsMutex.Unlock()
@@ -171,6 +175,19 @@ func (cell *GridCell) GetSubscriptions() []GridSubscription {
 	cell.CellMutex.Unlock()
 	//	fmt.Printf("unlock for subs %d %d\n", cell.Pos.X, cell.Pos.Y)
 	return subs
+}
+func (cell *GridCell) GetItems() []item.Item {
+	cell.ItemsMutex.Lock()
+	defer cell.ItemsMutex.Unlock()
+
+	items := []item.Item{}
+
+	for _, item := range cell.Items {
+		items = append(items, *item)
+	}
+
+	return items
+
 }
 
 func (cell *GridCell) UpdateNpc(index int, npc Npc) {
@@ -403,6 +420,7 @@ func (cell *GridCell) CellCoro() {
 					// this code is executed if a client subs first time to a cell
 					if client.Connected {
 						client.send <- NewResourcePositionsEvent(cell.GetResources())
+						client.send <- NewItemPositionsEvent(cell.GetItems(), cell.GridCellKey)
 						client.send <- NewCellDataEvent(cell.GridCellKey, cell.SubCells, cell.Pos, cell.SubCellBase64)
 
 						npcs := cell.GetNpcList()
