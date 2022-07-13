@@ -88,8 +88,6 @@ func NewCell(x int, y int) *GridCell {
 		npc := NewNpc(npcPos)
 		cell.NpcList = append(cell.NpcList, npc)
 	}
-	//if cell.Pos.X == 0 && cell.Pos.Y == 0 {
-	//}
 
 	t := time.NewTicker(CellUpdateRate)
 	cell.ticker = *t

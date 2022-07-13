@@ -15,16 +15,16 @@ type GridSubscription struct {
 
 type GridManager struct {
 	Grid                 map[int]map[int]*GridCell
-	newCellChannel       chan *GridCell
+	initCellChannel      chan *GridCell
 	UpdateClientPosition chan *Client
 	AddResource          chan *resource.Resource
 	gridMutex            sync.RWMutex
 }
 
-func NewGridManager(newCellChannel chan *GridCell) *GridManager {
+func NewGridManager(initCellChannel chan *GridCell) *GridManager {
 	gm := &GridManager{
 		Grid:                 make(map[int]map[int]*GridCell),
-		newCellChannel:       newCellChannel,
+		initCellChannel:      initCellChannel,
 		UpdateClientPosition: make(chan *Client),
 		AddResource:          make(chan *resource.Resource),
 		gridMutex:            sync.RWMutex{},
@@ -153,7 +153,7 @@ func (gm *GridManager) getCells(x int, y int) []*GridCell {
 func (gm *GridManager) add(x int, y int) *GridCell {
 	cell := NewCell(x, y)
 
-	gm.newCellChannel <- cell
+	gm.initCellChannel <- cell
 
 	col, ok := gm.Grid[x]
 
