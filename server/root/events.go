@@ -34,6 +34,7 @@ const (
 	UPDATE_PLAYER_EVENT          EventType = 21
 	NPC_ATTACK_ANIM_EVENT        EventType = 22
 	ITEM_POSITIONS_EVENT         EventType = 23
+	PLAYER_CLICKED_ITEM_EVENT    EventType = 24
 )
 
 const (
@@ -315,4 +316,8 @@ type PlayerPlacedResourceEvent struct {
 type LoginPlayerEvent struct {
 	ResourceType string `json:"resourceType"`
 	UUID         string `json:"uuid"`
+}
+
+type PlayerClickedItemEvent struct {
+	UUID string `json:"uuid"`
 }

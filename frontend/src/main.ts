@@ -109,7 +109,7 @@ export class Game extends Container {
         this.textHandler = new TextHandler()
         this.textHandler.container.zIndex = 3
 
-        this.itemHandler = new ItemHandler()
+        this.itemHandler = new ItemHandler(this.ws)
         this.itemHandler.container.zIndex = 4
 
 

@@ -1,5 +1,5 @@
 import { Container, Sprite } from "pixi.js"
-import { createVector } from "../events/events"
+import { createVector, getPlayerClickedItemEvent } from "../events/events"
 import { getTextureFromResourceType } from "../modules/ResourceHandler"
 import Vector, { IVector } from "./vector"
 
@@ -33,15 +33,24 @@ export class Item {
     pos: Vector
     container: Container
     uuid: string
+    ws: WebSocket
 
 
-    constructor(rawItem: IItem) {
+    constructor(rawItem: IItem, ws: WebSocket) {
+        this.ws = ws
         this.pos = createVector(rawItem.pos.x, rawItem.pos.y)
         this.uuid = rawItem.uuid
         this.container = new Container()
-        console.log(this.pos)
         this.container.position.set(this.pos.x, this.pos.y)
+
         const sprite = new Sprite(getTextureFromResourceType(rawItem.itemSubType)) // shows only a blob
+        sprite.interactive = true
+        sprite.on("click", () => {
+            ws.send(getPlayerClickedItemEvent(this.uuid))
+        })
+
         this.container.addChild(sprite)
     }
+
+
 }

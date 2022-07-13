@@ -4,6 +4,7 @@ import { Item } from "../types/item"
 
 class ItemHandler {
 
+    ws: WebSocket
     items: Item[]
     container: Container
 
@@ -11,14 +12,15 @@ class ItemHandler {
 
     // remove many items -> unsub from cell
 
-    constructor() {
+    constructor(ws: WebSocket) {
+        this.ws = ws
         this.items = []
         this.container = new Container()
     }
 
     handleItemPositionsEvent(event: ItemPositionsEvent) {
         event.items.forEach(iitem => {
-            const item = new Item(iitem)
+            const item = new Item(iitem, this.ws)
 
             this.container.addChild(item.container)
 

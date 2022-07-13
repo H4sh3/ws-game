@@ -289,6 +289,16 @@ func UnmarshalClientEvents(event_data BaseEvent, h *Hub, c *Client) {
 
 		h.HandlePlayerPlacedResource(*event, c)
 
+	case PLAYER_CLICKED_ITEM_EVENT:
+		event := &PlayerClickedItemEvent{}
+
+		if err := json.Unmarshal(event_data.Payload, &event); err != nil {
+			panic(err)
+		}
+
+		//h.HandlePlayerPlacedResource(*event, c)
+		fmt.Println("recieved player clicked item event")
+		fmt.Println(event)
 	}
 
 }
