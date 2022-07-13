@@ -9,6 +9,7 @@ import (
 	"math"
 	"sync"
 	"time"
+	"ws-game/item"
 	"ws-game/resource"
 	"ws-game/shared"
 
@@ -34,6 +35,8 @@ type GridCell struct {
 	Players                map[int]*Client            // players inside this cell atm
 	Resources              map[int]*resource.Resource // resources located in this cell
 	ResourcesMutex         sync.Mutex
+	Items                  map[string]*item.Item
+	ItemsMutex             sync.Mutex
 	Broadcast              chan interface{}
 	Subscribe              chan *Client
 	Unsubscribe            chan int
@@ -79,15 +82,27 @@ func NewCell(x int, y int) *GridCell {
 		NpcListMutex:           sync.Mutex{},
 		SubCells:               subCells,
 		SubCellBase64:          subCellsBase64,
+		Items:                  make(map[string]*item.Item),
+		ItemsMutex:             sync.Mutex{},
 	}
 
 	// test npc -> only one per cell atm
-
 	for i := 0; i < 1; i++ {
 		npcPos := shared.Vector{X: (x * GridCellSize), Y: (y * GridCellSize)}
 		npc := NewNpc(npcPos)
 		cell.NpcList = append(cell.NpcList, npc)
 	}
+
+	// spawn some items for testing
+	cell.ItemsMutex.Lock()
+	for i := 0; i < 5; i++ {
+		itemPos := shared.Vector{X: (x * GridCellSize), Y: (y * GridCellSize)}
+		item := item.NewItem(0, itemPos)
+		cell.Items[item.UUID] = &item
+	}
+	cell.ItemsMutex.Unlock()
+
+	fmt.Println(cell.Items)
 
 	t := time.NewTicker(CellUpdateRate)
 	cell.ticker = *t

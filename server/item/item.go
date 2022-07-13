@@ -21,13 +21,13 @@ const (
 	Consumable ItemType = "ConsumableItem"
 )
 
-type ItemTypeSub string
+type ItemSubType string
 
 // weapons
 const (
-	Axe    ItemTypeSub = "Axe"
-	Sword  ItemTypeSub = "Sword"
-	Hammer ItemTypeSub = "Hammer"
+	Axe    ItemSubType = "Axe"
+	Sword  ItemSubType = "Sword"
+	Hammer ItemSubType = "Hammer"
 )
 
 type BoniAttribute string
@@ -80,9 +80,8 @@ func rollRarity() Rarity {
 		return MagicRarity
 	} else if rarityRoll > 80 && rarityRoll <= 99 {
 		return UniqueRarity
-	} else if rarityRoll > 99 {
-		return UltraRarity
 	}
+	return UltraRarity
 }
 
 func NewItem(zoneLevel int, pos shared.Vector) Item {
@@ -100,7 +99,7 @@ func NewItem(zoneLevel int, pos shared.Vector) Item {
 		Absorb:      10,
 		AttackSpeed: 10,
 		Boni: []Boni{
-			Boni{
+			{
 				Attribute: Vitality,
 				Value:     10,
 			},
