@@ -1,7 +1,8 @@
 import { Sprite, Graphics, Loader, Container } from "pixi.js"
+import { RESOURCE_SCALE } from "../etc/const"
 import { randInt } from "../etc/math"
 import { Hitpoints, getHitResourceEvent, getLootResourceEvent } from "../events/events"
-import { itemTextures } from "../modules/ResourceHandler"
+import { getTextureFromResourceType, itemTextures } from "../modules/ResourceHandler"
 import { Player } from "./player"
 import Vector from "./vector"
 
@@ -97,14 +98,9 @@ export class Resource extends HasHitpoints {
                 this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}2.png`].texture)
             }
             this.sprite.scale.set(2, 2)
-        } else if (this.resourceType == "brick") {
-            this.sprite = new Sprite(itemTextures.brick)
-        } else if (this.resourceType == "log") {
-            this.sprite = new Sprite(itemTextures.log)
-        } else if (this.resourceType == "ironOre") {
-            this.sprite = new Sprite(itemTextures.ironOre)
         } else {
-            this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}.png`].texture)
+            this.sprite = new Sprite(getTextureFromResourceType(this.resourceType))
+            this.sprite.scale.set(RESOURCE_SCALE, RESOURCE_SCALE)
         }
 
         this.sprite.interactive = true

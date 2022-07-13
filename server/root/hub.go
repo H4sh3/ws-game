@@ -289,40 +289,53 @@ func (h *Hub) HandleLootResource(event LootResourceEvent, c *Client) {
 	}
 }
 
-func (h *Hub) HandlePlayerPlacedResource(event PlayerPlacedResourceEvent, c *Client) {
-	// blockade is 5 bricks
+func (h *Hub) buildResource(c *Client, costs int, ingredientResource resource.ResourceType, buildResource resource.ResourceType, pos shared.Vector, hitpoints int) {
+	if invRes, ok := c.Inventory[ingredientResource]; ok {
+		// check if enough materials in inventory to build this resource
+		fmt.Printf("invRes.Quantity %d\n", invRes.Quantity)
+		if invRes.Quantity >= costs {
+			invRes.Quantity -= costs
+			c.Inventory[ingredientResource] = invRes
 
+			buildResource := &resource.Resource{ResourceType: buildResource,
+				Pos:      pos,
+				Id:       h.ResourceManager.GetResourceId(),
+				Quantity: 1,
+				Hitpoints: shared.Hitpoints{
+					Current: hitpoints,
+					Max:     hitpoints,
+				},
+				IsSolid:    true,
+				IsLootable: false,
+			}
+
+			h.ResourceManager.AddResource <- buildResource
+
+			// translate build resource to inventory update
+
+			resourceToRemoveFromInventry := resource.ResourceMin{
+				Quantity:     5,
+				ResourceType: ingredientResource,
+			}
+
+			c.send <- NewUpdateInventoryEvent(resourceToRemoveFromInventry, true)
+		}
+	}
+}
+
+func (h *Hub) HandlePlayerPlacedResource(event PlayerPlacedResourceEvent, c *Client) {
 	if event.ResourceType == string(resource.Blockade) {
 		costs := 5
-		if invRes, ok := c.Inventory[resource.Brick]; ok {
-			// check if enough materials in inventory to build this resource
-			if invRes.Quantity >= costs {
-				invRes.Quantity -= costs
-				c.Inventory[resource.Brick] = invRes
-				r := &resource.Resource{ResourceType: resource.ResourceType(event.ResourceType),
-					Pos:      event.Pos,
-					Id:       h.ResourceManager.GetResourceId(),
-					Quantity: 1,
-					Hitpoints: shared.Hitpoints{
-						Current: 500,
-						Max:     500},
-					IsSolid:    true,
-					IsLootable: false,
-				}
+		buildResource := resource.Blockade
+		ingredientResource := resource.Brick
+		h.buildResource(c, costs, ingredientResource, buildResource, event.Pos, 500)
+	}
 
-				h.ResourceManager.AddResource <- r
-
-				// translate build resource to inventory update
-
-				resourceToRemoveFromInventry := resource.ResourceMin{
-					Quantity:     5,
-					ResourceType: resource.Brick,
-				}
-
-				c.send <- NewUpdateInventoryEvent(resourceToRemoveFromInventry, true)
-			}
-		}
-
+	if event.ResourceType == string(resource.WoodBlockade) {
+		costs := 5
+		buildResource := resource.WoodBlockade
+		ingredientResource := resource.Log
+		h.buildResource(c, costs, ingredientResource, buildResource, event.Pos, 200)
 	}
 }
 

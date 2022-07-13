@@ -124,6 +124,12 @@ func ResourcemanagerCoro(rM *ResourceManager) {
 }
 
 func (gm *ResourceManager) GetResource(id int) (*resource.Resource, error) {
+	defer func() {
+		gm.resourcesMutex.Unlock()
+	}()
+
+	gm.resourcesMutex.Lock()
+
 	r, ok := gm.resources[id]
 	if !ok {
 		return nil, errors.New("resource does not exist")

@@ -376,7 +376,7 @@ func (cell *GridCell) CellCoro() {
 			for _, client := range cell.wantsToSub {
 
 				for _, player := range cell.Players {
-					fmt.Printf("player in cell %s \n", player.UUID)
+					fmt.Printf("player %s in cell %d %d \n", player.UUID, cell.Pos.X, cell.Pos.Y)
 					if player.Id == client.Id {
 						continue
 					}

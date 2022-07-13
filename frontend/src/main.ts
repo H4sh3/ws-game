@@ -13,7 +13,7 @@ import { KeyboardHandler } from './modules/KeyboardHandler';
 import { SoundHandler } from './modules/SoundHandler';
 import TextHandler from './modules/TextHandler';
 import NpcHandler from './modules/NpcHandler';
-import ResourceHandler from './modules/ResourceHandler';
+import ResourceHandler, { getTextureFromResourceType } from './modules/ResourceHandler';
 import MiniMapHandler from './modules/MinimapHandler';
 import InventoryHandler from './modules/InventoryHandler';
 import BuilderHandler from './modules/BuilderHandler';
@@ -87,7 +87,7 @@ export class Game extends Container {
         this.keyHandler = new KeyboardHandler()
         this.soundHandler = new SoundHandler()
         this.inventoryHandler = new InventoryHandler()
-        this.builderHandler = new BuilderHandler(this.app.loader)
+        this.builderHandler = new BuilderHandler()
 
         this.miniMapHandler = new MiniMapHandler(this.player.currentPos)
 
@@ -132,10 +132,9 @@ export class Game extends Container {
             this.cursorPos.y = y
 
 
-            const selectedResource = this.builderHandler.selectedBuildResourceType
-            if (selectedResource.length > 0) {
+            if (this.builderHandler.selectedBuildResourceType.length > 0) {
                 this.cursorSprite.visible = true
-                this.cursorSprite.texture = this.app.loader.resources[`assets/${selectedResource}.png`].texture
+                this.cursorSprite.texture = getTextureFromResourceType(this.builderHandler.selectedBuildResourceType)
             } else {
                 this.cursorSprite.visible = false
             }
@@ -148,6 +147,10 @@ export class Game extends Container {
             // nothing selected -> return
             if (this.builderHandler.selectedBuildResourceType.length === 0) return
 
+            // same click event as the one selecting the resource in inventory
+            const clickTimeDiff = Date.now() - this.builderHandler.selectedAt
+            if (clickTimeDiff < 5) return
+
             // cant build -> return
             // if (!this.inventoryStore.canBuildResource(this.inventoryStore.selectedRecipe)) return
 
@@ -159,7 +162,7 @@ export class Game extends Container {
             const x = -(SCREEN_SIZE / 2) + x1 - pX + this.player.currentPos.x
             const y = -(SCREEN_SIZE / 2) + y1 - pY + this.player.currentPos.y
             const spawn = createVector(Math.trunc(x), Math.trunc(y))
-            this.ws.send(getPlayerPlacedResourceEvent("blockade", spawn))
+            this.ws.send(getPlayerPlacedResourceEvent(this.builderHandler.selectedBuildResourceType, spawn))
         })
 
         // bind update function
@@ -220,7 +223,6 @@ export class Game extends Container {
 
             this.handleUpdatePlayerEvent(parsed)
         } else if (isNpcAttackAnimEvent(parsed)) {
-            console.log(parsed)
             this.npcHandler.handleNpcAttackAnimEvent(parsed)
         }
     }
@@ -339,27 +341,11 @@ export class Game extends Container {
         this.gameConfig = parsed.gameConfig
 
         this.initWorld()
-
-
     }
 
 
     handleUpdateInventoryEvent(parsed: UpdateInventoryEvent) {
         this.inventoryHandler.updateItem(parsed)
-        /*         const item: Item = {
-                    resourceType: parsed.item.resourceType,
-                    quantity: parsed.item.quantity
-                }
-            
-                if (parsed.remove) {
-                    this.inventoryStore.itemBuild(item)
-                } else {
-                    this.inventoryStore.addItem(item)
-                    const pos = this.player.targetPos.copy()
-                    pos.x -= 25
-                    pos.y -= 35
-                    this.textHandler.addItem(`${item.resourceType} +${item.quantity}`, pos, "0x1dff20")
-                } */
     }
 
     handleLoadInventoryEvent(parsed: LoadInventoryEvent) {

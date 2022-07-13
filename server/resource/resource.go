@@ -8,15 +8,16 @@ import "ws-game/shared"
 type ResourceType string
 
 const (
-	Stone     ResourceType = "stone"
-	Brick     ResourceType = "brick"
-	Tree      ResourceType = "tree"
-	Log       ResourceType = "log"
-	Blockade  ResourceType = "blockade"
-	IronOre   ResourceType = "ironOre"
-	IronIngot ResourceType = "ironIngot"
-	Gold      ResourceType = "gold"
-	Cooper    ResourceType = "cooper"
+	Stone        ResourceType = "stone"
+	Brick        ResourceType = "brick"
+	Tree         ResourceType = "tree"
+	Log          ResourceType = "log"
+	Blockade     ResourceType = "blockade"
+	WoodBlockade ResourceType = "woodBlockade"
+	IronOre      ResourceType = "ironOre"
+	IronIngot    ResourceType = "ironIngot"
+	Gold         ResourceType = "gold"
+	Cooper       ResourceType = "cooper"
 )
 
 type ResourceMin struct {

@@ -1,15 +1,20 @@
 import { BaseTexture, Container, Sprite, Spritesheet, Texture } from "pixi.js";
+import { ItemBase } from "../components/shared";
 import { createVector, ResourcePositionsEvent, UpdateResourceEvent } from "../events/events";
 import { Game } from "../main";
 import { Resource } from "../types/resource";
 
 
 interface ItemTextures {
+    placeholder?: Texture
     brick?: Texture
     log?: Texture
     ironOre?: Texture
     builderIcon?: Texture
     button?: Texture
+    blockade?: Texture
+    woodBlockade?: Texture
+    stone?: Texture
 }
 
 export function getItemTexture(path: string): ItemTextures {
@@ -29,6 +34,11 @@ export function getItemTexture(path: string): ItemTextures {
 
     //  x:1 y:18
     const frames: { [id: string]: any } = {
+        "placeholder": {
+            frame: { x: 0 * 32, y: 24 * 32, w: 32, h: 32 },
+            sourceSize: { w: 32, h: 32 },
+            spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
+        },
         "brick": {
             frame: { x: 1 * 32, y: 17 * 32, w: 32, h: 32 },
             sourceSize: { w: 32, h: 32 },
@@ -54,14 +64,33 @@ export function getItemTexture(path: string): ItemTextures {
             sourceSize: { w: 32, h: 32 },
             spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
         },
+        "blockade": {
+            frame: { x: 1 * 32, y: 22 * 32, w: 32, h: 32 },
+            sourceSize: { w: 32, h: 32 },
+            spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
+        },
+        "woodBlockade": {
+            frame: { x: 2 * 32, y: 22 * 32, w: 32, h: 32 },
+            sourceSize: { w: 32, h: 32 },
+            spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
+        },
+        "stone": {
+            frame: { x: 3 * 32, y: 22 * 32, w: 32, h: 32 },
+            sourceSize: { w: 32, h: 32 },
+            spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 }
+        },
     }
 
     const frameNames = [
+        "placeholder",
         "brick",
         "log",
         "ironOre",
         "builderIcon",
-        "button"
+        "button",
+        "blockade",
+        "woodBlockade",
+        "stone"
     ]
 
     atlas.frames = frames
@@ -78,17 +107,48 @@ export function getItemTexture(path: string): ItemTextures {
     const itemTextures: ItemTextures = {};
 
     spritesheet.parse(() => {
-        itemTextures.brick = spritesheet.animations.frameNames[0]
-        itemTextures.log = spritesheet.animations.frameNames[1]
-        itemTextures.ironOre = spritesheet.animations.frameNames[2]
-        itemTextures.builderIcon = spritesheet.animations.frameNames[3]
-        itemTextures.button = spritesheet.animations.frameNames[4]
+        itemTextures.placeholder = spritesheet.animations.frameNames[0]
+        itemTextures.brick = spritesheet.animations.frameNames[1]
+        itemTextures.log = spritesheet.animations.frameNames[2]
+        itemTextures.ironOre = spritesheet.animations.frameNames[3]
+        itemTextures.builderIcon = spritesheet.animations.frameNames[4]
+        itemTextures.button = spritesheet.animations.frameNames[5]
+        itemTextures.blockade = spritesheet.animations.frameNames[6]
+        itemTextures.woodBlockade = spritesheet.animations.frameNames[7]
+        itemTextures.stone = spritesheet.animations.frameNames[8]
     });
 
     return itemTextures
 }
 
 export const itemTextures = getItemTexture("assets/items/item_collection.png")
+
+export const getTextureFromResourceType = (resourceType: string): Texture => {
+    // Todo: make this more generic
+    if (resourceType == "blockade") {
+        return itemTextures.blockade
+    } else if (resourceType == "brick") {
+        return itemTextures.brick
+
+    } else if (resourceType == "log") {
+        return itemTextures.log
+
+    } else if (resourceType == "ironOre") {
+        return itemTextures.ironOre
+
+    } else if (resourceType == "builderIcon") {
+        return itemTextures.builderIcon
+
+    } else if (resourceType == "button") {
+        return itemTextures.button
+    } else if (resourceType == "woodBlockade") {
+        return itemTextures.woodBlockade
+    } else if (resourceType == "stone") {
+        return itemTextures.stone
+    }
+    console.error(`no sprite for ${resourceType}`)
+    return itemTextures.placeholder
+}
 
 class ResourceHandler {
     // resources located in a gridcell
