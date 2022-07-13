@@ -118,6 +118,7 @@ export class Game extends Container {
         this.worldContainer.addChild(this.npcHandler.container)
         this.worldContainer.addChild(this.textHandler.container)
         this.worldContainer.addChild(this.itemHandler.container)
+        this.worldContainer.addChild(this.resourceHandler.container)
 
 
         this.addChild(this.worldContainer)
@@ -229,10 +230,13 @@ export class Game extends Container {
 
             this.handleUpdatePlayerEvent(parsed)
         } else if (isNpcAttackAnimEvent(parsed)) {
+
             this.npcHandler.handleNpcAttackAnimEvent(parsed)
         } else if (isItemPositionsEvent(parsed)) {
+
             this.itemHandler.handleItemPositionsEvent(parsed)
         } else if (isRemoveItemEvent(parsed)) {
+
             this.itemHandler.removeItem(parsed.uuid)
         }
     }
@@ -283,7 +287,7 @@ export class Game extends Container {
     handleRemoveGridCellEvent(parsed: RemoveGridCellEvent) {
         const { gridCellKey } = parsed
 
-        this.resourceHandler.removeGridCellResources(gridCellKey, this)
+        this.resourceHandler.removeGridCellResources(gridCellKey)
 
         this.tilemapHandler.removeGridCellTiles(gridCellKey, this.worldContainer)
 

@@ -43,16 +43,17 @@ export class Item {
         this.ws = ws
         this.pos = createVector(rawItem.pos.x, rawItem.pos.y)
         this.uuid = rawItem.uuid
-        this.container = new Container()
-        this.container.position.set(this.pos.x, this.pos.y)
 
         this.sprite = new Sprite(getTextureFromResourceType(rawItem.itemSubType)) // shows only a blob
         this.sprite.interactive = true
+
         this.sprite.on("click", () => {
             ws.send(getPlayerClickedItemEvent(this.uuid, this.gridCellPos))
         })
 
+        this.container = new Container()
         this.container.addChild(this.sprite)
+        this.container.position.set(this.pos.x, this.pos.y)
     }
 
 

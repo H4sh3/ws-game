@@ -102,19 +102,20 @@ func NewCell(x int, y int) *GridCell {
 	}
 
 	// spawn some items for testing
+	if cell.Pos.X == 0 && cell.Pos.Y == 0 {
+		cell.ItemsMutex.Lock()
+		cellCenter := shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2}
+		for i := 0; i < 5; i++ {
+			// start with center
+			spawnPos := cellCenter.Copy()
+			spawnPos.X += shared.RandIntInRange(-GridCellSize/2, GridCellSize/2)
+			spawnPos.Y += shared.RandIntInRange(-GridCellSize/2, GridCellSize/2)
 
-	cell.ItemsMutex.Lock()
-	cellCenter := shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2}
-	for i := 0; i < 5; i++ {
-		// start with center
-		spawnPos := cellCenter.Copy()
-		spawnPos.X += shared.RandIntInRange(-GridCellSize/2, GridCellSize/2)
-		spawnPos.Y += shared.RandIntInRange(-GridCellSize/2, GridCellSize/2)
-
-		item := item.NewItem(cell.Pos, 0, spawnPos)
-		cell.Items[item.UUID] = &item
+			item := item.NewItem(cell.Pos, 0, spawnPos)
+			cell.Items[item.UUID] = &item
+		}
+		cell.ItemsMutex.Unlock()
 	}
-	cell.ItemsMutex.Unlock()
 
 	t := time.NewTicker(CellUpdateRate)
 	cell.ticker = *t

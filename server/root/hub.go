@@ -405,6 +405,4 @@ func (h *Hub) PlayerClickedItemEvent(event PlayerClickedItemEvent, c *Client) {
 	cell.RemoveItem(event.UUID)
 
 	// Todo: Add item to clients items inventory
-
-	c.send <- NewRemoveItemEvent(event.UUID)
 }

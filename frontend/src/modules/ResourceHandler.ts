@@ -178,8 +178,7 @@ class ResourceHandler {
             const pos = createVector(r.pos.x, r.pos.y)
             const resource: Resource = new Resource(r.id, game.player, r.quantity, r.resourceType, pos, r.hitpoints, r.isSolid, game.app.loader, game.ws, r.isLootable)
 
-            game.worldContainer.addChild(resource.container);
-
+            this.container.addChild(resource.container)
 
             const { gridCellKey } = r;
             if (this.resourceMap.has(gridCellKey)) {
@@ -194,10 +193,10 @@ class ResourceHandler {
         this.updateResourceArr()
     }
 
-    removeGridCellResources(gridCellKey: string, game: Game) {
+    removeGridCellResources(gridCellKey: string) {
         if (this.resourceMap.has(gridCellKey)) {
             this.resourceMap.get(gridCellKey).map(r => {
-                game.worldContainer.removeChild(r.container)
+                this.container.removeChild(r.container)
             })
         }
         this.resourceMap.delete(gridCellKey)
