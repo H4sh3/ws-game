@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 )
@@ -11,6 +12,11 @@ type Hitpoints struct {
 }
 
 func RandIntInRange(min int, max int) int {
+
+	if max < min || min > max || min == max {
+		panic(fmt.Sprintf("wrong value range for RandIntInRange %d %d\n", min, max))
+	}
+
 	return rand.Intn(max-min) + min
 }
 
