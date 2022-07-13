@@ -99,7 +99,7 @@ func NewCell(x int, y int) *GridCell {
 
 		// start with center
 		spawnPos := shared.Vector{X: (x * GridCellSize) + GridCellSize/2, Y: (y * GridCellSize) + GridCellSize/2}
-		spawnPos.X += shared.RandIntInRange(-GridCellSize/2, -GridCellSize/2)
+		spawnPos.X += shared.RandIntInRange(-GridCellSize/2, GridCellSize/2)
 
 		item := item.NewItem(0, spawnPos)
 		cell.Items[item.UUID] = &item
