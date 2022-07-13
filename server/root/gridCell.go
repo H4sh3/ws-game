@@ -215,6 +215,10 @@ func (c *GridCell) AddQueuedItems() {
 		c.eventsToBroadcastMutex.Unlock()
 	}()
 
+	if len(c.ItemsToAdd) == 0 {
+		return
+	}
+
 	for _, item := range c.ItemsToAdd {
 		c.Items[item.UUID] = &item
 	}
