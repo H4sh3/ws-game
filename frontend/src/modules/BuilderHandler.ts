@@ -139,6 +139,7 @@ class BuilderHandler {
 
     initLayout() {
         this.container = new Container()
+        this.container.visible = false
         this.container.position.set(30, 30)
 
         const background = new Graphics();
