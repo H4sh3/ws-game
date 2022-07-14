@@ -1,7 +1,6 @@
 package root
 
 import (
-	"fmt"
 	"math"
 	"sync"
 	"ws-game/resource"
@@ -58,7 +57,6 @@ func GridManagerCoro(gm *GridManager) {
 			clientCell := c.getGridCell()
 			if newX != clientCell.Pos.X || newY != clientCell.Pos.Y || c.NeedsInit {
 				gm.clientMovedCell(clientCell, gridCell, c)
-				fmt.Printf("new cell is %d %d \n", clientCell.Pos.X, clientCell.Pos.Y)
 				c.NeedsInit = false
 			}
 		}
@@ -172,7 +170,6 @@ func (gm *GridManager) add(x int, y int) *GridCell {
 
 func (gm *GridManager) GridMap() string {
 	gm.gridMutex.Lock()
-	fmt.Println("draw grid lock")
 	minY := 0 //int(math.Inf(1))
 	maxY := int(math.Inf(-1))
 	minX := 0 //int(math.Inf(1))

@@ -292,7 +292,7 @@ func (h *Hub) HandleLootResource(event LootResourceEvent, c *Client) {
 func (h *Hub) buildResource(c *Client, costs int, ingredientResource resource.ResourceType, buildResource resource.ResourceType, pos shared.Vector, hitpoints int) {
 	if invRes, ok := c.Inventory[ingredientResource]; ok {
 		// check if enough materials in inventory to build this resource
-		fmt.Printf("invRes.Quantity %d\n", invRes.Quantity)
+
 		if invRes.Quantity >= costs {
 			invRes.Quantity -= costs
 			c.Inventory[ingredientResource] = invRes

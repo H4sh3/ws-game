@@ -206,7 +206,6 @@ class Npc extends HasHitpoints {
         this.activeAnimation = AnimationNames.attacking
 
         this.sprite.onComplete = () => {
-            console.log("back to idle")
             this.useIdleSprite(true)
         }
     }
