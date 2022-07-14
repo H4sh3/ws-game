@@ -18,6 +18,7 @@ type ClientPersistance struct {
 	Inventory     map[resource.ResourceType]resource.Resource
 	ItemInventory []item.Item
 	Hitpoints     shared.Hitpoints
+	EquippedItems []string
 }
 
 // Hub maintains the set of active clients and broadcasts messages to them
@@ -120,19 +121,11 @@ func (h *Hub) Run() {
 				Inventory:     client.ResourceInventory,
 				ItemInventory: client.ItemInventory,
 				Hitpoints:     client.Hitpoints,
+				EquippedItems: client.EquippedItems,
 			}
 			h.persistedClientData[client.UUID] = persistanceEntry
 
 			h.ClientMutex.Unlock()
-			/* 		case message := <-h.broadcast:
-			for clientId := range h.clients {
-				select {
-				case h.clients[clientId].send <- message:
-				default:
-					close(h.clients[clientId].send)
-					delete(h.clients, clientId)
-				}
-			}*/
 		}
 	}
 }
@@ -356,6 +349,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 		client.ResourceInventory = persistanceEntry.Inventory
 		client.ItemInventory = persistanceEntry.ItemInventory
 		client.Hitpoints = persistanceEntry.Hitpoints
+		client.EquippedItems = persistanceEntry.EquippedItems
 	} else {
 		// Initialize new client
 		uuid := gUUID.New().String()
@@ -390,7 +384,7 @@ func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
 					npc.SetRemove(true)
 
 					// spawn some loot
-					for i := 0; i < 5; i++ {
+					for i := 0; i < 250; i++ {
 						cell.SpawnItem(npc.Pos)
 					}
 				}

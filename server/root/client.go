@@ -49,13 +49,12 @@ type Client struct {
 	conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send      chan interface{} //[]byte
-	Id        int
-	UUID      string
-	Pos       shared.Vector
-	Hitpoints shared.Hitpoints
-	PosMutex  sync.Mutex
-	// ResourceInventory []resource.Resource
+	send                chan interface{}
+	Id                  int
+	UUID                string
+	Pos                 shared.Vector
+	Hitpoints           shared.Hitpoints
+	PosMutex            sync.Mutex
 	ResourceInventory   map[resource.ResourceType]resource.Resource
 	ItemInventory       []item.Item
 	ZoneChangeTick      int
@@ -65,6 +64,8 @@ type Client struct {
 	Connected           bool
 	ConnectedMutex      sync.Mutex
 	NeedsInit           bool
+	EquippedItemsMutex  sync.Mutex
+	EquippedItems       []string
 }
 
 func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
@@ -93,6 +94,8 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 		NeedsInit:           true,
 		Hitpoints:           hitpoints,
 		ItemInventory:       []item.Item{},
+		EquippedItemsMutex:  sync.Mutex{},
+		EquippedItems:       []string{},
 		// NeedsInit gets set to false after first cell data is provided to the client
 	}
 

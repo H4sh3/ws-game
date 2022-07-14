@@ -1,6 +1,7 @@
 package item
 
 import (
+	"fmt"
 	"ws-game/shared"
 
 	"github.com/google/uuid"
@@ -47,10 +48,10 @@ type Boni struct {
 type Rarity string
 
 const (
-	NormalRarity Rarity = "normalRarity" // 50%
-	MagicRarity  Rarity = "magicRarity"  // 80%
-	UniqueRarity Rarity = "uniqueRarity" // 9%
-	UltraRarity  Rarity = "ultraRarity"  // 1%
+	NormalRarity Rarity = "normal" // 50%
+	MagicRarity  Rarity = "magic"  // 80%
+	UniqueRarity Rarity = "unique" // 9%
+	UltraRarity  Rarity = "ultra"  // 1%
 )
 
 type Item struct {
@@ -74,14 +75,15 @@ type Item struct {
 }
 
 func rollRarity() Rarity {
-	rarityRoll := shared.RandIntInRange(1, 100)
+	rarityRoll := shared.RandIntInRange(0, 101)
 	if rarityRoll <= 50 {
 		return NormalRarity
-	} else if rarityRoll > 50 && rarityRoll <= 80 {
+	} else if rarityRoll > 50 && rarityRoll <= 95 {
 		return MagicRarity
-	} else if rarityRoll > 80 && rarityRoll <= 99 {
+	} else if rarityRoll > 95 && rarityRoll <= 99 {
 		return UniqueRarity
 	}
+	fmt.Println("UNIQUE ITEM OHH BOY!")
 	return UltraRarity
 }
 
@@ -106,6 +108,14 @@ func NewItem(gridCellPos shared.Vector, zoneLevel int, pos shared.Vector) Item {
 				Value:     10,
 			},
 		},
+	}
+
+	for i := 0; i < shared.RandIntInRange(2, 5); i++ {
+		//Todo random initialze items; rarity in considerations
+		item.Boni = append(item.Boni, Boni{
+			Attribute: Vitality,
+			Value:     10,
+		})
 	}
 
 	return item

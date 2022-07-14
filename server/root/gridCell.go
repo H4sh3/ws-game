@@ -128,7 +128,7 @@ func (c *GridCell) SpawnItem(pos shared.Vector) {
 	c.ItemsToAddMutex.Lock()
 	defer c.ItemsToAddMutex.Unlock()
 
-	r := 50
+	r := 500
 	pos.X += shared.RandIntInRange(-r, r)
 	pos.Y += shared.RandIntInRange(-r, r)
 
