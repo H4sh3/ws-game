@@ -27,7 +27,8 @@ export enum EVENT_TYPES {
     NPC_ATTACK_ANIM_EVENT = 22,
     ITEM_POSITIONS_EVENT = 23,
     PLAYER_CLICKED_ITEM_EVENT = 24,
-    REMOVE_ITEM_EVENT = 25
+    REMOVE_ITEM_EVENT = 25,
+    UPDATE_INVENTORY_ITEM_EVENT = 26
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -316,6 +317,19 @@ export function isRemoveItemEvent(value: any): value is RemoveItemEvent {
     return (
         isBaseEvent(value) &&
         value.eventType === EVENT_TYPES.REMOVE_ITEM_EVENT
+    )
+}
+
+export interface UpdateInventoryItemEvent {
+    eventType: string
+    item: IItem
+    remove: boolean
+}
+
+export function isUpdateInventoryItemEvent(value: any): value is UpdateInventoryItemEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType === EVENT_TYPES.UPDATE_INVENTORY_ITEM_EVENT
     )
 }
 

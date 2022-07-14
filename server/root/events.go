@@ -36,6 +36,7 @@ const (
 	ITEM_POSITIONS_EVENT         EventType = 23
 	PLAYER_CLICKED_ITEM_EVENT    EventType = 24
 	REMOVE_ITEM_EVENT            EventType = 25
+	UPDATE_INVENTORY_ITEM_EVENT  EventType = 26
 )
 
 const (
@@ -157,9 +158,10 @@ func NewRemovePlayerEvent(id int) interface{} {
 type LoadInventoryEvent struct {
 	EventType EventType              `json:"eventType"`
 	Resources []resource.ResourceMin `json:"resources"`
+	Items     []item.Item            `json:"items"`
 }
 
-func NewLoadInventoryEvent(inventory map[resource.ResourceType]resource.Resource) interface{} {
+func NewLoadInventoryEvent(inventory map[resource.ResourceType]resource.Resource, items []item.Item) interface{} {
 
 	resources := []resource.ResourceMin{}
 
@@ -173,6 +175,7 @@ func NewLoadInventoryEvent(inventory map[resource.ResourceType]resource.Resource
 	return &LoadInventoryEvent{
 		EventType: LOAD_INVENTORY_EVENT,
 		Resources: resources,
+		Items:     items,
 	}
 }
 
@@ -186,6 +189,20 @@ func NewUpdateInventoryEvent(r resource.ResourceMin, remove bool) interface{} {
 	return &UpdateInventoryEvent{
 		EventType: UPDATE_INVENTORY_EVENT,
 		Resource:  r,
+		Remove:    remove,
+	}
+}
+
+type UpdateInventoryItemEvent struct {
+	EventType EventType `json:"eventType"`
+	Item      item.Item `json:"item"`
+	Remove    bool      `json:"remove"`
+}
+
+func NewUpdateInventoryItemEvent(item item.Item, remove bool) interface{} {
+	return &UpdateInventoryItemEvent{
+		EventType: UPDATE_INVENTORY_ITEM_EVENT,
+		Item:      item,
 		Remove:    remove,
 	}
 }

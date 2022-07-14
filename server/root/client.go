@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"ws-game/item"
 	"ws-game/resource"
 	"ws-game/shared"
 
@@ -54,8 +55,9 @@ type Client struct {
 	Pos       shared.Vector
 	Hitpoints shared.Hitpoints
 	PosMutex  sync.Mutex
-	// Inventory []resource.Resource
-	Inventory           map[resource.ResourceType]resource.Resource
+	// ResourceInventory []resource.Resource
+	ResourceInventory   map[resource.ResourceType]resource.Resource
+	ItemInventory       []item.Item
 	ZoneChangeTick      int
 	ZoneChangeTickMutex sync.Mutex
 	GridCell            *GridCell
@@ -66,16 +68,13 @@ type Client struct {
 }
 
 func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
-	//spawnRange := 4
-	//x := shared.RandIntInRange(-spawnRange, spawnRange) * StepSize
-	//y := shared.RandIntInRange(-spawnRange, spawnRange) * StepSize
-	clientPostion := shared.Vector{X: 500, Y: 500}
+	clientPostion := shared.Vector{X: GridCellSize / 2, Y: GridCellSize / 2}
 
 	sendChan := make(chan interface{}, 1024)
 
 	hitpoints := shared.Hitpoints{
-		Current: 50000000,
-		Max:     50000000,
+		Current: 500,
+		Max:     500,
 	}
 
 	gridCell := hub.GridManager.GetCellFromPos(clientPostion)
@@ -93,6 +92,7 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 		GridCellMutex:       sync.Mutex{},
 		NeedsInit:           true,
 		Hitpoints:           hitpoints,
+		ItemInventory:       []item.Item{},
 		// NeedsInit gets set to false after first cell data is provided to the client
 	}
 

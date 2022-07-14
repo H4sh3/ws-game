@@ -115,7 +115,7 @@ func (h *Hub) Run() {
 			// store client progress in storage
 			persistanceEntry := ClientPersistance{
 				Pos:       client.Pos,
-				Inventory: client.Inventory,
+				Inventory: client.ResourceInventory,
 				Hitpoints: client.Hitpoints,
 			}
 			h.persistedClientData[client.UUID] = persistanceEntry
@@ -264,12 +264,12 @@ func (h *Hub) HandleLootResource(event LootResourceEvent, c *Client) {
 
 	if r.Pos.Dist((&c.Pos)) < MAX_LOOT_RANGE {
 		// Handle looting
-		if invRes, ok := c.Inventory[r.ResourceType]; ok {
+		if invRes, ok := c.ResourceInventory[r.ResourceType]; ok {
 			// already exists in inventory
 			invRes.Quantity += r.Quantity
-			c.Inventory[r.ResourceType] = invRes
+			c.ResourceInventory[r.ResourceType] = invRes
 		} else {
-			c.Inventory[r.ResourceType] = *r
+			c.ResourceInventory[r.ResourceType] = *r
 		}
 
 		// broadcast update event that removes the resource
@@ -290,12 +290,12 @@ func (h *Hub) HandleLootResource(event LootResourceEvent, c *Client) {
 }
 
 func (h *Hub) buildResource(c *Client, costs int, ingredientResource resource.ResourceType, buildResource resource.ResourceType, pos shared.Vector, hitpoints int) {
-	if invRes, ok := c.Inventory[ingredientResource]; ok {
+	if invRes, ok := c.ResourceInventory[ingredientResource]; ok {
 		// check if enough materials in inventory to build this resource
 
 		if invRes.Quantity >= costs {
 			invRes.Quantity -= costs
-			c.Inventory[ingredientResource] = invRes
+			c.ResourceInventory[ingredientResource] = invRes
 
 			buildResource := &resource.Resource{ResourceType: buildResource,
 				Pos:      pos,
@@ -350,7 +350,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 		// already logged in
 		client.UUID = uuid
 		client.Pos = persistanceEntry.Pos
-		client.Inventory = persistanceEntry.Inventory
+		client.ResourceInventory = persistanceEntry.Inventory
 		client.Hitpoints = persistanceEntry.Hitpoints
 	} else {
 		// Initialize new client
@@ -358,11 +358,11 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 		client.UUID = uuid
 		inventory := make(map[resource.ResourceType]resource.Resource)
 		inventory[resource.Brick] = *resource.NewResource(resource.Brick, shared.Vector{}, h.ResourceManager.GetResourceId(), 50, false, 100, false, "")
-		client.Inventory = inventory
+		client.ResourceInventory = inventory
 	}
 
 	client.send <- NewUserInitEvent(client.Id, client.Pos, client.Hitpoints, client.UUID, h.gameConfig)
-	client.send <- NewLoadInventoryEvent(client.Inventory)
+	client.send <- NewLoadInventoryEvent(client.ResourceInventory, client.ItemInventory)
 
 	gridCell := h.GridManager.GetCellFromPos(client.Pos)
 	gridCell.AddPlayer(client)
@@ -402,7 +402,7 @@ func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
 
 func (h *Hub) PlayerClickedItemEvent(event PlayerClickedItemEvent, c *Client) {
 	cell := h.GridManager.GetCell(event.GridCellPos.X, event.GridCellPos.Y)
-	cell.RemoveItem(event.UUID)
+	cell.LootItem(event.UUID, c)
 
 	// Todo: Add item to clients items inventory
 }

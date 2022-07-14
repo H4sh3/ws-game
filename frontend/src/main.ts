@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, IResource, isItemPositionsEvent, isRemoveItemEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, IResource, isItemPositionsEvent, isRemoveItemEvent, isUpdateInventoryItemEvent } from './events/events';
 import { Player } from './types/player';
 import Vector from './types/vector';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
@@ -238,6 +238,8 @@ export class Game extends Container {
         } else if (isRemoveItemEvent(parsed)) {
 
             this.itemHandler.removeItem(parsed.uuid)
+        } else if (isUpdateInventoryItemEvent(parsed)) {
+            console.log(parsed)
         }
     }
 

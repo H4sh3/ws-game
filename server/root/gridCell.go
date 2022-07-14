@@ -184,12 +184,24 @@ func Abs(x int) int {
 func getKey(x int, y int) string {
 	return fmt.Sprintf("%d#%d", x, y)
 }
-func (cell *GridCell) RemoveItem(uuid string) {
-	cell.ItemsToRemoveMutex.Lock()
-	defer cell.ItemsToRemoveMutex.Unlock()
 
-	cell.ItemsToRemove = append(cell.ItemsToRemove, uuid)
+func (cell *GridCell) LootItem(uuid string, c *Client) {
+	cell.ItemsMutex.Lock()
+	defer func() {
+		cell.ItemsMutex.Unlock()
+	}()
 
+	item, ok := cell.Items[uuid]
+	if ok {
+		c.ItemInventory = append(c.ItemInventory, *item)
+
+		// remove from ground
+		cell.AddEventToBroadcast(NewRemoveItemEvent(uuid))
+
+		//add to inventory
+		c.send <- NewUpdateInventoryItemEvent(*item, false)
+	}
+	delete(cell.Items, uuid)
 }
 
 func (cell *GridCell) GetSubscriptions() []GridSubscription {
@@ -568,11 +580,11 @@ func (cell *GridCell) CellCoro() {
 
 			cell.NpcUpdates()
 			cell.AddQueuedItems()
-			cell.RemoveQueuedItems()
+			// cell.RemoveQueuedItems()
 
 			// broadcast all events at once
-			if len(cell.eventsToBroadcast) > 0 {
-				eventsToBroadcast := cell.GetEventsToBroadcast()
+			eventsToBroadcast := cell.GetEventsToBroadcast()
+			if len(eventsToBroadcast) > 0 {
 				event := NewMultipleEvents(eventsToBroadcast)
 				for _, sub := range cell.GetSubscriptions() {
 					if sub.Player.getConnected() {
