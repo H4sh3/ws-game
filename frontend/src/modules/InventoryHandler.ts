@@ -106,7 +106,7 @@ class InventoryHandler {
         })
 
         this.items.forEach((item, ix) => {
-            item.container.position.set(ix * 40, 50)
+            item.container.position.set(10 + ix * 50, 55)
             this.container.addChild(item.container)
         })
     }
@@ -124,7 +124,7 @@ class InventoryHandler {
 
     private addItem(event: UpdateInventoryItemEvent) {
         if (event.remove) {
-            this.items = this.items.filter(i => i.uuid !== event.item.uuid)
+            this.items = this.items.filter(i => i.raw.uuid !== event.item.uuid)
         } else {
             this.items.push(new Item(event.item, this.ws, true))
         }

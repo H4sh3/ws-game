@@ -291,6 +291,8 @@ export class Game extends Container {
         this.tilemapHandler.removeGridCellTiles(gridCellKey)
 
         this.npcHandler.removeGridCellNpcs(gridCellKey)
+
+        this.itemHandler.removeItemsInCell(gridCellKey)
     }
 
     handlePlayerTargetPositionEvent(parsed: PlayerTargetPositionEvent) {

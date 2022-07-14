@@ -28,16 +28,27 @@ class ItemHandler {
         })
     }
 
+    removeItemsInCell(gridCellKey: string) {
+        const toRemove = this.items.filter(i => `${i.raw.gridCellPos.x}#${i.raw.gridCellPos.y}` == gridCellKey)
+
+        toRemove.forEach(i => {
+            this.container.removeChild(i.container)
+        })
+
+        this.items = this.items.filter(i => !toRemove.includes(i))
+        console.log(`items container children${this.container.children.length}`)
+        console.log(`items ${this.items.length}`)
+    }
 
     removeItem(uuid: string) {
-        const item = this.items.find(i => i.uuid == uuid)
+        const item = this.items.find(i => i.raw.uuid == uuid)
         if (!item) return
 
         // remove sprite from container; beeing rendered
         this.container.removeChild(item.container)
 
         // remove item
-        this.items = this.items.filter(i => i.uuid !== uuid)
+        this.items = this.items.filter(i => i.raw.uuid !== uuid)
     }
 }
 
