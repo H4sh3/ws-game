@@ -1,5 +1,6 @@
 import { CompositeTilemap } from "@pixi/tilemap"
 import * as PIXI from "pixi.js"
+import { Text } from "pixi.js"
 import { SCREEN_SIZE } from "../etc/const"
 import { CellDataEvent, createVector } from "../events/events"
 import Vector from "../types/vector"
@@ -65,28 +66,37 @@ class MiniMapHandler {
                 maxY = yInt > maxY ? yInt : maxY
             })
         })
-
-        //console.log({ minX, maxX })
-        //console.log({ minY, maxY })
     }
 
     update(playerPos: Vector, gridCellSize: number, subCells: number) {
+        // const aroundZero = (v: number) => v > -gridCellSize && v < gridCellSize
+        // let subCelX =aroundZero(playerPos.x) ? 0 : Math.floor(Math.abs(playerPos.x) / gridCellSize)
+        // let subCelY =aroundZero(playerPos.y) ? 0 : Math.floor(Math.abs(playerPos.y) / gridCellSize)
 
-        const subCelX = Math.floor(playerPos.x / gridCellSize)
-        const subCelY = Math.floor(playerPos.y / gridCellSize)
+        // Calculating the players gridCell from his position
+        // Example:
+        // GCS -> GridCellSize = 1000
+        // pos.x -1600 pos.y 1100
+        // divide with GCS 
+        // pos.x -1.6 pos.y 1.1
+        // if we floor this we would get cell -2 1 but we want -1 1
+        // To work around this we use the absolute value, divide it by the gridcellsize,floor it and add the sign back afterwards 
+        const gridCelX = Math.floor(Math.abs(playerPos.x) / gridCellSize) * (playerPos.x < 0 ? -1 : 1)
+        const gridCelY = Math.floor(Math.abs(playerPos.y) / gridCellSize) * (playerPos.y < 0 ? -1 : 1)
 
         this.tilemap = new CompositeTilemap()
 
         const offsetRange = 5
         for (let x = -offsetRange; x < offsetRange; x++) {
             for (let y = -offsetRange; y < offsetRange; y++) {
-                const tX = subCelX + x
-                const tY = subCelY + y
+                const tileIndexX = gridCelX + x
+                const tileIndexY = gridCelY + y
 
                 const tilePos = createVector(x * 20, y * 20)
-                if (tX in this.dataMatrix) {
-                    if (tY in this.dataMatrix[tX]) {
-                        const texture = this.dataMatrix[tX][tY]
+
+                if (tileIndexX in this.dataMatrix) {
+                    if (tileIndexY in this.dataMatrix[tileIndexX]) {
+                        const texture = this.dataMatrix[tileIndexX][tileIndexY]
 
                         this.tilemap.tile(texture, tilePos.x, tilePos.y)
                         continue
@@ -102,17 +112,39 @@ class MiniMapHandler {
             }
         }
 
-        // Todo: inspect this bug where the map flickers some times
-        const tX = -(playerPos.x / 50) % subCells
-        const tY = -(playerPos.y / 50) % subCells
 
-        this.tilemap.position.set(tX - 20, tY - 20)
+        const minimapTileSize = 20 // px
+        const tX = -((playerPos.x / gridCellSize) * subCells) % minimapTileSize
+        const tY = -((playerPos.y / gridCellSize) * subCells) % minimapTileSize
+        this.tilemap.position.set(tX, tY)
+
+
 
         // remove previous tilemap just before we add the new one
         while (this.container.children[0]) {
             this.container.removeChild(this.container.children[0]);
         }
+
+        const background = new PIXI.Graphics();
+        background.beginFill(0x000000);
+        background.drawRect(0, 0, width * 1.5, height * 1.5);
+        background.endFill();
+        background.position.set(-125, -100)
+        this.container.addChild(background)
+
         this.container.addChild(this.tilemap)
+
+        const topBar = new PIXI.Graphics();
+        topBar.beginFill(0x666666);
+        topBar.drawRect(0, 0, width * 1.6, 15);
+        topBar.endFill();
+        topBar.position.set(-125, -75)
+        this.container.addChild(topBar)
+
+        const text = new Text(`Zone ${gridCelX} ${gridCelY}`, { fontFamily: 'Arial Black', fontSize: 12, fill: 0xffffff, align: 'center' });
+        text.position.set(-122, -74)
+        this.container.addChild(text)
+
 
         const pixelSize = 2
         const pixel = new PIXI.Graphics();
