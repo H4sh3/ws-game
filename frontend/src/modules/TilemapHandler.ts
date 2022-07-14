@@ -63,16 +63,18 @@ class TilemapHandler {
 
         })
 
+        this.terrainTileMap.set(event.gridCellKey, cellTilemap)
         this.container.addChild(cellTilemap)
-        //worldContainer.addChild(cellTilemap)
     }
 
-    removeGridCellTiles(gridCellKey: string, worldContainer: Container) {
+    removeGridCellTiles(gridCellKey: string) {
         if (this.terrainTileMap.has(gridCellKey)) {
-            this.terrainTileMap.delete(gridCellKey)
 
-            // worldContainer.removeChild(this.terrainTileMap.get(gridCellKey))
+            // remove tiles from container
             this.container.removeChild(this.terrainTileMap.get(gridCellKey))
+
+            // remove entry from map
+            this.terrainTileMap.delete(gridCellKey)
         }
     }
 }

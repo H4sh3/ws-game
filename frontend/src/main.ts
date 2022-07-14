@@ -289,7 +289,7 @@ export class Game extends Container {
 
         this.resourceHandler.removeGridCellResources(gridCellKey)
 
-        this.tilemapHandler.removeGridCellTiles(gridCellKey, this.worldContainer)
+        this.tilemapHandler.removeGridCellTiles(gridCellKey)
 
         this.npcHandler.removeGridCellNpcs(gridCellKey)
     }
