@@ -62,22 +62,35 @@ type GameConfig struct {
 }
 
 type UserInitEvent struct {
-	EventType  EventType        `json:"eventType"`
-	Id         int              `json:"id"`
-	Pos        shared.Vector    `json:"pos"`
-	Hitpoints  shared.Hitpoints `json:"hitpoints"`
-	UUID       string           `json:"uuid"`
-	GameConfig GameConfig       `json:"gameConfig"`
+	EventType  EventType              `json:"eventType"`
+	Id         int                    `json:"id"`
+	Pos        shared.Vector          `json:"pos"`
+	Hitpoints  shared.Hitpoints       `json:"hitpoints"`
+	UUID       string                 `json:"uuid"`
+	GameConfig GameConfig             `json:"gameConfig"`
+	Resources  []resource.ResourceMin `json:"resources"`
+	Items      []item.Item            `json:"items"`
 }
 
-func NewUserInitEvent(id int, pos shared.Vector, hitpoints shared.Hitpoints, uuid string, config GameConfig) interface{} {
+func NewUserInitEvent(client *Client, config GameConfig) interface{} {
+	resources := []resource.ResourceMin{}
+
+	for _, entry := range client.ResourceInventory {
+		resources = append(resources, resource.ResourceMin{
+			Quantity:     entry.Quantity,
+			ResourceType: entry.ResourceType,
+		})
+	}
+
 	return &UserInitEvent{
 		EventType:  USER_INIT_EVENT,
-		Id:         id,
-		Pos:        pos,
-		Hitpoints:  hitpoints,
-		UUID:       uuid,
+		Id:         client.Id,
+		Pos:        client.Pos,
+		Hitpoints:  client.Hitpoints,
+		UUID:       client.UUID,
 		GameConfig: config,
+		Resources:  resources,
+		Items:      client.ItemInventory,
 	}
 }
 
@@ -153,30 +166,6 @@ type RemovePlayerEvent struct {
 
 func NewRemovePlayerEvent(id int) interface{} {
 	return &RemovePlayerEvent{EventType: REMOVE_PLAYER_EVENT, Id: id}
-}
-
-type LoadInventoryEvent struct {
-	EventType EventType              `json:"eventType"`
-	Resources []resource.ResourceMin `json:"resources"`
-	Items     []item.Item            `json:"items"`
-}
-
-func NewLoadInventoryEvent(inventory map[resource.ResourceType]resource.Resource, items []item.Item) interface{} {
-
-	resources := []resource.ResourceMin{}
-
-	for _, entry := range inventory {
-		resources = append(resources, resource.ResourceMin{
-			Quantity:     entry.Quantity,
-			ResourceType: entry.ResourceType,
-		})
-	}
-
-	return &LoadInventoryEvent{
-		EventType: LOAD_INVENTORY_EVENT,
-		Resources: resources,
-		Items:     items,
-	}
 }
 
 type UpdateInventoryEvent struct {

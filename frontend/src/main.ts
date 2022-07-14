@@ -1,5 +1,5 @@
-import { Application, Container, Graphics, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, KeyStates, getKeyBoardEvent, ResourcePositionsEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, UpdateResourceEvent, getPlayerPlacedResourceEvent, isLoadInventoryEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, LoadInventoryEvent, isNpcListEvent, NpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, UpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, IResource, isItemPositionsEvent, isRemoveItemEvent, isUpdateInventoryItemEvent } from './events/events';
+import { Application, Container, Sprite } from 'pixi.js';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, getPlayerPlacedResourceEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, isNpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, isItemPositionsEvent, isRemoveItemEvent, isUpdateInventoryItemEvent } from './events/events';
 import { Player } from './types/player';
 import Vector from './types/vector';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
@@ -55,11 +55,13 @@ export class Game extends Container {
 
         this.userStore = userStore
 
+        this.ws = new WebSocket(process.env.WS_API)
+
         this.localStorageWrapper = new LocalStorageWrapper()
+        this.inventoryHandler = new InventoryHandler(this.ws)
 
         this.players = new Map()
 
-        this.ws = new WebSocket(process.env.WS_API)
 
         this.ws.onerror = (error) => {
             console.log(error)
@@ -88,7 +90,6 @@ export class Game extends Container {
     initWorld() {
         this.keyHandler = new KeyboardHandler()
         this.soundHandler = new SoundHandler()
-        this.inventoryHandler = new InventoryHandler()
         this.builderHandler = new BuilderHandler()
 
         this.miniMapHandler = new MiniMapHandler(this.player.currentPos)
@@ -185,10 +186,6 @@ export class Game extends Container {
         if (isPlayerTargetPositionEvent(parsed)) {
 
             this.handlePlayerTargetPositionEvent(parsed)
-        } else if (isLoadInventoryEvent(parsed)) {
-
-            // Todo: refactor this in the user init event
-            this.handleLoadInventoryEvent(parsed)
         } else if (isUpdateInventoryEvent(parsed)) {
 
             this.handleUpdateInventoryEvent(parsed)
@@ -239,7 +236,7 @@ export class Game extends Container {
 
             this.itemHandler.removeItem(parsed.uuid)
         } else if (isUpdateInventoryItemEvent(parsed)) {
-            console.log(parsed)
+            this.inventoryHandler.handleUpdateInventoryItemEvent(parsed)
         }
     }
 
@@ -354,16 +351,14 @@ export class Game extends Container {
 
         this.gameConfig = parsed.gameConfig
 
+        this.inventoryHandler.init(parsed.resources, parsed.items)
+
         this.initWorld()
     }
 
 
     handleUpdateInventoryEvent(parsed: UpdateInventoryEvent) {
-        this.inventoryHandler.updateItem(parsed)
-    }
-
-    handleLoadInventoryEvent(parsed: LoadInventoryEvent) {
-        this.inventoryHandler.init(parsed.resources)
+        this.inventoryHandler.handleUpdateInventoryEvent(parsed)
     }
 
     handleUpdatePlayerEvent(event: UpdatePlayerEvent) {

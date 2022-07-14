@@ -20,7 +20,7 @@ class ItemHandler {
 
     handleItemPositionsEvent(event: ItemPositionsEvent) {
         event.items.forEach(eItem => {
-            const item = new Item(eItem, this.ws)
+            const item = new Item(eItem, this.ws, false)
 
             this.items.push(item)
 

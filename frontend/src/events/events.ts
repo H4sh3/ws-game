@@ -1,4 +1,4 @@
-import { IItem } from "../types/item"
+import { IItem, Item } from "../types/item"
 import Vector, { IVector } from "../types/vector"
 
 export enum EVENT_TYPES {
@@ -13,7 +13,6 @@ export enum EVENT_TYPES {
     UPDATE_RESOURCE_EVENT = 8,
     LOOT_RESOURCE_EVENT = 9,
     PLAYER_PLACED_RESOURCE_EVENT = 10,
-    LOAD_INVENTORY_EVENT = 11,
     UPDATE_INVENTORY_EVENT = 12,
     REMOVE_GRID_CELL = 13,
     MULTIPLE_EVENTS = 14,
@@ -77,6 +76,8 @@ export interface UserInitEvent extends BaseEvent {
     }
     hitpoints: Hitpoints
     gameConfig: GameConfig
+    resources: ResourceMin[]
+    items: IItem[]
 }
 
 export function isUserInitEvent(value: any): value is UserInitEvent {
@@ -178,16 +179,6 @@ export function isUpdateNpcEvent(value: any): value is UpdateNpcEvent {
     )
 }
 
-export interface LoadInventoryEvent extends BaseEvent {
-    resources: ResourceMin[]
-}
-
-export function isLoadInventoryEvent(value: any): value is LoadInventoryEvent {
-    return (
-        isBaseEvent(value) &&
-        value.eventType === EVENT_TYPES.LOAD_INVENTORY_EVENT
-    )
-}
 
 export interface UpdateInventoryEvent extends BaseEvent {
     resource: ResourceMin,
@@ -342,7 +333,6 @@ type EventTypes =
     IResource |
     ResourcePositionsEvent |
     UpdateResourceEvent |
-    LoadInventoryEvent |
     UpdateInventoryEvent |
     RemoveGridCellEvent |
     MultipleEvents |

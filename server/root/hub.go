@@ -3,6 +3,7 @@ package root
 import (
 	"fmt"
 	"sync"
+	"ws-game/item"
 	"ws-game/resource"
 	"ws-game/shared"
 
@@ -13,9 +14,10 @@ import (
 // - inventory
 // - position
 type ClientPersistance struct {
-	Pos       shared.Vector
-	Inventory map[resource.ResourceType]resource.Resource
-	Hitpoints shared.Hitpoints
+	Pos           shared.Vector
+	Inventory     map[resource.ResourceType]resource.Resource
+	ItemInventory []item.Item
+	Hitpoints     shared.Hitpoints
 }
 
 // Hub maintains the set of active clients and broadcasts messages to them
@@ -114,9 +116,10 @@ func (h *Hub) Run() {
 
 			// store client progress in storage
 			persistanceEntry := ClientPersistance{
-				Pos:       client.Pos,
-				Inventory: client.ResourceInventory,
-				Hitpoints: client.Hitpoints,
+				Pos:           client.Pos,
+				Inventory:     client.ResourceInventory,
+				ItemInventory: client.ItemInventory,
+				Hitpoints:     client.Hitpoints,
 			}
 			h.persistedClientData[client.UUID] = persistanceEntry
 
@@ -351,6 +354,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 		client.UUID = uuid
 		client.Pos = persistanceEntry.Pos
 		client.ResourceInventory = persistanceEntry.Inventory
+		client.ItemInventory = persistanceEntry.ItemInventory
 		client.Hitpoints = persistanceEntry.Hitpoints
 	} else {
 		// Initialize new client
@@ -361,8 +365,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 		client.ResourceInventory = inventory
 	}
 
-	client.send <- NewUserInitEvent(client.Id, client.Pos, client.Hitpoints, client.UUID, h.gameConfig)
-	client.send <- NewLoadInventoryEvent(client.ResourceInventory, client.ItemInventory)
+	client.send <- NewUserInitEvent(client, h.gameConfig)
 
 	gridCell := h.GridManager.GetCellFromPos(client.Pos)
 	gridCell.AddPlayer(client)

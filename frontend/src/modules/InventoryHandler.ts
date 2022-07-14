@@ -1,10 +1,11 @@
 import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { SCREEN_SIZE } from "../etc/const";
-import { ResourceMin, UpdateInventoryEvent } from "../events/events";
-import { itemTextures } from "./ResourceHandler";
+import { ResourceMin, UpdateInventoryEvent, UpdateInventoryItemEvent } from "../events/events";
+import { IItem, Item } from "../types/item";
+import { getTextureFromResourceType, itemTextures } from "./ResourceHandler";
 
 
-export interface InventoryItem {
+export interface InventoryResource {
     resourceType: string
     quantity: number
 }
@@ -12,10 +13,14 @@ export interface InventoryItem {
 class InventoryHandler {
     container: Container
 
-    inventoryItems: InventoryItem[]
+    resources: InventoryResource[]
+    items: Item[]
 
-    constructor() {
-        this.inventoryItems = []
+    ws: WebSocket
+
+    constructor(ws: WebSocket) {
+        this.ws = ws
+        this.resources = []
         this.container = new Container()
         this.container.position.set(0, SCREEN_SIZE - 100)
     }
@@ -28,18 +33,24 @@ class InventoryHandler {
         this.container.addChild(background)
     }
 
-    init(resources: ResourceMin[]) {
+    init(resources: ResourceMin[], items: IItem[]) {
         resources.forEach(r => {
-            this.addItem(r)
+            this.addResource(r)
         })
+
+        this.items = items.map(i => {
+            const item = new Item(i, this.ws, true)
+            return item
+        })
+
         this.render()
     }
 
-    addItem(resource: ResourceMin, remove: boolean = false) {
+    private addResource(resource: ResourceMin, remove: boolean = false) {
         const { resourceType, quantity } = resource
 
         // resource exists
-        const existingItem = this.inventoryItems.find(item => item.resourceType == resourceType)
+        const existingItem = this.resources.find(item => item.resourceType == resourceType)
 
         if (existingItem) {
             if (remove) {
@@ -48,10 +59,10 @@ class InventoryHandler {
                 existingItem.quantity += quantity
             }
 
-            this.inventoryItems = this.inventoryItems.filter(i => i.resourceType != resourceType)
-            this.inventoryItems.push(existingItem)
+            this.resources = this.resources.filter(i => i.resourceType != resourceType)
+            this.resources.push(existingItem)
 
-            this.inventoryItems = this.inventoryItems.filter(i => i.quantity > 0)
+            this.resources = this.resources.filter(i => i.quantity > 0)
         } else {
             if (remove) {
                 console.error("Tried to remove an item that does not exist in the inventory!")
@@ -59,11 +70,11 @@ class InventoryHandler {
             }
 
             // new resourece -> add entrys
-            const newItem: InventoryItem = {
+            const newItem: InventoryResource = {
                 resourceType,
                 quantity,
             }
-            this.inventoryItems.push(newItem)
+            this.resources.push(newItem)
         }
     }
 
@@ -73,31 +84,19 @@ class InventoryHandler {
             this.container.removeChild(this.container.children[0]);
         }
 
-        this.inventoryItems.sort((a, b) => a.quantity > b.quantity ? -1 : 0)
+        this.resources.sort((a, b) => a.quantity > b.quantity ? -1 : 0)
 
         // render new inventory state
 
         this.addBackground()
-        this.inventoryItems.forEach((item, ix) => {
-            console.log(item)
-            let texture: Texture;
-            if (item.resourceType == "log") {
-                texture = itemTextures.log
-            } else if (item.resourceType == "brick") {
-                texture = itemTextures.brick
-            } else if (item.resourceType == "ironOre") {
-                texture = itemTextures.ironOre
-            } else {
-                // todo add more item types
-                texture = itemTextures.brick
-            }
-
+        this.resources.forEach((resource, ix) => {
+            const texture: Texture = getTextureFromResourceType(resource.resourceType)
 
             const container = new Container()
             container.position.set(ix * 40, 0)
             const sprite = new Sprite(texture)
             container.addChild(sprite)
-            const text = new Text(`${item.quantity}`, {
+            const text = new Text(`${resource.quantity}`, {
                 fontFamily: 'Arial Black', fontSize: 14, fill: 0x000000, align: 'center' // 0x484f54
             });
             text.position.set(5, 30)
@@ -105,15 +104,32 @@ class InventoryHandler {
 
             this.container.addChild(container)
         })
+
+        this.items.forEach((item, ix) => {
+            item.container.position.set(ix * 40, 50)
+            this.container.addChild(item.container)
+        })
     }
 
     // add; update; remove if 0
-    updateItem(event: UpdateInventoryEvent) {
-
-        this.addItem(event.resource, event.remove)
+    handleUpdateInventoryEvent(event: UpdateInventoryEvent) {
+        this.addResource(event.resource, event.remove)
         this.render()
+    }
 
+    handleUpdateInventoryItemEvent(event: UpdateInventoryItemEvent) {
+        this.addItem(event)
+        this.render()
+    }
+
+    private addItem(event: UpdateInventoryItemEvent) {
+        if (event.remove) {
+            this.items = this.items.filter(i => i.uuid !== event.item.uuid)
+        } else {
+            this.items.push(new Item(event.item, this.ws, true))
+        }
     }
 }
+
 
 export default InventoryHandler

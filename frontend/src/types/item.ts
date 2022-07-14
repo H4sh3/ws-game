@@ -36,9 +36,11 @@ export class Item {
     uuid: string
     ws: WebSocket
     sprite: Sprite
+    isInventoryItem: boolean
 
 
-    constructor(rawItem: IItem, ws: WebSocket) {
+    constructor(rawItem: IItem, ws: WebSocket, isInventoryItem: boolean) {
+        this.isInventoryItem = isInventoryItem
         this.gridCellPos = rawItem.gridCellPos
         this.ws = ws
         this.pos = createVector(rawItem.pos.x, rawItem.pos.y)
@@ -48,7 +50,11 @@ export class Item {
         this.sprite.interactive = true
 
         this.sprite.on("click", () => {
-            ws.send(getPlayerClickedItemEvent(this.uuid, this.gridCellPos))
+            if (isInventoryItem) {
+                //activate / equip / use item in inventory -> send event to backend etc.
+            } else {
+                ws.send(getPlayerClickedItemEvent(this.uuid, this.gridCellPos))
+            }
         })
 
         this.container = new Container()
