@@ -29,6 +29,7 @@ export enum EVENT_TYPES {
     REMOVE_ITEM_EVENT = 25,
     UPDATE_INVENTORY_ITEM_EVENT = 26,
     PLAYER_CLICKED_INEVNTORY_ITEM_EVENT = 27,
+    UPDATE_EQUIPPED_INVENTORY_ITEM_EVENT = 28
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -323,6 +324,19 @@ export function isUpdateInventoryItemEvent(value: any): value is UpdateInventory
     return (
         isBaseEvent(value) &&
         value.eventType === EVENT_TYPES.UPDATE_INVENTORY_ITEM_EVENT
+    )
+}
+
+export interface UpdateEquippedInventoryItemEvent {
+    eventType: string
+    uuid: string
+    isEquipped: boolean
+}
+
+export function isUpdateEquippedInventoryItemEvent(value: any): value is UpdateEquippedInventoryItemEvent {
+    return (
+        isBaseEvent(value) &&
+        value.eventType === EVENT_TYPES.UPDATE_EQUIPPED_INVENTORY_ITEM_EVENT
     )
 }
 

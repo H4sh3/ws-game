@@ -124,6 +124,9 @@ func (c *Client) handleInventoryItemClick(uuid string) {
 	if !deselect {
 		c.EquippedItems = append(c.EquippedItems, uuid)
 	}
+
+	// update clients inventory status
+	c.send <- NewUpdateEquippedInventoryItemEvent(uuid, !deselect)
 }
 
 func (c *Client) updateStats() {

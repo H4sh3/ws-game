@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, getPlayerPlacedResourceEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, isNpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, isItemPositionsEvent, isRemoveItemEvent, isUpdateInventoryItemEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, getPlayerPlacedResourceEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, isNpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, isItemPositionsEvent, isRemoveItemEvent, isUpdateInventoryItemEvent, isUpdateEquippedInventoryItemEvent } from './events/events';
 import { Player } from './types/player';
 import Vector from './types/vector';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
@@ -236,7 +236,10 @@ export class Game extends Container {
             this.itemHandler.removeItem(parsed.uuid)
         } else if (isUpdateInventoryItemEvent(parsed)) {
             this.inventoryHandler.handleUpdateInventoryItemEvent(parsed)
+        } else if (isUpdateEquippedInventoryItemEvent(parsed)) {
+            this.inventoryHandler.handleUpdateEquippedInventoryItemEvent(parsed)
         }
+
     }
 
     // main update loop

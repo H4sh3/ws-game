@@ -1,6 +1,6 @@
 import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { SCREEN_SIZE } from "../etc/const";
-import { ResourceMin, UpdateInventoryEvent, UpdateInventoryItemEvent } from "../events/events";
+import { ResourceMin, UpdateEquippedInventoryItemEvent, UpdateInventoryEvent, UpdateInventoryItemEvent } from "../events/events";
 import { IItem, Item } from "../types/item";
 import { getTextureFromResourceType } from "./ResourceHandler";
 
@@ -25,6 +25,7 @@ class InventoryHandler {
         this.equippedItems = []
         this.items = []
         this.container = new Container()
+        this.container.sortableChildren = true
         this.container.position.set(0, SCREEN_SIZE - 100)
     }
 
@@ -115,11 +116,12 @@ class InventoryHandler {
 
             // if item is equipped
             if (this.equippedItems.includes(item.raw.uuid)) {
-                const equippedIcon = new Text(`X`, {
-                    fontFamily: 'Arial Black', fontSize: 14, fill: 0x000000, align: 'center' // 0x484f54
+                const equippedIcon = new Text(`+`, {
+                    fontFamily: 'Arial Black', fontSize: 24, fill: 0x00730a, align: 'center' // 0x484f54
                 });
-                equippedIcon.position.set(30, -10)
-                item.container.addChild(equippedIcon)
+                equippedIcon.position.set(item.container.position.x + 30, item.container.position.y - 15)
+                equippedIcon.zIndex = 10
+                this.container.addChild(equippedIcon)
             }
 
             this.container.addChild(item.container)
@@ -143,6 +145,19 @@ class InventoryHandler {
         } else {
             this.items.push(new Item(event.item, this.ws, true))
         }
+    }
+
+    handleUpdateEquippedInventoryItemEvent(event: UpdateEquippedInventoryItemEvent) {
+        console.log(event)
+        if (event.isEquipped) {
+            this.equippedItems.push(event.uuid)
+        } else {
+            console.log("before: ", this.equippedItems)
+            this.equippedItems = this.equippedItems.filter(uuid => uuid !== event.uuid)
+            console.log("after: ", this.equippedItems)
+        }
+
+        this.render()
     }
 }
 

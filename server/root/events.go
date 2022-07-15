@@ -10,34 +10,35 @@ import (
 type EventType int
 
 const (
-	NEW_USER_EVENT                      EventType = 0
-	USER_INIT_EVENT                     EventType = 1
-	USER_MOVE_EVENT                     EventType = 2
-	KEYBOARD_EVENT                      EventType = 3
-	PLAYER_TARGET_POSITION_EVENT        EventType = 4
-	RESOURCE_POSITIONS_EVENT            EventType = 5
-	REMOVE_PLAYER_EVENT                 EventType = 6
-	HIT_RESOURCE_EVENT                  EventType = 7
-	UPDATE_RESOURCE_EVENT               EventType = 8
-	LOOT_RESOURCE_EVENT                 EventType = 9
-	PLAYER_PLACED_RESOURCE_EVENT        EventType = 10
-	LOAD_INVENTORY_EVENT                EventType = 11
-	UPDATE_INVENTORY_EVENT              EventType = 12
-	REMOVE_GRID_CELL                    EventType = 13
-	MULTIPLE_EVENTS                     EventType = 14
-	LOGIN_PLAYER_EVENT                  EventType = 15
-	CELL_DATA_EVENT                     EventType = 16
-	NPC_LIST_EVENT                      EventType = 17
-	NPC_TARGET_POSITION_EVENT           EventType = 18
-	HIT_NPC_EVENT                       EventType = 19
-	UPDATE_NPC_EVENT                    EventType = 20
-	UPDATE_PLAYER_EVENT                 EventType = 21
-	NPC_ATTACK_ANIM_EVENT               EventType = 22
-	ITEM_POSITIONS_EVENT                EventType = 23
-	PLAYER_CLICKED_GROUND_ITEM_EVENT    EventType = 24
-	REMOVE_ITEM_EVENT                   EventType = 25
-	UPDATE_INVENTORY_ITEM_EVENT         EventType = 26
-	PLAYER_CLICKED_INEVNTORY_ITEM_EVENT EventType = 27
+	NEW_USER_EVENT                       EventType = 0
+	USER_INIT_EVENT                      EventType = 1
+	USER_MOVE_EVENT                      EventType = 2
+	KEYBOARD_EVENT                       EventType = 3
+	PLAYER_TARGET_POSITION_EVENT         EventType = 4
+	RESOURCE_POSITIONS_EVENT             EventType = 5
+	REMOVE_PLAYER_EVENT                  EventType = 6
+	HIT_RESOURCE_EVENT                   EventType = 7
+	UPDATE_RESOURCE_EVENT                EventType = 8
+	LOOT_RESOURCE_EVENT                  EventType = 9
+	PLAYER_PLACED_RESOURCE_EVENT         EventType = 10
+	LOAD_INVENTORY_EVENT                 EventType = 11
+	UPDATE_INVENTORY_EVENT               EventType = 12
+	REMOVE_GRID_CELL                     EventType = 13
+	MULTIPLE_EVENTS                      EventType = 14
+	LOGIN_PLAYER_EVENT                   EventType = 15
+	CELL_DATA_EVENT                      EventType = 16
+	NPC_LIST_EVENT                       EventType = 17
+	NPC_TARGET_POSITION_EVENT            EventType = 18
+	HIT_NPC_EVENT                        EventType = 19
+	UPDATE_NPC_EVENT                     EventType = 20
+	UPDATE_PLAYER_EVENT                  EventType = 21
+	NPC_ATTACK_ANIM_EVENT                EventType = 22
+	ITEM_POSITIONS_EVENT                 EventType = 23
+	PLAYER_CLICKED_GROUND_ITEM_EVENT     EventType = 24
+	REMOVE_ITEM_EVENT                    EventType = 25
+	UPDATE_INVENTORY_ITEM_EVENT          EventType = 26
+	PLAYER_CLICKED_INEVNTORY_ITEM_EVENT  EventType = 27
+	UPDATE_EQUIPPED_INVENTORY_ITEM_EVENT EventType = 28
 )
 
 const (
@@ -300,6 +301,16 @@ type NpcAttackAnimEvent struct {
 
 func NewNpcAttackAnimEvent(npcUUID string, attackID int) interface{} {
 	return &NpcAttackAnimEvent{EventType: NPC_ATTACK_ANIM_EVENT, NpcUUID: npcUUID, AttackID: attackID}
+}
+
+type UpdateEquippedInventoryItemEvent struct {
+	EventType  EventType `json:"eventType"`
+	UUID       string    `json:"uuid"`
+	IsEquipped bool      `json:"isEquipped"`
+}
+
+func NewUpdateEquippedInventoryItemEvent(uuid string, isEquipped bool) interface{} {
+	return &UpdateEquippedInventoryItemEvent{EventType: UPDATE_EQUIPPED_INVENTORY_ITEM_EVENT, UUID: uuid, IsEquipped: isEquipped}
 }
 
 // Events send from client
