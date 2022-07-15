@@ -1,10 +1,7 @@
 import { Container, Graphics, Sprite, Text } from "pixi.js"
-import { createVector, getPlayerClickedItemEvent } from "../events/events"
+import { createVector, getPlayerClickedGroundItemEvent, getPlayerClickedInventoryItemEvent } from "../events/events"
 import { getTextureFromResourceType } from "../modules/ResourceHandler"
 import Vector, { IVector } from "./vector"
-
-import { GlowFilter } from "@pixi/filter-glow"
-import { ShockwaveFilter } from "@pixi/filter-shockwave"
 
 export interface Boni {
     attribute: string
@@ -85,8 +82,10 @@ export class Item {
         this.sprite.on("click", () => {
             if (isInventoryItem) {
                 //activate / equip / use item in inventory -> send event to backend etc.
+                ws.send(getPlayerClickedInventoryItemEvent(this.raw.uuid))
             } else {
-                ws.send(getPlayerClickedItemEvent(this.raw.uuid, this.gridCellPos))
+                console.log("clicked item with rarity ", this.raw.rarity)
+                ws.send(getPlayerClickedGroundItemEvent(this.raw.uuid, this.gridCellPos))
             }
         })
 

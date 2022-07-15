@@ -359,6 +359,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 		client.ResourceInventory = inventory
 	}
 
+	client.updateStats()
 	client.send <- NewUserInitEvent(client, h.gameConfig)
 
 	gridCell := h.GridManager.GetCellFromPos(client.Pos)
@@ -369,14 +370,16 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 }
 
 func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
+
 	clientPos := client.GetPos()
 	cells := h.GridManager.getCells(clientPos.X/GridCellSize, clientPos.Y/GridCellSize)
 
 	for _, cell := range cells {
 		cell.NpcListMutex.Lock()
+		defer cell.NpcListMutex.Unlock()
 		for npcIndex, npc := range cell.NpcList {
 			if npc.UUID == event.UUID {
-				damage := shared.RandIntInRange(34, 50)
+				damage := shared.RandIntInRange(client.minDamage, client.maxDamage)
 				npc.Hitpoints.Current -= damage
 				remove := npc.Hitpoints.Current <= 0
 
@@ -384,16 +387,16 @@ func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
 					npc.SetRemove(true)
 
 					// spawn some loot
-					for i := 0; i < 250; i++ {
+					for i := 0; i < 50; i++ {
 						cell.SpawnItem(npc.Pos)
 					}
 				}
 
 				cell.NpcList[npcIndex] = npc
 				cell.Broadcast <- NewUpdateNpcEvent(npc.UUID, cell.NpcList[npcIndex].Hitpoints.Current, cell.NpcList[npcIndex].Hitpoints.Max, remove, cell.GridCellKey, damage)
+				return
 			}
 		}
-		cell.NpcListMutex.Unlock()
 	}
 }
 

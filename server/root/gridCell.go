@@ -53,6 +53,8 @@ type GridCell struct {
 	ItemsToAddMutex        sync.Mutex
 	ItemsToRemove          []string
 	ItemsToRemoveMutex     sync.Mutex
+	Active                 bool
+	ActiveMutex            sync.Mutex
 }
 
 func NewCell(x int, y int) *GridCell {
@@ -92,6 +94,8 @@ func NewCell(x int, y int) *GridCell {
 		ItemsToAddMutex:        sync.Mutex{},
 		ItemsToRemove:          []string{}, // UUID of item to remove
 		ItemsToRemoveMutex:     sync.Mutex{},
+		Active:                 true,
+		ActiveMutex:            sync.Mutex{},
 	}
 
 	// test npc -> only one per cell atm
@@ -112,6 +116,7 @@ func NewCell(x int, y int) *GridCell {
 			spawnPos.Y += shared.RandIntInRange(-GridCellSize/2, GridCellSize/2)
 
 			item := item.NewItem(cell.Pos, 0, spawnPos)
+			item.Rarity = "unique"
 			cell.Items[item.UUID] = &item
 		}
 		cell.ItemsMutex.Unlock()
@@ -192,16 +197,22 @@ func (cell *GridCell) LootItem(uuid string, c *Client) {
 	}()
 
 	item, ok := cell.Items[uuid]
+
 	if ok {
 		c.ItemInventory = append(c.ItemInventory, *item)
 
 		// remove from ground
 		cell.AddEventToBroadcast(NewRemoveItemEvent(uuid))
 
+		fmt.Printf("1:%s\n", uuid)
+		fmt.Printf("2:%s\n", item.UUID)
+
 		//add to inventory
+		fmt.Printf("lootet item with rarity %s \n", item.Rarity)
 		c.send <- NewUpdateInventoryItemEvent(*item, false)
+
+		delete(cell.Items, uuid)
 	}
-	delete(cell.Items, uuid)
 }
 
 func (cell *GridCell) GetSubscriptions() []GridSubscription {
@@ -261,7 +272,8 @@ func (c *GridCell) AddQueuedItems() {
 		return
 	}
 
-	for _, item := range c.ItemsToAdd {
+	for index := range c.ItemsToAdd {
+		item := c.ItemsToAdd[index]
 		c.Items[item.UUID] = &item
 	}
 
@@ -608,6 +620,9 @@ func (cell *GridCell) CellCoro() {
 			cell.wantsToSub = append(cell.wantsToSub, client)
 			if len(cell.GetSubscriptions()) == 0 {
 				cell.ticker.Reset(CellUpdateRate)
+				cell.ActiveMutex.Lock()
+				cell.Active = true
+				cell.ActiveMutex.Unlock()
 			}
 			cell.wantsToSubMutex.Unlock()
 		}
@@ -659,6 +674,11 @@ func (cell *GridCell) UnsubscribeClient(cId int) {
 
 	if len(cell.playerSubscriptions) == 0 && !npcHasPlayerTarget {
 		cell.ticker.Stop()
+
+		cell.ActiveMutex.Lock()
+		cell.Active = false
+		cell.ActiveMutex.Unlock()
+
 	}
 	cell.CellMutex.Unlock()
 }

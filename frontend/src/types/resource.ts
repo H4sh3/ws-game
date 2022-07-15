@@ -61,6 +61,7 @@ export class HasHitpoints {
 export class Resource extends HasHitpoints {
     id: number
     quantity: number
+    gridCellKey: string
     pos: Vector
     isSolid: boolean
     isLootable: boolean
@@ -75,8 +76,10 @@ export class Resource extends HasHitpoints {
     canDoAction?: () => boolean
     setCanDoAction?: (b: boolean) => void
 
-    constructor(id: number, player: Player, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean, canDoAction: () => boolean = () => { return true }, setCanDoAction: (b: boolean) => void = () => { }) {
+    constructor(gridCellKey: string, id: number, player: Player, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean, canDoAction: () => boolean = () => { return true }, setCanDoAction: (b: boolean) => void = () => { }) {
         super(hp)
+
+        this.gridCellKey = gridCellKey
 
         this.canDoAction = canDoAction
         this.setCanDoAction = setCanDoAction

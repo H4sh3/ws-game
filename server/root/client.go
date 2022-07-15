@@ -57,6 +57,7 @@ type Client struct {
 	PosMutex            sync.Mutex
 	ResourceInventory   map[resource.ResourceType]resource.Resource
 	ItemInventory       []item.Item
+	ItemInventoryMutex  sync.Mutex
 	ZoneChangeTick      int
 	ZoneChangeTickMutex sync.Mutex
 	GridCell            *GridCell
@@ -66,6 +67,8 @@ type Client struct {
 	NeedsInit           bool
 	EquippedItemsMutex  sync.Mutex
 	EquippedItems       []string
+	minDamage           int
+	maxDamage           int
 }
 
 func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
@@ -94,12 +97,84 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 		NeedsInit:           true,
 		Hitpoints:           hitpoints,
 		ItemInventory:       []item.Item{},
+		ItemInventoryMutex:  sync.Mutex{},
 		EquippedItemsMutex:  sync.Mutex{},
 		EquippedItems:       []string{},
+		minDamage:           10,
+		maxDamage:           20,
 		// NeedsInit gets set to false after first cell data is provided to the client
 	}
 
 	return client
+}
+
+func (c *Client) handleInventoryItemClick(uuid string) {
+	c.EquippedItemsMutex.Lock()
+	defer c.EquippedItemsMutex.Unlock()
+
+	deselect := false
+	for i, itemUUID := range c.EquippedItems {
+		if itemUUID == uuid {
+			// deselect
+			c.EquippedItems = append(c.EquippedItems[:i], c.EquippedItems[i+1:]...)
+			deselect = true
+		}
+	}
+
+	if !deselect {
+		c.EquippedItems = append(c.EquippedItems, uuid)
+	}
+}
+
+func (c *Client) updateStats() {
+	strength := 0
+	vitality := 0
+
+	minDamage := 10
+	maxDamage := 20
+
+	c.EquippedItemsMutex.Lock()
+	c.ItemInventoryMutex.Lock()
+	defer func() {
+		c.EquippedItemsMutex.Unlock()
+		c.ItemInventoryMutex.Unlock()
+	}()
+
+	for _, inventoryItem := range c.ItemInventory {
+		for _, itemUUID := range c.EquippedItems {
+			if inventoryItem.UUID == itemUUID {
+				// equipped item
+
+				fmt.Println("equipped item")
+
+				if inventoryItem.MinDamage > 0 {
+					minDamage += inventoryItem.MinDamage
+				}
+
+				if inventoryItem.MaxDamage > 0 {
+					maxDamage += inventoryItem.MaxDamage
+				}
+
+				for _, boni := range inventoryItem.Boni {
+					if boni.Attribute == "strength" {
+						strength += boni.Value
+					}
+					if boni.Attribute == "vitality" {
+						vitality += boni.Value
+					}
+				}
+			}
+		}
+	}
+
+	minDamage += strength
+	maxDamage += strength
+
+	c.minDamage = minDamage
+	c.maxDamage = maxDamage
+
+	fmt.Printf("minDamage %d \n", minDamage)
+	fmt.Printf("maxDamage %d \n", maxDamage)
 }
 
 func (c *Client) getConnected() bool {
@@ -292,7 +367,7 @@ func UnmarshalClientEvents(event_data BaseEvent, h *Hub, c *Client) {
 
 		h.HandlePlayerPlacedResource(*event, c)
 
-	case PLAYER_CLICKED_ITEM_EVENT:
+	case PLAYER_CLICKED_GROUND_ITEM_EVENT:
 		event := &PlayerClickedItemEvent{}
 
 		if err := json.Unmarshal(event_data.Payload, &event); err != nil {
@@ -301,6 +376,17 @@ func UnmarshalClientEvents(event_data BaseEvent, h *Hub, c *Client) {
 
 		//h.HandlePlayerPlacedResource(*event, c)
 		h.PlayerClickedItemEvent(*event, c)
+
+	case PLAYER_CLICKED_INEVNTORY_ITEM_EVENT:
+
+		event := &PlayerClickedInventoryItemEvent{}
+
+		if err := json.Unmarshal(event_data.Payload, &event); err != nil {
+			panic(err)
+		}
+
+		c.handleInventoryItemClick(event.UUID)
+		c.updateStats()
 	}
 
 }

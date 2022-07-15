@@ -1,5 +1,4 @@
-import { BaseTexture, Container, Sprite, Spritesheet, Texture } from "pixi.js";
-import { ItemBase } from "../components/shared";
+import { BaseTexture, Container, Spritesheet, Texture } from "pixi.js";
 import { createVector, ResourcePositionsEvent, UpdateResourceEvent } from "../events/events";
 import { Game } from "../main";
 import { Resource } from "../types/resource";
@@ -160,69 +159,85 @@ export const getTextureFromResourceType = (resourceType: string): Texture => {
     return itemTextures.placeholder
 }
 
+
+
 class ResourceHandler {
     // resources located in a gridcell
-    resourceMap: Map<string, Resource[]>
-    resourceArr: Resource[]
+    //resourceMap: Map<string, Resource[]>
+    resources: Resource[]
     container: Container
 
 
     constructor() {
-        this.resourceMap = new Map()
-        this.resourceArr = []
+        //this.resourceMap = new Map()
+        this.resources = []
         this.container = new Container()
     }
 
     handleAddResourceEvent(parsed: ResourcePositionsEvent, game: Game) {
         parsed.resources.forEach(r => {
             const pos = createVector(r.pos.x, r.pos.y)
-            const resource: Resource = new Resource(r.id, game.player, r.quantity, r.resourceType, pos, r.hitpoints, r.isSolid, game.app.loader, game.ws, r.isLootable)
-
+            const resource: Resource = new Resource(r.gridCellKey, r.id, game.player, r.quantity, r.resourceType, pos, r.hitpoints, r.isSolid, game.app.loader, game.ws, r.isLootable)
+            this.resources.push(resource)
             this.container.addChild(resource.container)
 
-            const { gridCellKey } = r;
-            if (this.resourceMap.has(gridCellKey)) {
-                const resources = this.resourceMap.get(gridCellKey)
-                resources.push(resource)
-                this.resourceMap.set(gridCellKey, resources)
-            } else {
-                // init new array if its a new cell
-                this.resourceMap.set(gridCellKey, [resource])
-            }
+            /* 
+                        const { gridCellKey } = r;
+                        if (this.resourceMap.has(gridCellKey)) {
+                            const resources = this.resourceMap.get(gridCellKey)
+                            resources.push(resource)
+                            this.resourceMap.set(gridCellKey, resources)
+                        } else {
+                            // init new array if its a new cell
+                            this.resourceMap.set(gridCellKey, [resource])
+                        } */
         })
-        this.updateResourceArr()
+        //this.updateResourceArr()
     }
 
     removeGridCellResources(gridCellKey: string) {
-        if (this.resourceMap.has(gridCellKey)) {
-            this.resourceMap.get(gridCellKey).map(r => {
-                this.container.removeChild(r.container)
-            })
-        }
-        this.resourceMap.delete(gridCellKey)
 
-        this.updateResourceArr()
+
+        this.resources.filter(r => r.gridCellKey === gridCellKey).forEach(r => {
+            r.container.children.forEach(c => c.destroy())
+            r.container.destroy()
+            this.container.removeChild(r.container)
+        })
+
+        this.resources.filter(r => r.gridCellKey !== gridCellKey)
+
+        /*         if (this.resourceMap.has(gridCellKey)) {
+                    this.resourceMap.get(gridCellKey).map(r => {
+                        r.container.children.forEach(c => c.destroy())
+                        r.container.destroy()
+                        this.container.removeChild(r.container)
+                    })
+                }
+                this.resourceMap.delete(gridCellKey) */
+
+        // this.updateResourceArr()
     }
 
-    updateResourceArr() {
-        let allResources: Resource[] = []
-        for (let k of this.resourceMap.keys()) {
-            allResources = [...allResources, ...this.resourceMap.get(k)]
-        }
-        this.resourceArr = allResources
-    }
+    /*     updateResourceArr() {
+    
+            let allResources: Resource[] = []
+            for (let k of this.resourceMap.keys()) {
+                allResources = [...allResources, ...this.resourceMap.get(k)]
+            }
+            this.resourceArr = allResources
+        } */
 
-    resources(): Resource[] {
-        return this.resourceArr
-    }
 
     handleUpdateResourceEvent(parsed: UpdateResourceEvent, game: Game) {
-        let resources = this.resourceMap.get(parsed.gridCellKey)
+        //let resources = this.resourceMap.get(parsed.gridCellKey)
 
-        const r = resources.find(r => r.id == parsed.id)
+        const r = this.resources.find(r => r.id == parsed.id)
         if (r) {
             if (parsed.remove) {
-                resources = resources.filter(rO => rO.id !== parsed.id)
+                r.container.children.forEach(c => c.destroy())
+                r.container.destroy()
+                this.container.removeChild(r.container)
+                this.resources = this.resources.filter(rO => rO.id !== parsed.id)
             }
 
             if (r.hitPoints.current !== parsed.hitpoints.current) {
@@ -238,16 +253,18 @@ class ResourceHandler {
             r.updateHealthbar(r.container)
 
             if (r.hitPoints.current <= 0) {
-                r.container.removeChild(r.sprite)
+                r.container.children.forEach(c => c.destroy())
+                r.container.destroy()
                 this.container.removeChild(r.container)
+                this.resources = this.resources.filter(rO => rO.id !== parsed.id)
             }
 
-            this.resourceMap.set(parsed.gridCellKey, resources)
+            //this.resources.push(r)
+            //this.resourceMap.set(parsed.gridCellKey, resources)
         } else {
             console.log("resourcen not found", parsed.gridCellKey)
             console.log(parsed.id)
         }
-        this.updateResourceArr()
     }
 }
 

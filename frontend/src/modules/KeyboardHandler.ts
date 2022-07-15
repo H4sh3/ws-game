@@ -66,7 +66,7 @@ export class KeyboardHandler {
                         break
                 }
 
-                const hasCollision = game.resourceHandler.resources().filter(r => r.isSolid).some(r => r.pos.dist(newPos) < 40)
+                const hasCollision = game.resourceHandler.resources.filter(r => r.isSolid).some(r => r.pos.dist(newPos) < 40)
                 if (!hasCollision) {
                     game.player.targetPos = newPos
                     game.ws.send(getKeyBoardEvent(key, value))

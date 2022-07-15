@@ -25,9 +25,10 @@ export enum EVENT_TYPES {
     UPDATE_PLAYER_EVENT = 21,
     NPC_ATTACK_ANIM_EVENT = 22,
     ITEM_POSITIONS_EVENT = 23,
-    PLAYER_CLICKED_ITEM_EVENT = 24,
+    PLAYER_CLICKED_GROUND_ITEM_EVENT = 24,
     REMOVE_ITEM_EVENT = 25,
-    UPDATE_INVENTORY_ITEM_EVENT = 26
+    UPDATE_INVENTORY_ITEM_EVENT = 26,
+    PLAYER_CLICKED_INEVNTORY_ITEM_EVENT = 27,
 }
 
 export function createVector(x: number, y: number): Vector {
@@ -472,9 +473,9 @@ interface PlayerClickedItemEvent extends BaseEvent {
     }
 }
 
-export function getPlayerClickedItemEvent(uuid: string, gridCellPos: IVector): string {
+export function getPlayerClickedGroundItemEvent(uuid: string, gridCellPos: IVector): string {
     const e: PlayerClickedItemEvent = {
-        "eventType": EVENT_TYPES.PLAYER_CLICKED_ITEM_EVENT,
+        "eventType": EVENT_TYPES.PLAYER_CLICKED_GROUND_ITEM_EVENT,
         "payload": {
             "uuid": uuid,
             "gridCellPos": gridCellPos
@@ -483,3 +484,18 @@ export function getPlayerClickedItemEvent(uuid: string, gridCellPos: IVector): s
     return JSON.stringify(e)
 }
 
+interface PlayerClickedInventoryItemEvent extends BaseEvent {
+    payload: {
+        uuid: string
+    }
+}
+
+export function getPlayerClickedInventoryItemEvent(uuid: string): string {
+    const e: PlayerClickedInventoryItemEvent = {
+        "eventType": EVENT_TYPES.PLAYER_CLICKED_INEVNTORY_ITEM_EVENT,
+        "payload": {
+            "uuid": uuid
+        }
+    }
+    return JSON.stringify(e)
+}

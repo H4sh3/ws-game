@@ -33,6 +33,10 @@ func main() {
 		w.Write([]byte(hub.GridManager.GridMap()))
 	})
 
+	http.HandleFunc("/cells", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(hub.GridManager.ActiveCells()))
+	})
+
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

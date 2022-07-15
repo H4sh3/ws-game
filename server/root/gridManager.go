@@ -1,6 +1,7 @@
 package root
 
 import (
+	"fmt"
 	"math"
 	"sync"
 	"ws-game/resource"
@@ -68,6 +69,26 @@ func (gm *GridManager) GetCellFromPos(clientPos shared.Vector) *GridCell {
 	y := clientPos.Y / GridCellSize
 
 	return gm.GetCell(x, y)
+}
+
+func (gm *GridManager) ActiveCells() string {
+	gm.gridMutex.Lock()
+	defer gm.gridMutex.Unlock()
+
+	activeCellCount := 0
+
+	for rIndex := range gm.Grid {
+		for cellIndex := range gm.Grid[rIndex] {
+			cell := gm.Grid[rIndex][cellIndex]
+			cell.ActiveMutex.Lock()
+			if cell.Active {
+				activeCellCount += 1
+			}
+			cell.ActiveMutex.Unlock()
+		}
+	}
+	fmt.Printf("active cells %d \n", activeCellCount)
+	return fmt.Sprintf("%d", activeCellCount)
 }
 
 func (gm *GridManager) GetCell(x int, y int) *GridCell {
