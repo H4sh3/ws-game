@@ -63,14 +63,15 @@ type GameConfig struct {
 }
 
 type UserInitEvent struct {
-	EventType  EventType              `json:"eventType"`
-	Id         int                    `json:"id"`
-	Pos        shared.Vector          `json:"pos"`
-	Hitpoints  shared.Hitpoints       `json:"hitpoints"`
-	UUID       string                 `json:"uuid"`
-	GameConfig GameConfig             `json:"gameConfig"`
-	Resources  []resource.ResourceMin `json:"resources"`
-	Items      []item.Item            `json:"items"`
+	EventType     EventType              `json:"eventType"`
+	Id            int                    `json:"id"`
+	Pos           shared.Vector          `json:"pos"`
+	Hitpoints     shared.Hitpoints       `json:"hitpoints"`
+	UUID          string                 `json:"uuid"`
+	GameConfig    GameConfig             `json:"gameConfig"`
+	Resources     []resource.ResourceMin `json:"resources"`
+	Items         []item.Item            `json:"items"`
+	EquippedItems []string               `json:"equippedItems"`
 }
 
 func NewUserInitEvent(client *Client, config GameConfig) interface{} {
@@ -84,14 +85,15 @@ func NewUserInitEvent(client *Client, config GameConfig) interface{} {
 	}
 
 	return &UserInitEvent{
-		EventType:  USER_INIT_EVENT,
-		Id:         client.Id,
-		Pos:        client.Pos,
-		Hitpoints:  client.Hitpoints,
-		UUID:       client.UUID,
-		GameConfig: config,
-		Resources:  resources,
-		Items:      client.ItemInventory,
+		EventType:     USER_INIT_EVENT,
+		Id:            client.Id,
+		Pos:           client.Pos,
+		Hitpoints:     client.Hitpoints,
+		UUID:          client.UUID,
+		GameConfig:    config,
+		Resources:     resources,
+		Items:         client.ItemInventory,
+		EquippedItems: client.EquippedItems,
 	}
 }
 

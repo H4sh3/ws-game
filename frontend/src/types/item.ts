@@ -102,13 +102,13 @@ export class Item {
 
         const background1 = new Graphics()
         const borderSize = 4
-        background1.beginFill(getRarityColorFromText(this.raw.rarity))
+        background1.beginFill(0xffffab);
         background1.drawRect(-borderSize, -borderSize, 35 + (borderSize * 2), 35 + (borderSize * 2));
         background1.endFill();
         this.container.addChild(background1)
 
         const background = new Graphics()
-        background.beginFill(0xffffab);
+        background.beginFill(getRarityColorFromText(this.raw.rarity))
         background.drawRect(0, 0, 35, 35);
         background.endFill();
         this.container.addChild(background)

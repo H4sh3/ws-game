@@ -79,6 +79,7 @@ export interface UserInitEvent extends BaseEvent {
     gameConfig: GameConfig
     resources: ResourceMin[]
     items: IItem[]
+    equippedItems: string[] // uuids
 }
 
 export function isUserInitEvent(value: any): value is UserInitEvent {

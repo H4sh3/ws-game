@@ -208,7 +208,6 @@ export class Game extends Container {
 
             this.handleRemoveGridCellEvent(parsed)
         } else if (isCellDataEvent(parsed)) {
-
             this.miniMapHandler.addTiles(parsed)
             this.tilemapHandler.processCellDataEvent(parsed)
         } else if (isNpcListEvent(parsed)) {
@@ -338,7 +337,14 @@ export class Game extends Container {
     }
 
     handleUserInitEvent(parsed: UserInitEvent) {
-        // own player + sprite etc.
+        // This event provides data required to recreate the state before log out
+        // - game config
+        // - position
+        // - hitpoints
+        // - inventory
+        // - equipped items
+        // - etc.
+
         this.localStorageWrapper.setUUID(parsed.uuid)
         this.player = new Player(parsed.id, createVector(SCREEN_SIZE / 2, SCREEN_SIZE / 2), getOwnPlayerSprite(), parsed.hitpoints, false)
 
@@ -353,7 +359,7 @@ export class Game extends Container {
 
         this.gameConfig = parsed.gameConfig
 
-        this.inventoryHandler.init(parsed.resources, parsed.items)
+        this.inventoryHandler.init(parsed.resources, parsed.items, parsed.equippedItems)
 
         this.initWorld()
     }

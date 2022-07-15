@@ -2,7 +2,7 @@ import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { SCREEN_SIZE } from "../etc/const";
 import { ResourceMin, UpdateInventoryEvent, UpdateInventoryItemEvent } from "../events/events";
 import { IItem, Item } from "../types/item";
-import { getTextureFromResourceType, itemTextures } from "./ResourceHandler";
+import { getTextureFromResourceType } from "./ResourceHandler";
 
 
 export interface InventoryResource {
@@ -15,12 +15,15 @@ class InventoryHandler {
 
     resources: InventoryResource[]
     items: Item[]
+    equippedItems: string[]
 
     ws: WebSocket
 
     constructor(ws: WebSocket) {
         this.ws = ws
         this.resources = []
+        this.equippedItems = []
+        this.items = []
         this.container = new Container()
         this.container.position.set(0, SCREEN_SIZE - 100)
     }
@@ -33,7 +36,7 @@ class InventoryHandler {
         this.container.addChild(background)
     }
 
-    init(resources: ResourceMin[], items: IItem[]) {
+    init(resources: ResourceMin[], items: IItem[], equippedItems: string[]) {
         resources.forEach(r => {
             this.addResource(r)
         })
@@ -42,6 +45,8 @@ class InventoryHandler {
             const item = new Item(i, this.ws, true)
             return item
         })
+
+        this.equippedItems = equippedItems
 
         this.render()
     }
@@ -107,6 +112,16 @@ class InventoryHandler {
 
         this.items.forEach((item, ix) => {
             item.container.position.set(10 + ix * 50, 55)
+
+            // if item is equipped
+            if (this.equippedItems.includes(item.raw.uuid)) {
+                const equippedIcon = new Text(`X`, {
+                    fontFamily: 'Arial Black', fontSize: 14, fill: 0x000000, align: 'center' // 0x484f54
+                });
+                equippedIcon.position.set(30, -10)
+                item.container.addChild(equippedIcon)
+            }
+
             this.container.addChild(item.container)
         })
     }
