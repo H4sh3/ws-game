@@ -84,6 +84,9 @@ class MiniMapHandler {
         const gridCelX = Math.floor(Math.abs(playerPos.x) / gridCellSize) * (playerPos.x < 0 ? -1 : 1)
         const gridCelY = Math.floor(Math.abs(playerPos.y) / gridCellSize) * (playerPos.y < 0 ? -1 : 1)
 
+        if (this.tilemap !== undefined) {
+            this.tilemap.destroy()
+        }
         this.tilemap = new CompositeTilemap()
 
         const offsetRange = 5
@@ -121,6 +124,9 @@ class MiniMapHandler {
 
 
         // remove previous tilemap just before we add the new one
+
+        this.container.children.forEach(c => c.destroy())
+
         while (this.container.children[0]) {
             this.container.removeChild(this.container.children[0]);
         }

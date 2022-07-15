@@ -71,7 +71,10 @@ class TilemapHandler {
         if (this.terrainTileMap.has(gridCellKey)) {
 
             // remove tiles from container
-            this.container.removeChild(this.terrainTileMap.get(gridCellKey))
+            const tile = this.terrainTileMap.get(gridCellKey)
+            tile.destroy()
+            tile.children.forEach(c => c.destroy())
+            this.container.removeChild(tile)
 
             // remove entry from map
             this.terrainTileMap.delete(gridCellKey)

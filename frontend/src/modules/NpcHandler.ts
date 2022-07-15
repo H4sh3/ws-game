@@ -29,6 +29,7 @@ class NpcHandler {
 
     removeGridCellNpcs(gridCellKey: string) {
         this.npcMap.get(gridCellKey).forEach(npc => {
+            npc.container.destroy()
             this.container.removeChild(npc.container)
         })
         this.npcMap.delete(gridCellKey)

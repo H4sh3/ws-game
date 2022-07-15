@@ -30,6 +30,7 @@ export class HasHitpoints {
 
     updateHealthbar(container: Container) {
         if (this.healthBar) {
+            this.healthBar.destroy()
             container.removeChild(this.healthBar)
         }
 

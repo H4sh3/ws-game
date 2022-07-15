@@ -32,6 +32,8 @@ class ItemHandler {
         const toRemove = this.items.filter(i => `${i.raw.gridCellPos.x}#${i.raw.gridCellPos.y}` == gridCellKey)
 
         toRemove.forEach(i => {
+            i.container.destroy()
+            i.container.children.forEach(c => c.destroy())
             this.container.removeChild(i.container)
         })
 
