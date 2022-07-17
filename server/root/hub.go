@@ -75,10 +75,11 @@ func NewHub() *Hub {
 
 func (h *Hub) getClientId() int {
 	h.idCntMutex.Lock()
+	defer h.idCntMutex.Unlock()
+
 	id := h.idCnt
 	h.idCnt++
-	fmt.Println(h.idCnt)
-	h.idCntMutex.Unlock()
+	fmt.Printf("new client with id: %d\n", h.idCnt)
 	return id
 }
 
@@ -150,15 +151,18 @@ func (h *Hub) handleMovementEvent(event KeyBoardEvent, c *Client) {
 	}
 
 	collision := false
+
 	for _, resource := range c.getGridCell().GetResources() {
 
 		if resource.GetRemove() {
 			c.GridCell.RemoveResource(&resource)
 			continue
 		}
+
 		if !resource.IsSolid {
 			continue
 		}
+
 		if newPos.Dist(&resource.Pos) < 40 {
 			collision = true
 			break
@@ -184,12 +188,12 @@ func (h *Hub) HandleResourceHit(event HitResourceEvent, c *Client) {
 
 	dist := r.Pos.Dist((&c.Pos))
 	if dist < MAX_LOOT_RANGE {
-		damage := shared.RandIntInRange(30, 60)
+		damage, isCrit := c.DamageRoll()
 		r.Hitpoints.Current -= damage
 
 		remove := r.Hitpoints.Current <= 0
 		cellToBroadCast := h.GridManager.GetCellFromPos(r.Pos)
-		cellToBroadCast.Broadcast <- NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove, r.GridCellKey, damage)
+		cellToBroadCast.Broadcast <- NewUpdateResourceEvent(r.Id, r.Hitpoints.Current, r.Hitpoints.Max, remove, r.GridCellKey, damage, isCrit)
 
 		if r.Hitpoints.Current <= 0 {
 			h.SpawnLoot(*r, c)
@@ -243,6 +247,12 @@ func (h *Hub) SpawnLoot(destroyedResource resource.Resource, c *Client) {
 		pos := destroyedResource.Pos.Copy()
 		r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true, destroyedResource.GridCellKey)
 		newResources = append(newResources, r)
+	} else if destroyedResource.ResourceType == resource.WoodBlockade {
+		quantity = 5
+		subType = resource.Log
+		pos := destroyedResource.Pos.Copy()
+		r := resource.NewResource(subType, pos, h.ResourceManager.GetResourceId(), quantity, false, -1, true, destroyedResource.GridCellKey)
+		newResources = append(newResources, r)
 	}
 
 	for _, r := range newResources {
@@ -270,7 +280,7 @@ func (h *Hub) HandleLootResource(event LootResourceEvent, c *Client) {
 
 		// broadcast update event that removes the resource
 		cell := h.GridManager.GetCellFromPos(r.Pos)
-		cell.Broadcast <- NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey, 0)
+		cell.Broadcast <- NewUpdateResourceEvent(r.Id, -1, -1, true, r.GridCellKey, 0, false)
 
 		// Todo broadcast UpdateResourceEvent to clients subbed to cell
 
@@ -282,6 +292,22 @@ func (h *Hub) HandleLootResource(event LootResourceEvent, c *Client) {
 		c.send <- NewUpdateInventoryEvent(resourceToAddToInventry, false)
 
 		h.ResourceManager.DeleteResource(r.Id)
+	}
+}
+
+func (h *Hub) HandlePlayerPlacedResource(event PlayerPlacedResourceEvent, c *Client) {
+	if event.ResourceType == string(resource.Blockade) {
+		costs := 5
+		buildResource := resource.Blockade
+		ingredientResource := resource.Brick
+		h.buildResource(c, costs, ingredientResource, buildResource, event.Pos, 500)
+	}
+
+	if event.ResourceType == string(resource.WoodBlockade) {
+		costs := 5
+		buildResource := resource.WoodBlockade
+		ingredientResource := resource.Log
+		h.buildResource(c, costs, ingredientResource, buildResource, event.Pos, 200)
 	}
 }
 
@@ -319,22 +345,6 @@ func (h *Hub) buildResource(c *Client, costs int, ingredientResource resource.Re
 	}
 }
 
-func (h *Hub) HandlePlayerPlacedResource(event PlayerPlacedResourceEvent, c *Client) {
-	if event.ResourceType == string(resource.Blockade) {
-		costs := 5
-		buildResource := resource.Blockade
-		ingredientResource := resource.Brick
-		h.buildResource(c, costs, ingredientResource, buildResource, event.Pos, 500)
-	}
-
-	if event.ResourceType == string(resource.WoodBlockade) {
-		costs := 5
-		buildResource := resource.WoodBlockade
-		ingredientResource := resource.Log
-		h.buildResource(c, costs, ingredientResource, buildResource, event.Pos, 200)
-	}
-}
-
 func (h *Hub) LoginPlayer(uuid string, client *Client) {
 
 	h.ClientMutex.Lock()
@@ -342,7 +352,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 	h.ClientMutex.Unlock()
 
 	if ok {
-		fmt.Printf("existing client with uuid %s", uuid)
+		fmt.Printf("existing client with uuid: %s\n", uuid)
 		// already logged in
 		client.UUID = uuid
 		client.Pos = persistanceEntry.Pos
@@ -379,7 +389,9 @@ func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
 		defer cell.NpcListMutex.Unlock()
 		for npcIndex, npc := range cell.NpcList {
 			if npc.UUID == event.UUID {
-				damage := shared.RandIntInRange(client.minDamage, client.maxDamage)
+
+				damage, isCrit := client.DamageRoll()
+
 				npc.Hitpoints.Current -= damage
 				remove := npc.Hitpoints.Current <= 0
 
@@ -387,13 +399,13 @@ func (h *Hub) HandleNpcHit(event HitNpcEvent, client *Client) {
 					npc.SetRemove(true)
 
 					// spawn some loot
-					for i := 0; i < 50; i++ {
+					for i := 0; i < 5; i++ {
 						cell.SpawnItem(npc.Pos)
 					}
 				}
 
 				cell.NpcList[npcIndex] = npc
-				cell.Broadcast <- NewUpdateNpcEvent(npc.UUID, cell.NpcList[npcIndex].Hitpoints.Current, cell.NpcList[npcIndex].Hitpoints.Max, remove, cell.GridCellKey, damage)
+				cell.Broadcast <- NewUpdateNpcEvent(npc.UUID, cell.NpcList[npcIndex].Hitpoints.Current, cell.NpcList[npcIndex].Hitpoints.Max, remove, cell.GridCellKey, damage, isCrit)
 				return
 			}
 		}

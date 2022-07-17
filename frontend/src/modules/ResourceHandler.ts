@@ -176,6 +176,7 @@ class ResourceHandler {
 
     handleAddResourceEvent(parsed: ResourcePositionsEvent, game: Game) {
         parsed.resources.forEach(r => {
+            console.log(`adding ${r.resourceType}`)
             const pos = createVector(r.pos.x, r.pos.y)
             const resource: Resource = new Resource(r.gridCellKey, r.id, game.player, r.quantity, r.resourceType, pos, r.hitpoints, r.isSolid, game.app.loader, game.ws, r.isLootable)
             this.resources.push(resource)
@@ -245,18 +246,19 @@ class ResourceHandler {
             }
 
             if (parsed.damage > 0) {
-                game.textHandler.addItem(`${parsed.damage}`, r.pos, "0xff0000")
+                game.textHandler.addItem(`${parsed.damage}`, r.pos, "0xff0000", parsed.isCrit)
             }
 
             r.hitPoints.current = parsed.hitpoints.current
             r.hitPoints.max = parsed.hitpoints.max
-            r.updateHealthbar(r.container)
 
             if (r.hitPoints.current <= 0) {
                 r.container.children.forEach(c => c.destroy())
                 r.container.destroy()
                 this.container.removeChild(r.container)
                 this.resources = this.resources.filter(rO => rO.id !== parsed.id)
+            } else {
+                r.updateHealthbar(r.container)
             }
 
             //this.resources.push(r)

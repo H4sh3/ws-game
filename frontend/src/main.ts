@@ -217,10 +217,10 @@ export class Game extends Container {
 
             this.npcHandler.handleNpcTargetPositionEvent(parsed)
         } else if (isUpdateNpcEvent(parsed)) {
-
             const pos = this.npcHandler.handleUpdateNpcEvent(parsed)
+
             if (parsed.damage > 0) {
-                this.textHandler.addItem(`-${parsed.damage}`, pos, "0xff0000")
+                this.textHandler.addItem(`-${parsed.damage}`, pos, "0xff0000", parsed.isCrit)
             }
         } else if (isUpdatePlayerEvent(parsed)) {
 

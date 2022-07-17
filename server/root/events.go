@@ -207,11 +207,12 @@ type UpdateResourceEvent struct {
 	Hitpoints   shared.Hitpoints `json:"hitpoints"`
 	Remove      bool             `json:"remove"`
 	Damage      int              `json:"damage"`
+	IsCrit      bool             `json:"isCrit"`
 }
 
-func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool, gridCellKey string, damage int) interface{} {
+func NewUpdateResourceEvent(id int, currentHp int, maxHp int, remove bool, gridCellKey string, damage int, isCrit bool) interface{} {
 	hitpoints := shared.Hitpoints{Current: currentHp, Max: maxHp}
-	return &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey, Damage: damage}
+	return &UpdateResourceEvent{EventType: UPDATE_RESOURCE_EVENT, Id: id, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey, Damage: damage, IsCrit: isCrit}
 }
 
 type RemoveGridCellEvent struct {
@@ -273,11 +274,12 @@ type UpdateNpcEvent struct {
 	Hitpoints   shared.Hitpoints `json:"hitpoints"`
 	Remove      bool             `json:"remove"`
 	Damage      int              `json:"damage"`
+	IsCrit      bool             `json:"isCrit"`
 }
 
-func NewUpdateNpcEvent(uuid string, currentHp int, maxHp int, remove bool, gridCellKey string, damage int) interface{} {
+func NewUpdateNpcEvent(uuid string, currentHp int, maxHp int, remove bool, gridCellKey string, damage int, isCrit bool) interface{} {
 	hitpoints := shared.Hitpoints{Current: currentHp, Max: maxHp}
-	return &UpdateNpcEvent{EventType: UPDATE_NPC_EVENT, NpcUUID: uuid, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey, Damage: damage}
+	return &UpdateNpcEvent{EventType: UPDATE_NPC_EVENT, NpcUUID: uuid, Remove: remove, Hitpoints: hitpoints, GridCellKey: gridCellKey, Damage: damage, IsCrit: isCrit}
 }
 
 type UpdatePlayerEvent struct {

@@ -69,6 +69,7 @@ type Client struct {
 	EquippedItems       []string
 	minDamage           int
 	maxDamage           int
+	critChance          int
 }
 
 func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
@@ -77,8 +78,8 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 	sendChan := make(chan interface{}, 1024)
 
 	hitpoints := shared.Hitpoints{
-		Current: 500,
-		Max:     500,
+		Current: 500000,
+		Max:     500000,
 	}
 
 	gridCell := hub.GridManager.GetCellFromPos(clientPostion)
@@ -102,10 +103,20 @@ func NewClient(hub *Hub, conn *websocket.Conn, id int) *Client {
 		EquippedItems:       []string{},
 		minDamage:           10,
 		maxDamage:           20,
+		critChance:          50,
 		// NeedsInit gets set to false after first cell data is provided to the client
 	}
 
 	return client
+}
+
+func (c *Client) DamageRoll() (int, bool) {
+	damage := shared.RandIntInRange(c.minDamage, c.maxDamage)
+	isCrit := shared.RandIntInRange(0, 101) >= c.critChance
+	if isCrit {
+		damage *= 2
+	}
+	return damage, isCrit
 }
 
 func (c *Client) handleInventoryItemClick(uuid string) {
@@ -148,8 +159,6 @@ func (c *Client) updateStats() {
 			if inventoryItem.UUID == itemUUID {
 				// equipped item
 
-				fmt.Println("equipped item")
-
 				if inventoryItem.MinDamage > 0 {
 					minDamage += inventoryItem.MinDamage
 				}
@@ -175,9 +184,6 @@ func (c *Client) updateStats() {
 
 	c.minDamage = minDamage
 	c.maxDamage = maxDamage
-
-	fmt.Printf("minDamage %d \n", minDamage)
-	fmt.Printf("maxDamage %d \n", maxDamage)
 }
 
 func (c *Client) getConnected() bool {

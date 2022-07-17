@@ -158,6 +158,7 @@ export interface UpdateResourceEvent {
     hitpoints: Hitpoints
     remove: boolean
     damage: number
+    isCrit: boolean
 }
 
 export function isUpdateResourceEvent(value: any): value is UpdateResourceEvent {
@@ -173,6 +174,7 @@ export interface UpdateNpcEvent {
     hitpoints: Hitpoints
     remove: boolean
     damage: number
+    isCrit: boolean
 }
 
 export function isUpdateNpcEvent(value: any): value is UpdateNpcEvent {
