@@ -21,30 +21,29 @@ const (
 )
 
 type GridCell struct {
-	Pos                    shared.Vector
-	GridCellKey            string
-	playerSubscriptions    map[int]GridSubscription // client id to subscription; used for event distribution
-	wantsToSub             []*Client
-	wantsToSubMutex        sync.Mutex
-	wantsToUnSub           []*Client
-	wantsToUnSubMutex      sync.Mutex
-	playersToRemove        []*Client
-	playersToRemoveMutex   sync.Mutex
-	playersToAdd           []*Client
-	playersToAddMutex      sync.Mutex
-	Players                map[int]*Client            // players inside this cell atm
-	Resources              map[int]*resource.Resource // resources located in this cell
-	ResourcesMutex         sync.Mutex
-	Items                  map[string]*item.Item
-	ItemsMutex             sync.Mutex
-	Broadcast              chan interface{}
-	Subscribe              chan *Client
+	Pos                  shared.Vector
+	GridCellKey          string
+	playerSubscriptions  map[int]GridSubscription // client id to subscription; used for event distribution
+	wantsToSub           []*Client
+	wantsToSubMutex      sync.Mutex
+	wantsToUnSub         []*Client
+	wantsToUnSubMutex    sync.Mutex
+	playersToRemove      []*Client
+	playersToRemoveMutex sync.Mutex
+	playersToAdd         []*Client
+	playersToAddMutex    sync.Mutex
+	Players              map[int]*Client            // players inside this cell atm
+	Resources            map[int]*resource.Resource // resources located in this cell
+	ResourcesMutex       sync.Mutex
+	Items                map[string]*item.Item
+	ItemsMutex           sync.Mutex
+	Broadcast            chan interface{}
+	//Subscribe              chan *Client
 	Unsubscribe            chan int
 	UpdateSubscriptions    chan bool
 	CellMutex              sync.Mutex
 	eventsToBroadcast      []interface{}
 	eventsToBroadcastMutex sync.Mutex
-	ticker                 time.Ticker
 	SubCells               []SubCell
 	NpcList                []Npc
 	NpcListMutex           sync.Mutex
@@ -63,22 +62,22 @@ func NewCell(x int, y int) *GridCell {
 	subCellsBase64 := getCellMiniMapPng(subCells)
 
 	cell := &GridCell{
-		Pos:                    shared.Vector{X: x, Y: y},
-		GridCellKey:            getKey(x, y),
-		playerSubscriptions:    make(map[int]GridSubscription),
-		wantsToSub:             []*Client{},
-		wantsToSubMutex:        sync.Mutex{},
-		wantsToUnSub:           []*Client{},
-		wantsToUnSubMutex:      sync.Mutex{},
-		playersToRemove:        []*Client{},
-		playersToRemoveMutex:   sync.Mutex{},
-		playersToAdd:           []*Client{},
-		playersToAddMutex:      sync.Mutex{},
-		Players:                make(map[int]*Client),
-		Resources:              make(map[int]*resource.Resource),
-		ResourcesMutex:         sync.Mutex{},
-		Broadcast:              make(chan interface{}),
-		Subscribe:              make(chan *Client),
+		Pos:                  shared.Vector{X: x, Y: y},
+		GridCellKey:          getKey(x, y),
+		playerSubscriptions:  make(map[int]GridSubscription),
+		wantsToSub:           []*Client{},
+		wantsToSubMutex:      sync.Mutex{},
+		wantsToUnSub:         []*Client{},
+		wantsToUnSubMutex:    sync.Mutex{},
+		playersToRemove:      []*Client{},
+		playersToRemoveMutex: sync.Mutex{},
+		playersToAdd:         []*Client{},
+		playersToAddMutex:    sync.Mutex{},
+		Players:              make(map[int]*Client),
+		Resources:            make(map[int]*resource.Resource),
+		ResourcesMutex:       sync.Mutex{},
+		Broadcast:            make(chan interface{}, 512),
+		//Subscribe:              make(chan *Client),
 		Unsubscribe:            make(chan int),
 		UpdateSubscriptions:    make(chan bool),
 		CellMutex:              sync.Mutex{},
@@ -94,7 +93,7 @@ func NewCell(x int, y int) *GridCell {
 		ItemsToAddMutex:        sync.Mutex{},
 		ItemsToRemove:          []string{}, // UUID of item to remove
 		ItemsToRemoveMutex:     sync.Mutex{},
-		Active:                 true,
+		Active:                 false,
 		ActiveMutex:            sync.Mutex{},
 	}
 
@@ -122,10 +121,6 @@ func NewCell(x int, y int) *GridCell {
 		cell.ItemsMutex.Unlock()
 	}
 
-	t := time.NewTicker(CellUpdateRate)
-	cell.ticker = *t
-
-	go cell.CellCoro()
 	return cell
 }
 
@@ -133,7 +128,7 @@ func (c *GridCell) SpawnItem(pos shared.Vector) {
 	c.ItemsToAddMutex.Lock()
 	defer c.ItemsToAddMutex.Unlock()
 
-	r := 500
+	r := 50
 	pos.X += shared.RandIntInRange(-r, r)
 	pos.Y += shared.RandIntInRange(-r, r)
 
@@ -204,11 +199,6 @@ func (cell *GridCell) LootItem(uuid string, c *Client) {
 		// remove from ground
 		cell.AddEventToBroadcast(NewRemoveItemEvent(uuid))
 
-		fmt.Printf("1:%s\n", uuid)
-		fmt.Printf("2:%s\n", item.UUID)
-
-		//add to inventory
-		fmt.Printf("lootet item with rarity %s \n", item.Rarity)
 		c.send <- NewUpdateInventoryItemEvent(*item, false)
 
 		delete(cell.Items, uuid)
@@ -385,7 +375,7 @@ func (cell *GridCell) UpdateNpc(index int, npc Npc) {
 			npc.State = Returning
 			npc.Hitpoints.Current = npc.Hitpoints.Max
 
-			cell.AddEventToBroadcast(NewUpdateNpcEvent(npc.UUID, npc.Hitpoints.Current, npc.Hitpoints.Max, false, cell.GridCellKey, 0))
+			cell.AddEventToBroadcast(NewUpdateNpcEvent(npc.UUID, npc.Hitpoints.Current, npc.Hitpoints.Max, false, cell.GridCellKey, 0, false))
 			npc.targetedPlayer = nil
 			return
 		}
@@ -482,13 +472,15 @@ func (cell *GridCell) NpcUpdates() {
 }
 
 func (cell *GridCell) CellCoro() {
+	ticker := time.NewTicker(CellUpdateRate)
+	defer ticker.Stop()
+
 	for {
 		select {
-		// h.GridManager.drawGrid()
 		/*
 			Update Subs
 		*/
-		case <-cell.ticker.C:
+		case <-ticker.C:
 			// Measure time for cell updates
 			// start := time.Now()
 
@@ -497,27 +489,27 @@ func (cell *GridCell) CellCoro() {
 			cell.wantsToSubMutex.Lock()
 			for _, client := range cell.wantsToSub {
 
+				isConnected := client.getConnected()
+
 				for _, player := range cell.Players {
-					fmt.Printf("player %s in cell %d %d \n", player.UUID, cell.Pos.X, cell.Pos.Y)
 					if player.Id == client.Id {
 						continue
 					}
 
-					if client.Connected {
+					if isConnected {
 						cell.AddEventToBroadcast(GetNewPlayerEvent(player.Id, player.GetPos(), player.Hitpoints))
 					}
 				}
 
-				if !cell.CheckSubscription(client) {
+				newCellSubscription := !cell.CheckSubscription(client)
+				if newCellSubscription && isConnected {
 					// this code is executed if a client subs first time to a cell
-					if client.Connected {
-						client.send <- NewResourcePositionsEvent(cell.GetResources())
-						client.send <- NewItemPositionsEvent(cell.GetItems(), cell.GridCellKey)
-						client.send <- NewCellDataEvent(cell.GridCellKey, cell.SubCells, cell.Pos, cell.SubCellBase64)
+					client.send <- NewResourcePositionsEvent(cell.GetResources())
+					client.send <- NewItemPositionsEvent(cell.GetItems(), cell.GridCellKey)
+					client.send <- NewCellDataEvent(cell.GridCellKey, cell.SubCells, cell.Pos, cell.SubCellBase64)
 
-						npcs := cell.GetNpcList()
-						client.send <- NewNpcListEvent(cell.GridCellKey, npcs)
-					}
+					npcs := cell.GetNpcList()
+					client.send <- NewNpcListEvent(cell.GridCellKey, npcs)
 				}
 			}
 			// after all sub request have been processed, set to empty array
@@ -607,27 +599,41 @@ func (cell *GridCell) CellCoro() {
 				cell.eventsToBroadcast = []interface{}{}
 				// fmt.Printf("%s loop took %dms\n", cell.GridCellKey, time.Since(start).Milliseconds())
 			}
+
+			cell.ActiveMutex.Lock()
+			if !cell.Active {
+				cell.ActiveMutex.Unlock()
+				// stop the corotine for this cell
+				return
+			}
+			cell.ActiveMutex.Unlock()
+
 		/*
 			Broadcast
 		*/
 		case event := <-cell.Broadcast:
 			cell.AddEventToBroadcast(event)
-		/*
-			Subscribe
-		*/
-		case client := <-cell.Subscribe:
-			cell.wantsToSubMutex.Lock()
-			cell.wantsToSub = append(cell.wantsToSub, client)
-			if len(cell.GetSubscriptions()) == 0 {
-				cell.ticker.Reset(CellUpdateRate)
-				cell.ActiveMutex.Lock()
-				cell.Active = true
-				cell.ActiveMutex.Unlock()
-			}
-			cell.wantsToSubMutex.Unlock()
 		}
 	}
+}
 
+/*
+	Subscribe
+*/
+func (cell *GridCell) Subscribe(client *Client) {
+	cell.wantsToSubMutex.Lock()
+	defer cell.wantsToSubMutex.Unlock()
+
+	cell.wantsToSub = append(cell.wantsToSub, client)
+}
+
+func (cell *GridCell) ActiveCheck() {
+	cell.ActiveMutex.Lock()
+	defer cell.ActiveMutex.Unlock()
+	if !cell.Active {
+		cell.Active = true
+		go cell.CellCoro()
+	}
 }
 
 func (cell *GridCell) AddResource(r *resource.Resource) {
@@ -673,13 +679,17 @@ func (cell *GridCell) UnsubscribeClient(cId int) {
 	}
 
 	if len(cell.playerSubscriptions) == 0 && !npcHasPlayerTarget {
-		cell.ticker.Stop()
 
 		cell.ActiveMutex.Lock()
+
+		// if last player unsubbed active is set to false,
+		// cellCoro will return/stop next iteration
+
 		cell.Active = false
 		cell.ActiveMutex.Unlock()
 
 	}
+
 	cell.CellMutex.Unlock()
 }
 

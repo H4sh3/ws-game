@@ -365,7 +365,7 @@ func (h *Hub) LoginPlayer(uuid string, client *Client) {
 	gridCell := h.GridManager.GetCellFromPos(client.Pos)
 	gridCell.AddPlayer(client)
 	for _, cell := range h.GridManager.getCells(gridCell.Pos.X/GridCellSize, gridCell.Pos.Y/GridCellSize) {
-		cell.Subscribe <- client
+		cell.Subscribe(client)
 	}
 }
 

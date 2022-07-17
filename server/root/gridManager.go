@@ -40,10 +40,11 @@ func GridManagerCoro(gm *GridManager) {
 		select {
 		case r := <-gm.AddResource:
 			cell := gm.GetCellFromPos(r.Pos)
+			cell.ResourcesMutex.Lock()
 			cell.Resources[r.Id] = r
-
 			newResources := make(map[int]resource.Resource)
 			newResources[r.Id] = *r
+			cell.ResourcesMutex.Unlock()
 			cell.Broadcast <- NewResourcePositionsEvent(newResources)
 
 		case c := <-gm.UpdateClientPosition:
@@ -87,32 +88,32 @@ func (gm *GridManager) ActiveCells() string {
 			cell.ActiveMutex.Unlock()
 		}
 	}
-	fmt.Printf("active cells %d \n", activeCellCount)
+
 	return fmt.Sprintf("%d", activeCellCount)
 }
 
 func (gm *GridManager) GetCell(x int, y int) *GridCell {
 	gm.gridMutex.Lock()
-	//fmt.Println("grid 1 locked")
+	defer gm.gridMutex.Unlock()
 
 	col, colOk := gm.Grid[x]
 
 	if !colOk {
 		cell := gm.add(x, y)
-		gm.gridMutex.Unlock()
-		//fmt.Println("grid 1 unlocked")
+		cell.ActiveCheck()
+
 		return cell
 	}
 	_, cellOk := col[y]
 	if !cellOk {
 		cell := gm.add(x, y)
-		gm.gridMutex.Unlock()
-		//fmt.Println("grid 1 unlocked")
+		cell.ActiveCheck()
+
 		return cell
 	}
 	cell := gm.Grid[x][y]
-	gm.gridMutex.Unlock()
-	//fmt.Println("grid 1 unlocked")
+	cell.ActiveCheck()
+
 	return cell
 
 }
@@ -136,7 +137,7 @@ func (gm *GridManager) clientMovedCell(oldCell *GridCell, newCell *GridCell, c *
 	// # # #
 	cells := gm.getCells(newCell.Pos.X, newCell.Pos.Y)
 	for _, cell := range cells {
-		cell.Subscribe <- c
+		cell.Subscribe(c)
 	}
 
 	// Notify clients to remove player if he moved to a cell they are not subscribed to
