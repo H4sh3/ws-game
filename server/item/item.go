@@ -98,8 +98,8 @@ func NewItem(gridCellPos shared.Vector, zoneLevel int, pos shared.Vector) Item {
 		Quantity:    1,
 		Rarity:      rollRarity(),
 		Quality:     100,
-		MinDamage:   20,
-		MaxDamage:   50,
+		MinDamage:   2000,
+		MaxDamage:   5000,
 		Absorb:      10,
 		AttackSpeed: 10,
 		Boni: []Boni{

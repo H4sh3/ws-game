@@ -162,43 +162,25 @@ export const getTextureFromResourceType = (resourceType: string): Texture => {
 
 
 class ResourceHandler {
-    // resources located in a gridcell
-    //resourceMap: Map<string, Resource[]>
     resources: Resource[]
     container: Container
 
 
     constructor() {
-        //this.resourceMap = new Map()
         this.resources = []
         this.container = new Container()
     }
 
     handleAddResourceEvent(parsed: ResourcePositionsEvent, game: Game) {
         parsed.resources.forEach(r => {
-            console.log(`adding ${r.resourceType}`)
             const pos = createVector(r.pos.x, r.pos.y)
-            const resource: Resource = new Resource(r.gridCellKey, r.id, game.player, r.quantity, r.resourceType, pos, r.hitpoints, r.isSolid, game.app.loader, game.ws, r.isLootable)
+            const resource: Resource = new Resource(r.gridCellKey, r.id, r.quantity, r.resourceType, pos, r.hitpoints, r.isSolid, r.isLootable, game)
             this.resources.push(resource)
             this.container.addChild(resource.container)
-
-            /* 
-                        const { gridCellKey } = r;
-                        if (this.resourceMap.has(gridCellKey)) {
-                            const resources = this.resourceMap.get(gridCellKey)
-                            resources.push(resource)
-                            this.resourceMap.set(gridCellKey, resources)
-                        } else {
-                            // init new array if its a new cell
-                            this.resourceMap.set(gridCellKey, [resource])
-                        } */
         })
-        //this.updateResourceArr()
     }
 
     removeGridCellResources(gridCellKey: string) {
-
-
         this.resources.filter(r => r.gridCellKey === gridCellKey).forEach(r => {
             r.container.children.forEach(c => c.destroy())
             r.container.destroy()
@@ -206,31 +188,10 @@ class ResourceHandler {
         })
 
         this.resources.filter(r => r.gridCellKey !== gridCellKey)
-
-        /*         if (this.resourceMap.has(gridCellKey)) {
-                    this.resourceMap.get(gridCellKey).map(r => {
-                        r.container.children.forEach(c => c.destroy())
-                        r.container.destroy()
-                        this.container.removeChild(r.container)
-                    })
-                }
-                this.resourceMap.delete(gridCellKey) */
-
-        // this.updateResourceArr()
     }
 
-    /*     updateResourceArr() {
-    
-            let allResources: Resource[] = []
-            for (let k of this.resourceMap.keys()) {
-                allResources = [...allResources, ...this.resourceMap.get(k)]
-            }
-            this.resourceArr = allResources
-        } */
 
-
-    handleUpdateResourceEvent(parsed: UpdateResourceEvent, game: Game) {
-        //let resources = this.resourceMap.get(parsed.gridCellKey)
+    handleUpdateResourceEvent(parsed: UpdateResourceEvent): Resource | undefined {
 
         const r = this.resources.find(r => r.id == parsed.id)
         if (r) {
@@ -239,14 +200,6 @@ class ResourceHandler {
                 r.container.destroy()
                 this.container.removeChild(r.container)
                 this.resources = this.resources.filter(rO => rO.id !== parsed.id)
-            }
-
-            if (r.hitPoints.current !== parsed.hitpoints.current) {
-                game.soundHandler.playerHitResource(r.resourceType)
-            }
-
-            if (parsed.damage > 0) {
-                game.textHandler.addItem(`${parsed.damage}`, r.pos, "0xff0000", parsed.isCrit)
             }
 
             r.hitPoints.current = parsed.hitpoints.current
@@ -261,11 +214,11 @@ class ResourceHandler {
                 r.updateHealthbar(r.container)
             }
 
-            //this.resources.push(r)
-            //this.resourceMap.set(parsed.gridCellKey, resources)
+            return r
         } else {
             console.log("resourcen not found", parsed.gridCellKey)
             console.log(parsed.id)
+            return undefined
         }
     }
 }

@@ -16,13 +16,13 @@ export class Player extends HasHitpoints {
     frame: number
     sprite: AnimatedSprite
     deltaCount: number
-    actionOnCooldown: boolean
     movesRight: boolean
     spriteContainer: Container
     hitpoints: Hitpoints
     isOtherPlayer?: boolean
+    mouseDown?: boolean
 
-    constructor(id: number, pos: Vector, sprite: AnimatedSprite, hitpoints: Hitpoints, isOtherPlayer = true) {
+    constructor(id: number, pos: Vector, sprite: AnimatedSprite, hitpoints: Hitpoints, isOtherPlayer = true, mouseDown = false) {
         super(hitpoints, -35)
 
         this.vel = createVector(0, 0)
@@ -32,13 +32,13 @@ export class Player extends HasHitpoints {
         this.id = id
         this.frame = 0
         this.deltaCount = 0
-        this.actionOnCooldown = true
         this.movesRight = true
         this.spriteContainer = new Container();
         this.sprite = sprite
         this.spriteContainer.addChild(this.sprite)
         this.spriteContainer.position.set(pos.x, pos.y)
         this.isOtherPlayer = isOtherPlayer
+        this.mouseDown = mouseDown
     }
 
     canDoAction(): boolean {

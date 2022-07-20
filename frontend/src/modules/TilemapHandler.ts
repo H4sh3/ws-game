@@ -12,6 +12,7 @@ class TilemapHandler {
         this.gameConfig = gameConfig
         this.terrainTileMap = new Map()
         this.container = new Container()
+        this.container.interactive = true
     }
 
     setGameConfig(gameConfig: GameConfig) {

@@ -1,7 +1,8 @@
 import { AnimatedSprite, BaseTexture, Container, Spritesheet, Texture } from "pixi.js";
 import { createVector, getHitNpcEvent, Hitpoints, INpc } from "../events/events";
+import { Game } from "../main";
 import { Player } from "./player";
-import { HasHitpoints } from "./resource";
+import { HasHitpoints, IsClickable } from "./resource";
 import Vector from "./vector";
 
 enum AnimationNames {
@@ -75,14 +76,14 @@ export function spawnDeadAnim(container: Container, npc: Npc) {
     }
 
     anim.anchor.set(0.5, 0.5)
-    anim.position.set(npc.currentPos.x, npc.currentPos.y)
+    anim.position.set(npc.pos.x, npc.pos.y)
     container.addChild(anim)
 
 }
 
-class Npc extends HasHitpoints {
+class Npc extends HasHitpoints implements IsClickable {
     UUID: string
-    currentPos: Vector
+    pos: Vector
     targetPos: Vector
     hitpoints: Hitpoints
     npcType: string
@@ -97,7 +98,7 @@ class Npc extends HasHitpoints {
 
     activeAnimation: AnimationNames
 
-    constructor(serial: INpc, ws: WebSocket, player: Player) {
+    constructor(serial: INpc, ws: WebSocket, player: Player, game: Game) {
         super(serial.hitpoints, -50)
 
         this.player = player
@@ -109,30 +110,34 @@ class Npc extends HasHitpoints {
         this.hitpoints = serial.hitpoints
         this.attackSpeed = serial.attackSpeed
 
-        this.currentPos = createVector(serial.pos.x, serial.pos.y)
-        this.targetPos = this.currentPos.copy()
+        this.pos = createVector(serial.pos.x, serial.pos.y)
+        this.targetPos = this.pos.copy()
 
-
-        // Todo: use loader for better performance
         this.useIdleSprite()
         this.sprite.interactive = true
-        this.sprite.on('click', () => {
-            if (this.currentPos.dist(this.player.currentPos) < 150) {
-                this.ws.send(getHitNpcEvent("1", this.UUID))
-            }
-        });
+
+        this.sprite.on('mouseover', () => {
+            game.hoveredElement = this
+        })
+
+        this.sprite.on('mouseout', () => {
+            game.hoveredElement = undefined
+        })
 
         this.container = new Container()
         this.container.addChild(this.sprite)
     }
 
+    gotClicked() {
+        return getHitNpcEvent("1", this.UUID)
+    }
 
     updatePosition() {
 
         // dont move on attack
         if (this.activeAnimation === AnimationNames.attacking) return
 
-        const step = this.targetPos.copy().sub(this.currentPos).mult(0.2)
+        const step = this.targetPos.copy().sub(this.pos).mult(0.2)
 
         // used for dead anim mirror scale
 
@@ -143,9 +148,9 @@ class Npc extends HasHitpoints {
 
 
         if (step.mag() > 0.1) {
-            this.currentPos.add(step)
+            this.pos.add(step)
         } else {
-            this.currentPos = this.targetPos.copy()
+            this.pos = this.targetPos.copy()
         }
 
         this.useWalkSprite()

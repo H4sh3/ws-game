@@ -1,5 +1,5 @@
 import { Application, Container, Sprite } from 'pixi.js';
-import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, getPlayerPlacedResourceEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, isNpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, isItemPositionsEvent, isRemoveItemEvent, isUpdateInventoryItemEvent, isUpdateEquippedInventoryItemEvent } from './events/events';
+import { isPlayerTargetPositionEvent, createVector, isUpdateResourceEvent, isResourcePositionsEvent, isRemovePlayerEvent, isNewPlayerEvent, RemovePlayerEvent, PlayerTargetPositionEvent, NewPlayerEvent, UserInitEvent, getPlayerPlacedResourceEvent, isUpdateInventoryEvent, isRemoveGridCellEvent, RemoveGridCellEvent, isMultipleEvents, getLoginPlayerEvent, isCellDataEvent, UpdateInventoryEvent, isNpcListEvent, isNpcTargetPositionEvent, NpcTargetPositionEvent, isUserInitEvent, GameConfig, isUpdateNpcEvent, isUpdatePlayerEvent, UpdatePlayerEvent, isNpcAttackAnimEvent, isItemPositionsEvent, isRemoveItemEvent, isUpdateInventoryItemEvent, isUpdateEquippedInventoryItemEvent, getLootResourceEvent, getHitResourceEvent } from './events/events';
 import { Player } from './types/player';
 import Vector from './types/vector';
 import { getOtherPlayerSprite, getOwnPlayerSprite } from './sprites/player';
@@ -18,6 +18,8 @@ import MiniMapHandler from './modules/MinimapHandler';
 import InventoryHandler from './modules/InventoryHandler';
 import BuilderHandler from './modules/BuilderHandler';
 import ItemHandler from './modules/ItemHandler';
+import { Resource } from './types/resource';
+import Npc from './types/npc';
 
 export class Game extends Container {
     app: Application;
@@ -37,10 +39,12 @@ export class Game extends Container {
     inventoryHandler: InventoryHandler
     builderHandler: BuilderHandler
     itemHandler: ItemHandler
+    hoveredElement: undefined | Resource | Npc
 
     player: Player
-    players: Map<number, Player>
+    playerActionCooldown: number
 
+    players: Map<number, Player>
 
     cursorSprite: Sprite
     cursorPos: Vector
@@ -48,6 +52,7 @@ export class Game extends Container {
 
     userStore: UserStore
     localStorageWrapper: LocalStorageWrapper
+
 
     constructor(app: Application, userStore: UserStore) {
         super();
@@ -61,7 +66,6 @@ export class Game extends Container {
         this.inventoryHandler = new InventoryHandler(this.ws)
 
         this.players = new Map()
-
 
         this.ws.onerror = (error) => {
             console.log(error)
@@ -85,6 +89,9 @@ export class Game extends Container {
                 this.processEvent(parsed)
             }
         }
+
+        this.hoveredElement = undefined
+        this.playerActionCooldown = 0
     }
 
     initWorld() {
@@ -97,6 +104,7 @@ export class Game extends Container {
         // container structurs
         this.worldContainer = new Container();
         this.worldContainer.sortableChildren = true
+        this.worldContainer.interactive = true
 
         this.tilemapHandler = new TilemapHandler(this.gameConfig)
         this.tilemapHandler.container.zIndex = 0
@@ -115,6 +123,7 @@ export class Game extends Container {
 
 
         // add handler containers
+        // These are the containers that move with the world
         this.worldContainer.addChild(this.tilemapHandler.container)
         this.worldContainer.addChild(this.npcHandler.container)
         this.worldContainer.addChild(this.textHandler.container)
@@ -139,13 +148,20 @@ export class Game extends Container {
             this.cursorPos.x = x
             this.cursorPos.y = y
 
-
             if (this.builderHandler.selectedBuildResourceType.length > 0) {
                 this.cursorSprite.visible = true
                 this.cursorSprite.texture = getTextureFromResourceType(this.builderHandler.selectedBuildResourceType)
             } else {
                 this.cursorSprite.visible = false
             }
+        })
+
+        this.worldContainer.on("mousedown", (e) => {
+            this.player.mouseDown = true
+        })
+
+        this.worldContainer.on("mouseup", (e) => {
+            this.player.mouseDown = false
         })
 
         this.app.stage.on("click", (e) => {
@@ -191,7 +207,13 @@ export class Game extends Container {
             this.handleUpdateInventoryEvent(parsed)
         } else if (isUpdateResourceEvent(parsed)) {
 
-            this.resourceHandler.handleUpdateResourceEvent(parsed, this)
+            const resource = this.resourceHandler.handleUpdateResourceEvent(parsed)
+
+            if (parsed.damage > 0) {
+                this.soundHandler.playerHitResource(resource.resourceType)
+                this.textHandler.addItem(`${parsed.damage}`, resource.pos, "0xff0000", parsed.isCrit)
+            }
+
         } else if (isResourcePositionsEvent(parsed)) {
 
             this.resourceHandler.handleAddResourceEvent(parsed, this)
@@ -219,9 +241,10 @@ export class Game extends Container {
         } else if (isUpdateNpcEvent(parsed)) {
             const pos = this.npcHandler.handleUpdateNpcEvent(parsed)
 
-            if (parsed.damage > 0) {
-                this.textHandler.addItem(`-${parsed.damage}`, pos, "0xff0000", parsed.isCrit)
+            if (pos.x !== -1 && pos.y !== -1 && parsed.damage > 0) {
+                this.textHandler.addItem(`${parsed.damage}`, pos, "0xff0000", parsed.isCrit)
             }
+
         } else if (isUpdatePlayerEvent(parsed)) {
 
             this.handleUpdatePlayerEvent(parsed)
@@ -244,6 +267,7 @@ export class Game extends Container {
 
     // main update loop
     update(delta: number) {
+
         this.textHandler.update()
 
         this.keyHandler.handleKeyBoard(delta, this)
@@ -273,8 +297,21 @@ export class Game extends Container {
         // update npc positions
         this.npcHandler.update()
 
+        this.attackAndLoot()
+        this.playerActionCooldown += delta
+    }
 
-        this.player.updateCooldown(delta)
+    attackAndLoot() {
+        const canAttack = this.playerActionCooldown > 10
+        const hasTarget = this.hoveredElement !== undefined
+        if (hasTarget && canAttack && this.player.mouseDown) {
+            const isInRange = this.hoveredElement.pos.dist(this.player.currentPos) <= 150
+            if (isInRange) {
+                const e: string = this.hoveredElement.gotClicked()
+                this.ws.send(e)
+                this.playerActionCooldown = 0
+            }
+        }
     }
 
     handleRemovePlayerEvent(parsed: RemovePlayerEvent) {

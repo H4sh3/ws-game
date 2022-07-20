@@ -47,8 +47,8 @@ func NewNpc(pos shared.Vector) Npc {
 		spawnPos:         pos,
 		movesBackToSpawn: false,
 		Hitpoints: shared.Hitpoints{
-			Current: 250,
-			Max:     250,
+			Current: 25000,
+			Max:     25000,
 		},
 		NpcType:          "",
 		aggressive:       false,

@@ -2,6 +2,7 @@ import { Sprite, Graphics, Loader, Container, Text } from "pixi.js"
 import { RESOURCE_SCALE } from "../etc/const"
 import { randInt } from "../etc/math"
 import { Hitpoints, getHitResourceEvent, getLootResourceEvent } from "../events/events"
+import { Game } from "../main"
 import { getTextureFromResourceType, itemTextures } from "../modules/ResourceHandler"
 import { Player } from "./player"
 import Vector from "./vector"
@@ -76,7 +77,14 @@ export class HasHitpoints {
     }
 }
 
-export class Resource extends HasHitpoints {
+
+
+export interface IsClickable {
+    pos: Vector,
+    gotClicked: () => string
+}
+
+export class Resource extends HasHitpoints implements IsClickable {
     id: number
     quantity: number
     gridCellKey: string
@@ -94,7 +102,7 @@ export class Resource extends HasHitpoints {
     canDoAction?: () => boolean
     setCanDoAction?: (b: boolean) => void
 
-    constructor(gridCellKey: string, id: number, player: Player, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, loader: Loader, ws: WebSocket, isLootable: boolean, canDoAction: () => boolean = () => { return true }, setCanDoAction: (b: boolean) => void = () => { }) {
+    constructor(gridCellKey: string, id: number, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, isLootable: boolean, game: Game, canDoAction: () => boolean = () => { return true }, setCanDoAction: (b: boolean) => void = () => { }) {
         super(hp)
 
         this.gridCellKey = gridCellKey
@@ -102,8 +110,8 @@ export class Resource extends HasHitpoints {
         this.canDoAction = canDoAction
         this.setCanDoAction = setCanDoAction
         this.id = id
-        this.ws = ws
-        this.player = player
+        this.ws = game.ws
+        this.player = game.player
         this.quantity = quantity
         this.pos = pos
         this.isSolid = isSolid
@@ -115,9 +123,9 @@ export class Resource extends HasHitpoints {
 
         if (this.resourceType == "tree") {
             if (randInt(1, 10) > 5) {
-                this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}1.png`].texture)
+                this.sprite = new Sprite(game.app.loader.resources[`assets/${this.resourceType}1.png`].texture)
             } else {
-                this.sprite = new Sprite(loader.resources[`assets/${this.resourceType}2.png`].texture)
+                this.sprite = new Sprite(game.app.loader.resources[`assets/${this.resourceType}2.png`].texture)
             }
             this.sprite.scale.set(2, 2)
         } else {
@@ -131,27 +139,23 @@ export class Resource extends HasHitpoints {
 
         this.updateHealthbar(this.container)
 
-
-        this.sprite.on('click', () => {
-            if (!this.isLootable && !this.player.canDoAction()) {
-                return
-            }
-            if (this.pos.dist(this.player.currentPos) < 150) {
-                if (this.isLootable) {
-                    this.ws.send(getLootResourceEvent(this.id))
-                } else {
-                    // is hitable
-                    this.ws.send(getHitResourceEvent("1", this.id))
-                }
-            }
-        });
-
         this.sprite.on('mouseover', () => {
-            if (this.pos.dist(this.player.currentPos) > 150) return
+            game.hoveredElement = this
         });
+
 
         this.sprite.on('mouseout', () => {
-        });
+            game.hoveredElement = undefined
+        })
+    }
+
+    gotClicked(): string {
+        if (this.isLootable) {
+            return getLootResourceEvent(this.id)
+        } else {
+            // is hitable
+            return getHitResourceEvent("1", this.id)
+        }
     }
 
 

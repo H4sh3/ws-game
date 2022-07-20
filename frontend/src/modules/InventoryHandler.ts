@@ -148,13 +148,10 @@ class InventoryHandler {
     }
 
     handleUpdateEquippedInventoryItemEvent(event: UpdateEquippedInventoryItemEvent) {
-        console.log(event)
         if (event.isEquipped) {
             this.equippedItems.push(event.uuid)
         } else {
-            console.log("before: ", this.equippedItems)
             this.equippedItems = this.equippedItems.filter(uuid => uuid !== event.uuid)
-            console.log("after: ", this.equippedItems)
         }
 
         this.render()

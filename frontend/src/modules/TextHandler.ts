@@ -51,6 +51,7 @@ class TextHandler {
         let cTrie = 0
         const maxTrie = 50
         const step = 25
+
         while (this.items.some(i => i.pos.dist(validPos) < 15)) {
             if (cTrie >= maxTrie) break
 

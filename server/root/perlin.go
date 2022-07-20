@@ -34,11 +34,12 @@ func getTerrainType(noise float64) TerrainType {
 
 	return Water
 }
+
 func getSubCells(cellX int, cellY int) []SubCell {
 	alpha := 2.0
 	beta := 2.0
 	var n int32 = 3
-	pn := perl2.NewPerlin(alpha, beta, n, 42122)
+	pn := perl2.NewPerlin(alpha, beta, n, 54000)
 
 	cells := []SubCell{}
 

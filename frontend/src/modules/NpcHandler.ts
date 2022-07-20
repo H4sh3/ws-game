@@ -18,7 +18,7 @@ class NpcHandler {
     handleNpcListEvent(event: NpcListEvent, game: Game) {
         const { npcList, gridCellKey } = event
         const newNpcs: Npc[] = npcList.map(npc => {
-            const n = new Npc(npc, game.ws, game.player)
+            const n = new Npc(npc, game.ws, game.player, game)
             this.container.addChild(n.container)
             return n
         })
@@ -38,8 +38,8 @@ class NpcHandler {
     update() {
         this.npcArray().map(npc => {
             npc.updatePosition()
-            npc.container.x = npc.currentPos.x
-            npc.container.y = npc.currentPos.y
+            npc.container.x = npc.pos.x
+            npc.container.y = npc.pos.y
         })
     }
 
@@ -78,12 +78,12 @@ class NpcHandler {
         let npcs = this.npcMap.get(gridCellKey)
 
         if (!npcs) {
-            return
+            return createVector(-1, -1)
         }
 
         const npc = npcs.find(n => n.UUID === npcUUID)
         if (!npc) {
-            return
+            return createVector(-1, -1)
         }
 
         npc.hitPoints.current = hitpoints.current
@@ -100,7 +100,7 @@ class NpcHandler {
 
         npc.updateHealthbar(npc.container)
 
-        return npc.currentPos.copy()
+        return npc.pos.copy()
     }
 
     handleNpcAttackAnimEvent(event: NpcAttackAnimEvent) {
