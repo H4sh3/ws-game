@@ -156,15 +156,9 @@ export class Game extends Container {
             }
         })
 
-        this.worldContainer.on("mousedown", (e) => {
+        addEventListener('mousedown', () => {
             this.player.mouseDown = true
-        })
 
-        this.worldContainer.on("mouseup", (e) => {
-            this.player.mouseDown = false
-        })
-
-        this.app.stage.on("click", (e) => {
             const cX = this.cursorPos.x
             const cY = this.cursorPos.y
 
@@ -187,8 +181,11 @@ export class Game extends Container {
             const y = -(SCREEN_SIZE / 2) + y1 - pY + this.player.currentPos.y
             const spawn = createVector(Math.trunc(x), Math.trunc(y))
             this.ws.send(getPlayerPlacedResourceEvent(this.builderHandler.selectedBuildResourceType, spawn))
-        })
+        });
 
+        addEventListener('mouseup', () => {
+            this.player.mouseDown = false
+        });
         // bind update function
         this.update = this.update.bind(this);
 
@@ -230,6 +227,7 @@ export class Game extends Container {
 
             this.handleRemoveGridCellEvent(parsed)
         } else if (isCellDataEvent(parsed)) {
+
             this.miniMapHandler.addTiles(parsed)
             this.tilemapHandler.processCellDataEvent(parsed)
         } else if (isNpcListEvent(parsed)) {
@@ -239,12 +237,11 @@ export class Game extends Container {
 
             this.npcHandler.handleNpcTargetPositionEvent(parsed)
         } else if (isUpdateNpcEvent(parsed)) {
-            const pos = this.npcHandler.handleUpdateNpcEvent(parsed)
 
+            const pos = this.npcHandler.handleUpdateNpcEvent(parsed)
             if (pos.x !== -1 && pos.y !== -1 && parsed.damage > 0) {
                 this.textHandler.addItem(`${parsed.damage}`, pos, "0xff0000", parsed.isCrit)
             }
-
         } else if (isUpdatePlayerEvent(parsed)) {
 
             this.handleUpdatePlayerEvent(parsed)
@@ -258,11 +255,22 @@ export class Game extends Container {
 
             this.itemHandler.removeItem(parsed.uuid)
         } else if (isUpdateInventoryItemEvent(parsed)) {
+
             this.inventoryHandler.handleUpdateInventoryItemEvent(parsed)
         } else if (isUpdateEquippedInventoryItemEvent(parsed)) {
+
             this.inventoryHandler.handleUpdateEquippedInventoryItemEvent(parsed)
         }
 
+    }
+
+    updateWorldContainer() {
+        this.worldContainer.x = -this.player.currentPos.x + (SCREEN_SIZE / 2)
+        this.worldContainer.y = -this.player.currentPos.y + (SCREEN_SIZE / 2)
+    }
+
+    updateMinimap() {
+        this.miniMapHandler.update(this.player.currentPos, this.gameConfig.gridCellSize, this.gameConfig.subCells)
     }
 
     // main update loop
@@ -274,10 +282,11 @@ export class Game extends Container {
 
         // update world container based on players position
         this.player.updatePosition()
-        this.worldContainer.x = -this.player.currentPos.x + (SCREEN_SIZE / 2)
-        this.worldContainer.y = -this.player.currentPos.y + (SCREEN_SIZE / 2)
 
-        this.miniMapHandler.update(this.player.currentPos, this.gameConfig.gridCellSize, this.gameConfig.subCells)
+        if (this.player.posChanged) {
+            this.updateWorldContainer()
+            this.updateMinimap()
+        }
 
         // Translates cursor to relativ player position and grid
         const pX = this.player.currentPos.x % 50
@@ -388,8 +397,11 @@ export class Game extends Container {
         this.localStorageWrapper.setUUID(parsed.uuid)
         this.player = new Player(parsed.id, createVector(SCREEN_SIZE / 2, SCREEN_SIZE / 2), getOwnPlayerSprite(), parsed.hitpoints, false)
 
-        this.player.currentPos.x = parsed.pos.x
-        this.player.currentPos.y = parsed.pos.y
+        this.player.currentPos.x = 0
+        this.player.currentPos.y = 0
+        this.player.targetPos.x = parsed.pos.x
+        this.player.targetPos.y = parsed.pos.y
+
 
         this.player.spriteContainer.sortableChildren = true
         this.player.spriteContainer.zIndex = 4
@@ -401,7 +413,11 @@ export class Game extends Container {
 
         this.inventoryHandler.init(parsed.resources, parsed.items, parsed.equippedItems)
 
+
         this.initWorld()
+
+        this.updateWorldContainer()
+        this.updateMinimap()
     }
 
 

@@ -6,9 +6,9 @@ import { HasHitpoints, IsClickable } from "./resource";
 import Vector from "./vector";
 
 enum AnimationNames {
-    idle = 0,
-    walking = 1,
-    attacking = 2,
+    Idle = 0,
+    Walking = 1,
+    Attacking = 2,
 }
 
 export function getTexturesFromSpriteSheet(name: string, path: string, numFrames: number, w: number, h: number): Texture[] {
@@ -135,7 +135,7 @@ class Npc extends HasHitpoints implements IsClickable {
     updatePosition() {
 
         // dont move on attack
-        if (this.activeAnimation === AnimationNames.attacking) return
+        if (this.activeAnimation === AnimationNames.Attacking) return
 
         const step = this.targetPos.copy().sub(this.pos).mult(0.2)
 
@@ -162,7 +162,7 @@ class Npc extends HasHitpoints implements IsClickable {
     }
 
     useWalkSprite() {
-        if (this.activeAnimation === AnimationNames.walking) return
+        if (this.activeAnimation === AnimationNames.Walking) return
 
         if (this.sprite === undefined) {
             this.sprite = new AnimatedSprite(walkingKnightAnim)
@@ -173,11 +173,11 @@ class Npc extends HasHitpoints implements IsClickable {
         this.sprite.anchor.set(0.5)
         this.sprite.scale.set(2, 2)
         this.sprite.play()
-        this.activeAnimation = AnimationNames.walking
+        this.activeAnimation = AnimationNames.Walking
     }
 
     useIdleSprite(force: boolean = false) {
-        if (!force && (this.activeAnimation === AnimationNames.idle)) return
+        if (!force && (this.activeAnimation === AnimationNames.Idle)) return
 
         if (this.sprite === undefined) {
             this.sprite = new AnimatedSprite(idleKnightAnim)
@@ -189,11 +189,11 @@ class Npc extends HasHitpoints implements IsClickable {
         this.sprite.scale.set(2, 2)
         this.sprite.scale.x = this.movesRight ? 2 : -2
         this.sprite.play()
-        this.activeAnimation = AnimationNames.idle
+        this.activeAnimation = AnimationNames.Idle
     }
 
     playAttack() {
-        if (this.activeAnimation === AnimationNames.attacking) return
+        if (this.activeAnimation === AnimationNames.Attacking) return
 
         if (this.sprite === undefined) {
             this.sprite = new AnimatedSprite(attackKnightAnim)
@@ -208,7 +208,7 @@ class Npc extends HasHitpoints implements IsClickable {
 
         this.sprite.play()
         this.sprite.loop = false
-        this.activeAnimation = AnimationNames.attacking
+        this.activeAnimation = AnimationNames.Attacking
 
         this.sprite.onComplete = () => {
             this.useIdleSprite(true)
