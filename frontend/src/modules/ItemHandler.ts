@@ -38,8 +38,6 @@ class ItemHandler {
         })
 
         this.items = this.items.filter(i => !toRemove.includes(i))
-        console.log(`items container children${this.container.children.length}`)
-        console.log(`items ${this.items.length}`)
     }
 
     removeItem(uuid: string) {
