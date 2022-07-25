@@ -1,11 +1,15 @@
 import Vector from "./vector"
 import { createVector, Hitpoints } from "../events/events"
-import { AnimatedSprite, Container, Graphics } from "pixi.js"
+import { AnimatedSprite, Container } from "pixi.js"
 import { PLAYER_SPRITE_SCALE } from "../sprites/player"
 import { HasHitpoints } from "./resource"
 import { getTexturesFromSpriteSheet } from "./npc"
 
 const deadAnimationTextures = getTexturesFromSpriteSheet("player_dead", 'assets/human/dead/sprite_sheet.png', 5, 48, 64)
+
+
+const slash_animation = getTexturesFromSpriteSheet("slash_animation", 'assets/slash_animation.png', 5, 32, 32)
+
 
 export class Player extends HasHitpoints {
     id: number
@@ -21,10 +25,14 @@ export class Player extends HasHitpoints {
     hitpoints: Hitpoints
     isOtherPlayer?: boolean
     mouseDown?: boolean
+    slashAnimation: AnimatedSprite
+    attackSpeed: number
+    actionCooldown: number
 
     constructor(id: number, pos: Vector, sprite: AnimatedSprite, hitpoints: Hitpoints, isOtherPlayer = true, mouseDown = false) {
         super(hitpoints, -35)
 
+        this.attackSpeed = 60
         this.vel = createVector(0, 0)
         this.currentPos = pos
         this.targetPos = pos
@@ -39,10 +47,33 @@ export class Player extends HasHitpoints {
         this.spriteContainer.position.set(pos.x, pos.y)
         this.isOtherPlayer = isOtherPlayer
         this.mouseDown = mouseDown
+
+        this.slashAnimation = new AnimatedSprite(slash_animation)
+        this.slashAnimation.position.set(0, -40)
+
+        let calcedAnimSpeed = 2 - ((this.attackSpeed * 50) / 750);
+        calcedAnimSpeed = calcedAnimSpeed <= 0 ? 0.1 : calcedAnimSpeed
+        this.sprite.animationSpeed = calcedAnimSpeed
+
+        if (calcedAnimSpeed == 0.1) {
+            this.slashAnimation.scale.set(3, 3)
+        } else {
+            this.slashAnimation.scale.set(2, 2)
+        }
+
+        this.slashAnimation.loop = false
+        this.slashAnimation.visible = false
+        this.slashAnimation.onComplete = () => {
+            this.slashAnimation.visible = false
+            this.slashAnimation.gotoAndStop(0)
+        }
+        this.spriteContainer.addChild(this.slashAnimation)
+
+        this.actionCooldown = 60
     }
 
     canDoAction(): boolean {
-        if (this.deltaCount > 30) {
+        if (this.deltaCount > this.actionCooldown) {
             this.deltaCount = 0
             return true
         }
@@ -60,7 +91,6 @@ export class Player extends HasHitpoints {
             this.sprite.stop()
             return
         }
-
 
         if (step.mag() > 0.1) {
             this.currentPos.add(step)
@@ -92,5 +122,22 @@ export class Player extends HasHitpoints {
             anim.play()
             anim.animationSpeed = 0.05
         }
+    }
+
+    playHitAnim() {
+        const toLeft = this.sprite.scale.x < 0
+        const looksLeft = this.slashAnimation.scale.x < 0
+        if (toLeft && !looksLeft) {
+            this.slashAnimation.scale.x = -this.slashAnimation.scale.x
+            this.slashAnimation.position.x = 20
+        }
+        if (!toLeft && looksLeft) {
+            this.slashAnimation.position.x = -20
+            this.slashAnimation.scale.x = Math.abs(this.slashAnimation.scale.x)
+        }
+
+
+        this.slashAnimation.visible = true
+        this.slashAnimation.play()
     }
 }

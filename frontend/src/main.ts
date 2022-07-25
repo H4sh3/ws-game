@@ -18,7 +18,7 @@ import MiniMapHandler from './modules/MinimapHandler';
 import InventoryHandler from './modules/InventoryHandler';
 import BuilderHandler from './modules/BuilderHandler';
 import ItemHandler from './modules/ItemHandler';
-import { Resource } from './types/resource';
+import { isResource, Resource } from './types/resource';
 import Npc from './types/npc';
 
 export class Game extends Container {
@@ -306,19 +306,22 @@ export class Game extends Container {
         // update npc positions
         this.npcHandler.update()
 
-        this.attackAndLoot()
-        this.playerActionCooldown += delta
+        this.attackAndLoot(delta)
     }
 
-    attackAndLoot() {
-        const canAttack = this.playerActionCooldown > 10
+    attackAndLoot(delta: number) {
+        this.player.updateCooldown(delta)
         const hasTarget = this.hoveredElement !== undefined
-        if (hasTarget && canAttack && this.player.mouseDown) {
+        if (this.player.canDoAction() && hasTarget && this.player.mouseDown) {
             const isInRange = this.hoveredElement.pos.dist(this.player.currentPos) <= 150
             if (isInRange) {
+
+                if (isResource(this.hoveredElement) && !this.hoveredElement.isLootable || !isResource(this.hoveredElement)) {
+                    this.player.playHitAnim()
+                }
+
                 const e: string = this.hoveredElement.gotClicked()
                 this.ws.send(e)
-                this.playerActionCooldown = 0
             }
         }
     }

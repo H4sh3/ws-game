@@ -84,6 +84,14 @@ export interface IsClickable {
     gotClicked: () => string
 }
 
+export function isResource(value: any): value is Resource {
+    return (
+        "isSolid" in value &&
+        "isLootable" in value &&
+        "resourceType" in value
+    )
+}
+
 export class Resource extends HasHitpoints implements IsClickable {
     id: number
     quantity: number
@@ -99,16 +107,11 @@ export class Resource extends HasHitpoints implements IsClickable {
     container: Container
     sprite: Sprite
 
-    canDoAction?: () => boolean
-    setCanDoAction?: (b: boolean) => void
-
-    constructor(gridCellKey: string, id: number, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, isLootable: boolean, game: Game, canDoAction: () => boolean = () => { return true }, setCanDoAction: (b: boolean) => void = () => { }) {
+    constructor(gridCellKey: string, id: number, quantity: number, resourceType: string, pos: Vector, hp: Hitpoints, isSolid: boolean, isLootable: boolean, game: Game) {
         super(hp)
 
         this.gridCellKey = gridCellKey
 
-        this.canDoAction = canDoAction
-        this.setCanDoAction = setCanDoAction
         this.id = id
         this.ws = game.ws
         this.player = game.player
