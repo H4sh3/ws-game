@@ -69,12 +69,11 @@ export class Player extends HasHitpoints {
         }
         this.spriteContainer.addChild(this.slashAnimation)
 
-        this.actionCooldown = 60
+        this.actionCooldown = 0
     }
 
     canDoAction(): boolean {
         if (this.deltaCount > this.actionCooldown) {
-            this.deltaCount = 0
             return true
         }
         return false

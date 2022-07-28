@@ -313,8 +313,8 @@ export class Game extends Container {
         this.player.updateCooldown(delta)
 
         const hasTarget = this.hoveredElement !== undefined
-
         if (!hasTarget) return
+
         if (!this.player.mouseDown) return
         if (!this.player.canDoAction()) return
 
@@ -327,6 +327,7 @@ export class Game extends Container {
 
         const e: string = this.hoveredElement.gotClicked()
         this.ws.send(e)
+        this.player.actionCooldown = 0
     }
 
     handleRemovePlayerEvent(parsed: RemovePlayerEvent) {
