@@ -311,19 +311,22 @@ export class Game extends Container {
 
     attackAndLoot(delta: number) {
         this.player.updateCooldown(delta)
+
         const hasTarget = this.hoveredElement !== undefined
-        if (this.player.canDoAction() && hasTarget && this.player.mouseDown) {
-            const isInRange = this.hoveredElement.pos.dist(this.player.currentPos) <= 150
-            if (isInRange) {
 
-                if (isResource(this.hoveredElement) && !this.hoveredElement.isLootable || !isResource(this.hoveredElement)) {
-                    this.player.playHitAnim()
-                }
+        if (!hasTarget) return
+        if (!this.player.mouseDown) return
+        if (!this.player.canDoAction()) return
 
-                const e: string = this.hoveredElement.gotClicked()
-                this.ws.send(e)
-            }
+        const isInRange = this.hoveredElement.pos.dist(this.player.currentPos) <= 150
+        if (!isInRange) return
+
+        if (isResource(this.hoveredElement) && !this.hoveredElement.isLootable || !isResource(this.hoveredElement)) {
+            this.player.playHitAnim()
         }
+
+        const e: string = this.hoveredElement.gotClicked()
+        this.ws.send(e)
     }
 
     handleRemovePlayerEvent(parsed: RemovePlayerEvent) {
